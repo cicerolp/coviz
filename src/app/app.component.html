@@ -1,12 +1,63 @@
-<div class="Container">
+<!-- <div class="Container">
     <div class="Header">
         <app-navbar></app-navbar>
     </div>
     <div class="HeightTaker">
         <div class="Wrapper">
             <div class="Content">
-                <div id="map"></div>
+                <div id="map">
+                    <app-navigator></app-navigator>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</div> -->
+
+<ng-container>
+  <!-- <mat-toolbar class="example-header">Header</mat-toolbar> -->
+  <app-navbar></app-navbar>
+
+  <mat-sidenav-container class="app-container">
+    <mat-sidenav #sidenav position="end" [mode]="mode.value" opened="true" class="app-sidenav" [formGroup]="options">
+
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Map Settings</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <section>
+            <span class="badge badge-primary">Geometry:</span>
+            <mat-form-field class="app-section">
+              <mat-select formControlName="geometry" (selectionChange)="applyConfig($event)">
+                <mat-option *ngFor="let opt of geometry_values" [value]="opt.value">
+                  {{opt.viewValue}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+
+          <section>
+            <span class="badge badge-primary">Resolution:</span> {{this.options.get('resolution').value}}
+            <mat-slider class="app-section" min="1" max="25" step="1" value="8" thumbLabel="true" tickInterval="auto" formControlName="resolution"
+              (change)="applyConfig($event)"></mat-slider>
+          </section>
+
+        </mat-card-content>
+        <mat-card-footer align="end">
+          <button mat-raised-button color="warn" (click)="sidenav.toggle()">Close</button>
+        </mat-card-footer>
+      </mat-card>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <div id="map">
+        <app-navigator></app-navigator>
+        <button mat-raised-button color="primary" class="on-map" (click)="sidenav.toggle()">Open Config</button>
+
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+
+  <!-- <mat-toolbar class="app-footer">Footer</mat-toolbar> -->
+</ng-container>
