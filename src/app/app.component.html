@@ -18,7 +18,7 @@
   <app-navbar></app-navbar>
 
   <mat-sidenav-container class="app-container">
-    <mat-sidenav #sidenav position="end" [mode]="mode.value" opened="true" class="app-sidenav" [formGroup]="options">
+    <mat-sidenav #sidenav position="end" [mode]="mode.value" opened="false" class="app-sidenav" [formGroup]="options">
 
       <mat-card>
         <mat-card-header>
@@ -36,14 +36,8 @@
               </mat-select>
             </mat-form-field>
           </section>
-
-          <section>
-            <span class="badge badge-primary">Resolution:</span> {{this.options.get('resolution').value}}
-            <mat-slider class="app-section" min="1" max="25" step="1" value="8" thumbLabel="true" tickInterval="auto" formControlName="resolution"
-              (change)="applyConfig($event)"></mat-slider>
-          </section>
-
         </mat-card-content>
+
         <mat-card-footer align="end">
           <button mat-raised-button color="warn" (click)="sidenav.toggle()">Close</button>
         </mat-card-footer>
@@ -55,9 +49,30 @@
         <app-navigator></app-navigator>
         <button mat-raised-button color="primary" class="on-map" (click)="sidenav.toggle()">Open Config</button>
 
+        <mat-card class="map-card on-map" [formGroup]="options">
+          <div #mapwidgets>
+            <section>
+              <span class="badge badge-info">Zoom:</span> {{currentZoom}} of {{maximumZoom}}
+            </section>
+            <section>
+              <span class="badge badge-info">Count:</span> {{currentCount}} of {{maximumCount}}
+            </section>
+            <section>
+                <span class="badge badge-primary">Geometry Size:</span> {{this.options.get('geom_size').value}}
+                <mat-slider min="0" max="10" step="0.5" thumbLabel="true" tickInterval="auto" formControlName="geom_size" (change)="applyConfig($event)"></mat-slider>
+              </section>
+            <section>
+              <span class="badge badge-primary">Resolution:</span> {{this.options.get('resolution').value}}
+              <mat-slider min="1" max="10" step="1" thumbLabel="true" tickInterval="auto" formControlName="resolution" (change)="applyConfig($event)"></mat-slider>
+            </section>
+          </div>
+        </mat-card>
+
       </div>
     </mat-sidenav-content>
   </mat-sidenav-container>
 
-  <!-- <mat-toolbar class="app-footer">Footer</mat-toolbar> -->
+  <mat-toolbar class="app-footer">
+      <app-line-chart></app-line-chart>
+  </mat-toolbar>
 </ng-container>

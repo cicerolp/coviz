@@ -17,13 +17,17 @@ import { MapService } from './services/map.service';
 import { NavigatorComponent } from './navigator/navigator.component';
 
 import { MaterialModule } from './material/material.module';
+import { DataService } from './services/data.service';
+import { ConfigurationService } from './services/configuration.service';
+import { LineChartComponent } from './line-chart/line-chart.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     NavbarComponent,
-    NavigatorComponent
+    NavigatorComponent,
+    LineChartComponent
   ],
   imports: [
     BrowserModule,
@@ -40,7 +44,7 @@ import { MaterialModule } from './material/material.module';
     MaterialModule,
     RoutingModule
   ],
-  providers: [GeocodingService, MapService],
+  providers: [GeocodingService, MapService, DataService, ConfigurationService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

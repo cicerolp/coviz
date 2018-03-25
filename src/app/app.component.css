@@ -51,10 +51,19 @@ html, body, .Container, .LeftNavigation, .Content {
   width:100%;
 }
 
+.map-card {
+  position: relative;
+  top: 25px;
+  right: 15px;
+  float: right;
+  font-size: 1.25em;
+  background: rgba(200, 200, 200, 0.75) !important
+}
+
 .app-container {
   position: absolute;
   top: 55px;
-  bottom: 0;
+  bottom: 150px;
   left: 0;
   right: 0;
 }
@@ -78,6 +87,7 @@ html, body, .Container, .LeftNavigation, .Content {
   bottom: 0;
   left: 0;
   right: 0;
+  height: 150px;
 }
 
 .app-section {
@@ -86,4 +96,3 @@ html, body, .Container, .LeftNavigation, .Content {
   align-items: center;
   /* height: 60px; */
 }
-
