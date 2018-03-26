@@ -3,8 +3,10 @@ import { Injectable } from '@angular/core';
 @Injectable()
 export class ConfigurationService {
   public Server = 'http://localhost:7000/';
-  public ApiUrl = 'api/';
+  public ApiUrl = 'api';
   public ServerWithApiUrl = this.Server + this.ApiUrl;
+
+  public dataset = 'on_time_performance';
 
   constructor() { }
 

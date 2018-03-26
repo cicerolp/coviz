@@ -1,1 +1,27 @@
-<div id="chart"></div>
+<mat-card class="map-card-footer" [formGroup]="options">
+  <section>
+    <form [formGroup]="options">
+      <md2-datepicker formControlName="fromDateTime" (change)="broadcast()" placeholder="Start DateTime" type="datetime" startView="month"
+        format="M/d/y H:mm A"></md2-datepicker>
+
+        <md2-datepicker formControlName="toDateTime" (change)="broadcast()" placeholder="End DateTime" type="datetime" startView="month"
+        format="M/d/y H:mm A"></md2-datepicker>
+
+      <!--  <mat-form-field> -->
+      <!-- <mat-placeholder>Start DateTime</mat-placeholder>
+        <mat-datetimepicker-toggle [for]="fromDateTime" matSuffix></mat-datetimepicker-toggle>
+        <mat-datetimepicker #fromDateTime type="datetime" openOnFocus="true" timeInterval="30"></mat-datetimepicker>
+        <input matInput formControlName="fromDateTime" [matDatetimepicker]="fromDateTime" required autocomplete="false" (dateChange)="broadcast()"> -->
+      <!-- </mat-form-field>
+ -->
+      <!-- <mat-form-field>
+        <mat-placeholder>End DateTime</mat-placeholder>
+        <mat-datetimepicker-toggle [for]="toDateTime" matSuffix></mat-datetimepicker-toggle>
+        <mat-datetimepicker #toDateTime type="datetime" openOnFocus="true" timeInterval="30"></mat-datetimepicker>
+        <input matInput formControlName="toDateTime" [matDatetimepicker]="toDateTime" required autocomplete="false" (dateChange)="broadcast()">
+      </mat-form-field> -->
+    </form>
+  </section>
+</mat-card>
+<div id="{{uniqueId}}">
+</div>

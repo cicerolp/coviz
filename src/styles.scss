@@ -4,6 +4,26 @@
 @import "~bootstrap/dist/css/bootstrap.css";
 @import "~leaflet/dist/leaflet.css";
 
+@import '~@angular/material/theming';
+@include mat-core();
+$app-primary: mat-palette($mat-indigo);
+$app-accent:  mat-palette($mat-pink);
+$app-warn:    mat-palette($mat-red);
+
+// Custom Sass colors vars (will be available in all the project)
+$primary: mat-color($app-primary);
+$accent: mat-color($app-accent);
+$warn: mat-color($app-warn);
+
+$theme: mat-light-theme($app-primary, $app-accent, $app-warn);
+
+@include angular-material-theme($theme);
+
+@import '~@mat-datetimepicker/core/datetimepicker/datetimepicker-theme.scss';
+
+// Using the $theme variable from the pre-built theme you can call the theming function
+@include mat-datetimepicker-theme($theme);
+
 html, body {
   height: 100%;
   width: 100%;
@@ -26,7 +46,6 @@ html, body {
   z-index: 900;
 }
 
-
 /* Rules for sizing the icon. */
 .material-icons.md-16 { font-size: 16px; }
 .material-icons.md-18 { font-size: 18px; }
@@ -41,3 +60,7 @@ html, body {
 /* Rules for using icons as white on a dark background. */
 .material-icons.md-light { color: rgba(255, 255, 255, 1); }
 .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+.app-footer-item {
+  flex: 1 1 100%;
+}

@@ -1,5 +1,4 @@
 /*
-
 * {
     margin: 0;
     padding: 0;
@@ -44,7 +43,8 @@ html, body, .Container, .LeftNavigation, .Content {
 }
 .RightNavigation, .Content {
   overflow: auto;
-} */
+}
+*/
 
 #map {
   height:100%;
@@ -56,7 +56,7 @@ html, body, .Container, .LeftNavigation, .Content {
   top: 25px;
   right: 15px;
   float: right;
-  font-size: 1.25em;
+  font-size: 1.20em;
   background: rgba(200, 200, 200, 0.75) !important
 }
 
@@ -88,6 +88,7 @@ html, body, .Container, .LeftNavigation, .Content {
   left: 0;
   right: 0;
   height: 150px;
+  background: rgb(202, 210, 211);
 }
 
 .app-section {
@@ -96,3 +97,11 @@ html, body, .Container, .LeftNavigation, .Content {
   align-items: center;
   /* height: 60px; */
 }
+
+.app-footer-container {
+  display: flex; /* or inline-flex */
+  width: 100%;
+  align-items: stretch;
+  flex-direction: row;
+}
+

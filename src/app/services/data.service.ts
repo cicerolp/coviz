@@ -22,7 +22,13 @@ export class DataService {
 
   query(action: string): Observable<any> {
     return this.http
-      .get(this.config.ServerWithApiUrl + 'query/' + action)
+      .get(this.config.ServerWithApiUrl + '/query' + action)
+      .map(response => response.json());
+  }
+
+  schema(action: string): Observable<any> {
+    return this.http
+      .get(this.config.ServerWithApiUrl + '/schema' + action)
       .map(response => response.json());
   }
 }

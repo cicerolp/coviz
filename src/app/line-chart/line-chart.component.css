@@ -1,0 +1,9 @@
+.map-card-footer {
+  position: relative;
+  top: 0;
+  left: 0;
+  font-size: 0.7em;
+  background: rgb(202, 210, 211) !important;
+  box-shadow: none !important;
+  padding: 0px !important;
+}

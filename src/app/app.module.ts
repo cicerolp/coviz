@@ -20,14 +20,22 @@ import { MaterialModule } from './material/material.module';
 import { DataService } from './services/data.service';
 import { ConfigurationService } from './services/configuration.service';
 import { LineChartComponent } from './line-chart/line-chart.component';
+import { SchemaService } from './services/schema.service';
+import { CalendarComponent } from './calendar/calendar.component';
+import { BarChartComponent } from './bar-chart/bar-chart.component';
+import { WidgetHostDirective } from './widget-host.directive';
 
+import { Md2Module, NoConflictStyleCompatibilityMode } from 'md2';
 
 @NgModule({
   declarations: [
     AppComponent,
     NavbarComponent,
     NavigatorComponent,
-    LineChartComponent
+    LineChartComponent,
+    CalendarComponent,
+    BarChartComponent,
+    WidgetHostDirective
   ],
   imports: [
     BrowserModule,
@@ -42,9 +50,13 @@ import { LineChartComponent } from './line-chart/line-chart.component';
     NgbModule.forRoot(),
 
     MaterialModule,
-    RoutingModule
+    RoutingModule,
+
+    Md2Module,
+    NoConflictStyleCompatibilityMode
   ],
-  providers: [GeocodingService, MapService, DataService, ConfigurationService],
-  bootstrap: [AppComponent]
+  providers: [GeocodingService, MapService, DataService, ConfigurationService, SchemaService],
+  bootstrap: [AppComponent],
+  entryComponents: [BarChartComponent, LineChartComponent],
 })
 export class AppModule { }
