@@ -23,7 +23,7 @@ export class SchemaService {
       },
       'spatialDimension': ['pickup'],
       // 'categoricalDimension': ['passenger_count', 'payment_type'],
-      'categoricalDimension': ['payment_type'],
+      'categoricalDimension': ['passenger_count'],
       'payloads': ['trip_distance', 'total_amount'],
       'payloadValues': {
         'trip_distance': {
@@ -63,8 +63,9 @@ export class SchemaService {
       },
       'spatialDimension': ['origin_airport', 'dest_airport'],
       // 'categoricalDimension': ['cancelled', 'diverted', 'unique_carrier', 'origin_airport_id'],
+      // 'categoricalDimension': ['cancelled', 'diverted', 'unique_carrier'],
       'categoricalDimension': ['unique_carrier'],
-      'payloads': ['arr_delay', 'dep_delay'],
+      'payloads': ['dep_delay', 'arr_delay'],
       'payloadValues': {
         'arr_delay': {
           'quantile': { 'min_value': -10, 'max_value': 25, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
@@ -104,8 +105,7 @@ export class SchemaService {
         'pickup_datetime': { 'lower': 0, 'upper': 0 }
       },
       'spatialDimension': ['pickup'],
-      // 'categoricalDimension': ['passenger_count', 'payment_type'],
-      'categoricalDimension': ['payment_type'],
+      'categoricalDimension': ['passenger_count', 'payment_type'],
       'payloads': ['trip_distance', 'total_amount'],
       'payloadValues': {
         'trip_distance': {

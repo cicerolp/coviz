@@ -239,6 +239,9 @@ export class Demo5Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
+      componentInstance.setYLabel('count');
+      componentInstance.setXLabel(dim);
+
       componentInstance.setDataset(this.getFormValue(0, 'dataset'));
       componentInstance.register(dim, this.setCategoricalData);
       this.widgets.push({ key: dim, type: 'categorical', widget: componentInstance });
@@ -352,15 +355,15 @@ export class Demo5Component implements OnInit, AfterViewInit {
       this.getCategoricalConstNoExp(dim) +
       '/group=' + dim
     ).subscribe(data => {
-      const extents = d3.extent(data[0], d => d[1]);
+      const extents = d3.extent(data[0], d => d[1] * 100);
       const scale = d3.scaleLinear<string, string>().
         // interpolate(d3.interpoateRgb).
         domain(extents as [number, number]).
-        range(['rgb(255,255,255)', 'rgb(2,56,88)']);
+        range(['rgb(240,240,240)', 'rgb(2,56,88)']);
 
-      const colors = (<any[]>data[0]).map(d => scale(d[1]));
+      const colors = (<any[]>data[0]).map(d => scale(d[1] * 100));
 
-      self.setColors(colors);
+      self.setColors(colors, scale);
     });
   }
 

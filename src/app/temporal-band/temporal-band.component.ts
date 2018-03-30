@@ -32,8 +32,9 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
   bands = [];
   curves = [];
 
-  xLabel = 'Time';
+  xLabel = '';
   yLabel = '';
+  yFormat = d3.format('.2s');
 
   options: FormGroup;
 
@@ -172,6 +173,18 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() { }
 
+  setXLabel(value: string) {
+    this.xLabel = value;
+  }
+
+  setYLabel(value: string) {
+    this.yLabel = value;
+  }
+
+  setFormatter(formatter: any) {
+    this.yFormat = formatter;
+  }
+
   setDataset(dataset: string) {
     this.dataset = this.schemaService.get(dataset);
   }
@@ -208,7 +221,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
     container = container.parentNode.getBoundingClientRect();
 
-    const margin = { top: 5, right: 25, bottom: 75, left: 50 };
+    const margin = { top: 5, right: 15, bottom: 70, left: 55 };
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
@@ -243,7 +256,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // add the Y axis
     const yAxis = d3.axisLeft(yScale)
-      .tickFormat(d3.format('d'))
+      .tickFormat(self.yFormat)
       .ticks(5);
     svg.append('g')
       .attr('class', 'yAxis')
@@ -285,11 +298,12 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     yAxis.scale(yScale);
 
     // updateAxis
+
     // text label for the x axis
     xAxis(svg.select('.xAxis'));
     svg.select('#labelXAxis')
       .attr('x', (width / 2.0))
-      .attr('y', (height + margin.top + 20))
+      .attr('y', height + 35)
       .style('text-anchor', 'middle')
       .text(this.xLabel);
 
@@ -297,8 +311,8 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     yAxis(svg.select('.yAxis'));
     svg.select('#labelYAxis')
       .attr('transform', 'rotate(-90)')
-      .attr('y', 0 - margin.left)
-      .attr('x', 0 - (height / 2))
+      .attr('y', 0)
+      .attr('x', - (height / 2))
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .text(this.yLabel);

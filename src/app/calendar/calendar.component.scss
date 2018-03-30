@@ -31,3 +31,26 @@
   stroke-width: 2px;
 }
 
+.day.hover {
+  stroke: #000;
+  stroke-width: 2;
+}
+
+#tooltip {
+  background-color: #fff;
+  border: 2px solid #ccc;
+  padding: 5px;
+}
+
+.svg-color-quant-calendar {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 0px;
+  box-shadow: none;
+
+  position: absolute;
+  top: 15px;
+  right: -10px;
+  width: 370px;
+  padding: 5px 5px 0px;
+  height: 34px;
+}

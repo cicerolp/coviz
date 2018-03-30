@@ -27,6 +27,10 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
   subject = new Subject<any>();
   callbacks: any[] = [];
 
+  xLabel = '';
+  yLabel = '';
+  yFormat = d3.format('.2s');
+
   options: FormGroup;
 
   constructor(
@@ -88,6 +92,18 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
   }
 
   ngOnInit() { }
+
+  setXLabel(value: string) {
+    this.xLabel = value;
+  }
+
+  setYLabel(value: string) {
+    this.yLabel = value;
+  }
+
+  setFormatter(formatter: any) {
+    this.yFormat = formatter;
+  }
 
   completeCurve(curve, defaultMinTime, defaultMaxTime, step) {
     if (curve.length === 0) {
@@ -159,7 +175,7 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
 
     container = container.parentNode.getBoundingClientRect();
 
-    const margin = { top: 5, right: 5, bottom: 75, left: 45 };
+    const margin = { top: 5, right: 5, bottom: 68, left: 55 };
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
@@ -220,9 +236,33 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
       .call(xAxis);
 
     // add the Y axis
-    const yAxis = d3.axisLeft(y);
+    const yAxis = d3.axisLeft(y)
+      .tickFormat(self.yFormat)
+      .ticks(5);
     svg.append('g')
       .call(yAxis);
+
+    // labels
+    svg.append('text').attr('id', 'labelXAxis');
+    svg.append('text').attr('id', 'labelYAxis');
+
+    // text label for the x axis
+    xAxis(svg.select('.xAxis'));
+    svg.select('#labelXAxis')
+      .attr('x', (width / 2.0))
+      .attr('y', height + margin.bottom - 39)
+      .style('text-anchor', 'middle')
+      .text(this.xLabel);
+
+    // text label for the y axis
+    yAxis(svg.select('.yAxis'));
+    svg.select('#labelYAxis')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', - (margin.left))
+      .attr('x', - (height / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .text(this.yLabel);
   }
 
   ngAfterViewInit() {

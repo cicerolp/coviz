@@ -5,6 +5,7 @@ import { Widget } from '../widget';
 
 import * as d3 from 'd3';
 import * as moment from 'moment';
+import { legendColor } from 'd3-svg-legend';
 
 import { Subject } from 'rxjs/Subject';
 import { DataService } from '../services/data.service';
@@ -25,17 +26,21 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
   subject = new Subject<any>();
   callbacks: any[] = [];
 
+  xLabel = '';
+  yLabel = '';
+  yFormat = d3.format('.2f');
+
   options: FormGroup;
 
   private initialDate: Date;
   private finalDate: Date;
 
-  private format = d3.timeFormat('%Y-%m-%d');
+  private monthFormatter = d3.timeFormat('%b');
+  private dateFormatter = d3.timeFormat('%Y-%m-%d');
+
   private year = 0;
   private min = Number.MAX_SAFE_INTEGER;
   private max = Number.MIN_SAFE_INTEGER;
-
-  private label = (d) => d; // d3.format('.1%')
 
   constructor(fb: FormBuilder, private schemaService: SchemaService, private dataService: DataService) {
     this.options = fb.group({
@@ -51,6 +56,18 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
   }
 
   ngOnInit() { }
+
+  setXLabel(value: string) {
+    this.xLabel = value;
+  }
+
+  setYLabel(value: string) {
+    this.yLabel = value;
+  }
+
+  setFormatter(formatter: any) {
+    this.monthFormatter = formatter;
+  }
 
   setData(data) {
     let initialDate: Date;
@@ -81,7 +98,7 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
     data[0].forEach(d => {
       d[0] = new Date(d[0] * 1000);
       d[0].setHours(0, 24 * 60, 0, 0);
-      d[0] = this.format(d[0]);
+      d[0] = this.dateFormatter(d[0]);
 
       this.min = Math.min(this.min, d[1]);
       this.max = Math.max(this.max, d[1]);
@@ -92,7 +109,34 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .rollup(d => parseFloat(d[0][1]))
       .map(data[0]);
 
+    this.loadLegend();
     this.loadWidget();
+  }
+
+  loadLegend() {
+    const svg = d3.select('#svg-color-quant-' + this.uniqueId);
+    svg.selectAll('*').remove();
+
+    svg.attr('class', 'svg-color-quant-calendar');
+
+    svg.append('g')
+      .attr('class', 'legendQuant')
+      .attr('transform', 'translate(0, 0)');
+
+    const domain: [number, number] = [this.min, this.max];
+
+    const colorLegend = legendColor()
+      .labelFormat(d3.format('.2'))
+      .orient('horizontal')
+      .shapeWidth(70)
+      .shapePadding(0)
+      .shapeHeight(5)
+      .scale(d3.scaleQuantize<string>().domain(domain).range(
+        ['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)', 'rgb(171,217,233)', 'rgb(44,123,182)'].reverse()
+      ));
+
+    svg.select('.legendQuant')
+      .call(colorLegend);
   }
 
   setDataset(dataset: string) {
@@ -157,8 +201,6 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
         return d3.timeWeeks(d3.timeWeek.floor(m), d3.timeMonth.offset(m, 1)).length;
       };
 
-      const monthName = d3.timeFormat('%B');
-
       container = container.parentNode.getBoundingClientRect();
 
       const margin = { top: 5, right: 5, bottom: 75, left: 5 };
@@ -182,18 +224,39 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
+      // tooltip object
+      const tooltip = d3.select('body')
+        .append('div')
+        .attr('id', 'tooltip')
+        .style('position', 'absolute')
+        .style('z-index', '10')
+        .style('visibility', 'hidden');
+
       const rect = svg.selectAll('.day')
         .data(function (d) { return d3.timeDays(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
         .enter().append('rect')
         .attr('class', 'day')
-        .attr('width', cellWidth)
-        .attr('height', cellHeight)
+        .attr('width', cellWidth - 1)
+        .attr('height', cellHeight - 1)
+        .attr('rx', 3)
+        .attr('ry', 3) // rounded corners
         .attr('x', function (d) { return d3.timeWeek.count(d3.timeYear(d), d) * cellWidth; })
         .attr('y', function (d) { return d.getDay() * cellHeight; })
-        .datum(this.format);
+        .on('mouseover', (d) => {
+          d3.select(d3.event.currentTarget).classed('hover', true);
 
-      rect.append('title')
-        .text(function (d) { return d; });
+          tooltip.style('visibility', 'visible');
+
+          tooltip.html(d + ': ' + this.yFormat(this.data.get(d)))
+            .style('left', (d3.event.pageX) + 30 + 'px')
+            .style('top', (d3.event.pageY) + 'px');
+        })
+        .on('mouseout', (d) => {
+          d3.select(d3.event.currentTarget).classed('hover', false);
+
+          tooltip.style('visibility', 'hidden');
+        })
+        .datum(this.dateFormatter);
 
       const monthPath = (t0) => {
         const t1 = new Date(t0.getFullYear(), t0.getMonth() + 1, 0);
@@ -223,15 +286,13 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
         .attr('y', (cellHeight * 7) + (1 * 8) + 15)
         .attr('x', (d) => {
           const size = (width / 12);
-          return (size * d.getMonth().valueOf());
+          return (size * d.getMonth().valueOf()) + size / 2;
         })
-        .attr('text-anchor', 'start')
-        .text((d) => monthName(d));
+        .attr('text-anchor', 'middle')
+        .text((d) => this.monthFormatter(d));
 
       rect.filter(d => this.data.has(d))
-        .style('fill', d => color(this.data.get(d)))
-        .select('title')
-        .text(d => d + ': ' + this.label(this.data.get(d)));
+        .style('fill', d => color(this.data.get(d)));
     }
   }
 

@@ -91,37 +91,53 @@ export class Demo4Component implements OnInit, AfterViewInit {
 
   bandQuantiles = '0.5';
 
+  temporalDim: string;
+
   aggr_values = [
     // { value: 'count', viewValue: 'Count' },
     // { value: 'mean', viewValue: 'Mean' },
     // { value: 'variance', viewValue: 'Variance' },
     // { value: 'quantile', viewValue: 'Quantile' },
-    // { value: 'cdf', viewValue: 'CDF' },
+    // { value: 'cdf', viewValue: 'CDF' }
     { value: 'pipeline', viewValue: 'Outlierness' }
   ];
 
-  temporalDim: string;
-
   aggr_map = {
     'count': {
-      key: 'count'
+      key: 'count',
+      label: 'count',
+      formatter: d3.format('.2s')
     },
     'mean': {
       key: 'average',
-      sufix: '_g'
+      sufix: '_g',
+      label: 'value',
+      formatter: d3.format('.2s')
     },
     'variance': {
       key: 'variance',
-      sufix: '_g'
+      sufix: '_g',
+      label: 'value',
+      formatter: d3.format('.2s')
     },
     'quantile': {
       key: 'quantile',
-      sufix: '_t'
+      sufix: '_t',
+      label: 'value',
+      formatter: d3.format('.2s')
     },
     'cdf': {
       key: 'inverse',
-      sufix: '_t'
-    }
+      sufix: '_t',
+      label: 'quantile',
+      formatter: d3.format('.2f')
+    },
+    'pipeline': {
+      key: 'pipeline',
+      sufix: '',
+      label: 'outlierness',
+      formatter: d3.format('.2f')
+    },
   };
 
   geometry_values = [
@@ -218,8 +234,19 @@ export class Demo4Component implements OnInit, AfterViewInit {
 
       const domain = [0.0, 0.25, 0.75];
 
+      const labels = ({ i, genLength, generatedLabels }) => {
+        if (i === 0) {
+          return 'Absent';
+        } else if (i === genLength - 1) {
+          return '0.75 to 1';
+        }
+        return generatedLabels[i];
+      };
+
       const colorLegend = legendColor()
+        .ascending(true)
         .labelFormat(d3.format('.2f'))
+        .labels(labels)
         .scale(d3.scaleThreshold<number, string>().domain(domain).range(this.pipeline_range));
 
       svg.select('.legendQuant')
@@ -322,6 +349,8 @@ export class Demo4Component implements OnInit, AfterViewInit {
   loadWidgetsData() {
     for (const ref of this.widgets) {
       if (ref.type === 'categorical') {
+        ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
+        ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
         ref.widget.setNextTerm(
           '/pipeline' +
           '/join=right_join' +
@@ -338,6 +367,8 @@ export class Demo4Component implements OnInit, AfterViewInit {
           '/group=' + ref.key
         );
       } else if (ref.type === 'temporal') {
+        ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
+        ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
         ref.widget.setNextTerm(
           '/pipeline' +
           '/join=right_join' +
@@ -576,13 +607,14 @@ export class Demo4Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
+      componentInstance.setXLabel(dim);
       componentInstance.register(dim, this.setCategoricalData);
       this.widgets.push({ key: dim, type: 'categorical', widget: componentInstance });
     }
 
-    for (const key of Object.keys(this.dataset.temporalDimension)) {
+    for (const dim of Object.keys(this.dataset.temporalDimension)) {
       // set pipeline temporal dimension
-      this.temporalDim = key;
+      this.temporalDim = dim;
 
       const component = this.componentFactory.resolveComponentFactory(LineChartComponent);
 
@@ -591,12 +623,13 @@ export class Demo4Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
-      const lower = this.dataset.temporalDimension[key].lower;
-      const upper = this.dataset.temporalDimension[key].upper;
-      this.temporal[key] = '/const=' + key + '.interval.(' + lower + ':' + upper + ')';
+      const lower = this.dataset.temporalDimension[dim].lower;
+      const upper = this.dataset.temporalDimension[dim].upper;
+      this.temporal[dim] = '/const=' + dim + '.interval.(' + lower + ':' + upper + ')';
 
-      componentInstance.register(key, this.setTemporalData);
-      this.widgets.push({ key: key, type: 'temporal', widget: componentInstance });
+      componentInstance.setXLabel(dim);
+      componentInstance.register(dim, this.setTemporalData);
+      this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
     }
 
     // refresh input data

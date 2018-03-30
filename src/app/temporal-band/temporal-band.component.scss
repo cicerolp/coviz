@@ -9,7 +9,7 @@
 }
 
 .md2-datepicker-trigger {
-  padding: 15px 0 4px 35px !important;
+  padding: 0px 0 4px 35px !important;
 }
 
 .md2-datepicker-input {
@@ -18,4 +18,10 @@
 
   padding-right: 0 !important;
   line-height: 0 !important;
+}
+
+.md2-datepicker-button {
+  top: 0px !important;
+  height: 40px !important;
+  padding: 5px !important;
 }

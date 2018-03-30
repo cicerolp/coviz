@@ -92,7 +92,7 @@
 
     <div *ngIf="options.get('aggr').value === 'quantile' || options.get('aggr').value === 'cdf'" class="app-footer-toolbar app-footer-container over-map">
       <section class="app-footer-item">
-        <span class="badge badge-secondary">Payload Parameter: {{ getPayloadInfo('value') }}</span>
+        <span class="badge badge-warning">Payload Parameter: {{ getPayloadInfo('value') }}</span>
         <mat-slider [min]="getPayloadInfo('min')" [max]="getPayloadInfo('max')" [step]="getPayloadInfo('step')" thumbLabel="true"
           tickInterval="auto" [ngModel]="getPayloadInfo('value')" (ngModelChange)="setPayloadInfo('value', $event)" (change)="setMapData()"></mat-slider>
       </section>

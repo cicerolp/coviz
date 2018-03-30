@@ -3,6 +3,8 @@ import { Component, ViewChild, OnInit, ElementRef, AfterViewInit, Input, ViewEnc
 import { Widget } from '../widget';
 
 import * as d3 from 'd3';
+import { legendColor } from 'd3-svg-legend';
+
 import { Subject } from 'rxjs/Subject';
 import { DataService } from '../services/data.service';
 import { ConfigurationService } from '../services/configuration.service';
@@ -11,7 +13,7 @@ import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-box-plot',
-  encapsulation: ViewEncapsulation.None,
+  // encapsulation: ViewEncapsulation.None,
   templateUrl: './box-plot.component.html',
   styleUrls: ['./box-plot.component.scss']
 })
@@ -24,13 +26,14 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
   subject = new Subject<any>();
   callbacks: any[] = [];
 
-  Label = '';
-  yLabel = '';
   xLabel = '';
-  lineLabel = -1;
-  colors = [];
+  yLabel = '';
+  yFormat = d3.format('.2f');
 
+  colors = [];
+  scale: any;
   mouseLine = -1;
+  lineLabel = -1;
 
   constructor(private dataService: DataService,
     private configService: ConfigurationService,
@@ -62,13 +65,23 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
     this.yLabel = value;
   }
 
-  setColors(colors) {
+  setFormatter(formatter: any) {
+    this.yFormat = formatter;
+  }
+
+  setColors(colors, scale?) {
+    this.scale = scale;
     this.colors = colors;
+
     this.loadWidget();
+    this.loadLegend();
   }
 
   setData(data: any) {
+    this.mouseLine = -1;
+
     this.data = [];
+    this.scale = undefined;
     this.colors = [];
 
     for (let i = 0; i < data[0].length; i += 5) {
@@ -84,6 +97,33 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
     }
 
     this.loadWidget();
+    this.loadLegend();
+  }
+
+  loadLegend() {
+    const svg = d3.select('#svg-color-quant-' + this.uniqueId);
+    svg.selectAll('*').remove();
+    svg.attr('class', 'svg-color-quant-boxplot');
+
+    if (this.scale) {
+      svg.append('g')
+        .attr('class', 'legendQuant')
+        .attr('transform', 'translate(0, 0)');
+
+      const domain: [number, number] = [0, 1000];
+
+      const colorLegend = legendColor()
+        .labelFormat(d3.format('.2'))
+        .orient('horizontal')
+        .cells(10)
+        .shapeWidth(70)
+        .shapePadding(0)
+        .shapeHeight(5)
+        .scale(this.scale);
+
+      svg.select('.legendQuant')
+        .call(colorLegend);
+    }
   }
 
   setDataset(dataset: string) {
@@ -121,25 +161,16 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
 
     container = container.parentNode.getBoundingClientRect();
 
-    const margin = { top: 20, right: 5, bottom: 40, left: 45 };
+    const margin = { top: 20, right: 5, bottom: 40, left: 55 };
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
     d3.select('#' + this.uniqueId).selectAll('*').remove();
 
-    const svg = d3.select('#' + this.uniqueId)
-      .append('svg')
-      .attr('viewBox', '0 0 ' + container.width + ' ' + container.height)
-      .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-    svg.on('mousemove', () => {
-      const precisionRound = (number, precision) => {
-        const factor = Math.pow(10, precision);
-        return Math.round(number * factor) / factor;
-      };
-
-      this.mouseLine = precisionRound(d3.mouse(<HTMLElement>svg.node())[1], 1);
+    const draw_line = () => {
+      if (this.mouseLine === -1) {
+        return;
+      }
 
       let mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
       mLine.remove();
@@ -156,6 +187,23 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
         .attr('y2', d => d)
         .attr('stroke', 'red')
         .attr('stroke-width', 2);
+    };
+
+    const svg = d3.select('#' + this.uniqueId)
+      .append('svg')
+      .attr('viewBox', '0 0 ' + container.width + ' ' + container.height)
+      .append('g')
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    svg.on('mousemove', () => {
+      const precisionRound = (number, precision) => {
+        const factor = Math.pow(10, precision);
+        return Math.round(number * factor) / factor;
+      };
+
+      this.mouseLine = precisionRound(d3.mouse(<HTMLElement>svg.node())[1], 1);
+
+      draw_line();
 
       self.lineLabel = yScale.invert(this.mouseLine);
       self.broadcast(yScale.invert(this.mouseLine));
@@ -174,10 +222,12 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
       .attr('transform', 'translate(0,' + height + ')');
 
     //
-    const yScale = d3.scaleLinear().range([height, 0]);
-    yScale.domain([d3.min(this.data.map(d => d[1])), d3.max(this.data.map(d => d[4]))]);
+    const yScale = d3.scaleLinear().range([height, -margin.top]);
+    yScale.domain([d3.min(this.data.map(d => d[1])), d3.max(this.data.map(d => d[4] + (d[5] - d[4]) * 0.015))]);
 
-    const yAxis = d3.axisLeft(yScale);
+    const yAxis = d3.axisLeft(yScale)
+      .tickFormat(self.yFormat)
+      .ticks(5);
     svg.append('g')
       .attr('class', 'yAxis')
       .attr('transform', 'translate(' + (0) + ',0)');
@@ -214,7 +264,7 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
         .attr('y', height + margin.bottom - 5)
         .style('text-anchor', 'end')
         .style('color', 'red')
-        .text('parameter: ' + this.lineLabel);
+        .text('parameter: ' + this.yFormat(this.lineLabel));
     }
 
     /* svg.on('click', () => {
@@ -280,6 +330,8 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
       .attr('x2', (function (d) { return xScale(d[0]) + xScale.bandwidth(); }).bind(this))
       .attr('y2', (function (d, i) { return yScale(d[3]); }).bind(this))
       .attr('stroke', 'black');
+
+    draw_line();
   }
 
   ngAfterViewInit() {

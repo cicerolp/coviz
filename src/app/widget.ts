@@ -19,4 +19,8 @@ export interface Widget {
   setDataset(dataset: string): void;
 
   broadcast(): void;
+
+  setXLabel(label: string): void;
+  setYLabel(label: string): void;
+  setFormatter(formatter: any): void;
 }

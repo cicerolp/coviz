@@ -253,6 +253,7 @@ export class Demo1Component implements OnInit, AfterViewInit {
   loadWidgetsData() {
     for (const ref of this.widgets) {
       if (ref.type === 'categorical') {
+        ref.widget.setYLabel(this.getAggrLabel());
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
           '/aggr=' + this.aggr +
@@ -262,6 +263,7 @@ export class Demo1Component implements OnInit, AfterViewInit {
           '/group=' + ref.key
         );
       } else if (ref.type === 'temporal') {
+        ref.widget.setYLabel(this.getAggrLabel());
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
           '/aggr=' + this.aggr +
@@ -330,6 +332,10 @@ export class Demo1Component implements OnInit, AfterViewInit {
     }
 
     this.loadWidgetsData();
+  }
+
+  getAggrLabel() {
+    return 'count';
   }
 
   getCategoricalConst(filter?: string) {
@@ -424,11 +430,13 @@ export class Demo1Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
+      componentInstance.setFormatter(d3.format('.2s'));
+      componentInstance.setXLabel(dim);
       componentInstance.register(dim, this.setCategoricalData);
       this.widgets.push({ key: dim, type: 'categorical', widget: componentInstance });
     }
 
-    for (const key of Object.keys(this.dataset.temporalDimension)) {
+    for (const dim of Object.keys(this.dataset.temporalDimension)) {
       const component = this.componentFactory.resolveComponentFactory(LineChartComponent);
 
       const componentRef = viewContainerRef.createComponent(component);
@@ -436,12 +444,14 @@ export class Demo1Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
-      const lower = this.dataset.temporalDimension[key].lower;
-      const upper = this.dataset.temporalDimension[key].upper;
-      this.temporal[key] = '/const=' + key + '.interval.(' + lower + ':' + upper + ')';
+      const lower = this.dataset.temporalDimension[dim].lower;
+      const upper = this.dataset.temporalDimension[dim].upper;
+      this.temporal[dim] = '/const=' + dim + '.interval.(' + lower + ':' + upper + ')';
 
-      componentInstance.register(key, this.setTemporalData);
-      this.widgets.push({ key: key, type: 'temporal', widget: componentInstance });
+      componentInstance.setFormatter(d3.format('.2s'));
+      componentInstance.setXLabel(dim);
+      componentInstance.register(dim, this.setTemporalData);
+      this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
     }
 
     // refresh input data

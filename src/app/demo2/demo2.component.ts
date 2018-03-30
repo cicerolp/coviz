@@ -91,30 +91,40 @@ export class Demo2Component implements OnInit, AfterViewInit {
   aggr_values = [
     { value: 'count', viewValue: 'Count' },
     { value: 'mean', viewValue: 'Mean' },
-    { value: 'variance', viewValue: 'Variance' },
+    // { value: 'variance', viewValue: 'Variance' },
     { value: 'quantile', viewValue: 'Quantile' },
     { value: 'cdf', viewValue: 'CDF' }
   ];
 
   aggr_map = {
     'count': {
-      key: 'count'
+      key: 'count',
+      label: 'count',
+      formatter: d3.format('.2s')
     },
     'mean': {
       key: 'average',
-      sufix: '_g'
+      sufix: '_g',
+      label: 'value',
+      formatter: d3.format('.2s')
     },
     'variance': {
       key: 'variance',
-      sufix: '_g'
+      sufix: '_g',
+      label: 'value',
+      formatter: d3.format('.2s')
     },
     'quantile': {
       key: 'quantile',
-      sufix: '_t'
+      sufix: '_t',
+      label: 'value',
+      formatter: d3.format('.2s')
     },
     'cdf': {
       key: 'inverse',
-      sufix: '_t'
+      sufix: '_t',
+      label: 'quantile',
+      formatter: d3.format('.2f')
     },
   };
 
@@ -203,7 +213,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
       const domain: [number, number] = [parseFloat(this.getPayloadInfo('min_value')), parseFloat(this.getPayloadInfo('max_value'))];
 
       const colorLegend = legendColor()
-        .labelFormat(d3.format('.2f'))
+        .ascending(true)
+        .labelFormat(d3.format('.2'))
         .scale(d3.scaleQuantize<string>().domain(domain).range(this.payload_range));
 
       svg.select('.legendQuant')
@@ -301,6 +312,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
   loadWidgetsData() {
     for (const ref of this.widgets) {
       if (ref.type === 'categorical') {
+        ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
+        ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
           this.getAggr() +
@@ -310,6 +323,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
           '/group=' + ref.key
         );
       } else if (ref.type === 'temporal') {
+        ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
+        ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
           this.getAggr() +
@@ -497,7 +512,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     this.widgets = [];
 
-    for (const key of Object.keys(this.dataset.temporalDimension)) {
+    for (const dim of Object.keys(this.dataset.temporalDimension)) {
       const component = this.componentFactory.resolveComponentFactory(LineChartComponent);
 
       const componentRef = viewContainerRef.createComponent(component);
@@ -505,12 +520,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
-      const lower = this.dataset.temporalDimension[key].lower;
-      const upper = this.dataset.temporalDimension[key].upper;
-      this.temporal[key] = '/const=' + key + '.interval.(' + lower + ':' + upper + ')';
+      const lower = this.dataset.temporalDimension[dim].lower;
+      const upper = this.dataset.temporalDimension[dim].upper;
+      this.temporal[dim] = '/const=' + dim + '.interval.(' + lower + ':' + upper + ')';
 
-      componentInstance.register(key, this.setTemporalData);
-      this.widgets.push({ key: key, type: 'temporal', widget: componentInstance });
+      componentInstance.setXLabel(dim);
+      componentInstance.register(dim, this.setTemporalData);
+      this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
     }
 
     // refresh input data

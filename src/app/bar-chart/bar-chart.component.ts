@@ -25,6 +25,10 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
   callbacks: any[] = [];
   selectedElts = new Array<string>();
 
+  xLabel = '';
+  yLabel = '';
+  yFormat = d3.format('.2s');
+
   constructor(private dataService: DataService,
     private configService: ConfigurationService,
     private schemaService: SchemaService,
@@ -47,6 +51,18 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
   }
 
   ngOnInit() { }
+
+  setXLabel(value: string) {
+    this.xLabel = value;
+  }
+
+  setYLabel(value: string) {
+    this.yLabel = value;
+  }
+
+  setFormatter(formatter: any) {
+    this.yFormat = formatter;
+  }
 
   setDataset(dataset: string) {
     this.dataset = this.schemaService.get(dataset);
@@ -81,7 +97,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
     container = container.parentNode.getBoundingClientRect();
 
-    const margin = { top: 20, right: 5, bottom: 20, left: 60 };
+    const margin = { top: 8, right: 5, bottom: 35, left: 55 };
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
@@ -117,8 +133,8 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
       })
       .attr('x', d => x(this.dataset.aliases[this.dim][d[0]]))
       .attr('width', x.bandwidth())
-      .attr('y', function (d) { return y(d[1]); })
-      .attr('height', function (d) { return height - y(d[1]); })
+      .attr('y', (d) => y(d[1]))
+      .attr('height', (d) => height - y(d[1]))
       .on('click', function (d) {
         if (d3.select(this).attr('class') === 'bar') {
           d3.select(this).attr('class', 'bar-selected');
@@ -141,9 +157,32 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .call(xAxis);
 
     // add the Y axis
-    const yAxis = d3.axisLeft(y);
+    const yAxis = d3.axisLeft(y)
+      .tickFormat(self.yFormat);
     svg.append('g')
       .call(yAxis);
+
+    // labels
+    svg.append('text').attr('id', 'labelXAxis');
+    svg.append('text').attr('id', 'labelYAxis');
+
+    // text label for the x axis
+    xAxis(svg.select('.xAxis'));
+    svg.select('#labelXAxis')
+      .attr('x', (width / 2.0))
+      .attr('y', height + margin.bottom - 5)
+      .style('text-anchor', 'middle')
+      .text(this.xLabel);
+
+    // text label for the y axis
+    yAxis(svg.select('.yAxis'));
+    svg.select('#labelYAxis')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', - (margin.left))
+      .attr('x', - (height / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .text(this.yLabel);
   }
 
   ngAfterViewInit() {
