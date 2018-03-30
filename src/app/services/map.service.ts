@@ -8,21 +8,27 @@ import * as L from 'leaflet';
 
 import { Mercator } from '../mercator';
 import { Location } from '../location';
+import { LatLngBounds } from 'leaflet';
 
 @Injectable()
 export class MapService {
   public map: L.Map;
   private status = 'online';
 
+  private lastPosition = {
+    'center': [0, 0],
+    'zoom': 2
+  };
+
   constructor(private http: HttpClient) { }
 
   load() {
     this.map = L.map('map', {
       worldCopyJump: true
-    }).setView([0, 0], 6);
+    }).setView(this.lastPosition.center, this.lastPosition.zoom);
 
     L.tileLayer('https://api.mapbox.com/styles/v1/cicerolp/cjc0c1nafgzqu2sru25nufh5r/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
-      attribution: 'QDS Authors',
+      attribution: '',
       maxZoom: 18,
       id: 'mapbox.streets',
       accessToken: 'pk.eyJ1IjoiY2ljZXJvbHAiLCJhIjoia1IxYmtfMCJ9.3EMmwKCCFN-hmsrQY4_wUQ'
@@ -38,14 +44,19 @@ export class MapService {
     });
 
     this.map.addLayer(new DebugLayer()); */
+
+    this.map.on('moveend', () => {
+      this.lastPosition.center = this.map.getCenter();
+      this.lastPosition.zoom = this.map.getZoom();
+    });
   }
 
   flyTo(location: Location): void {
     // this.map.fitBounds(location.viewBounds, {});
-    this.map.flyToBounds(location.viewBounds, {});
+    this.map.flyToBounds(location.viewBounds, { duration: 3.0 });
   }
 
- get_coords_bounds(bound?: any, zoom?: number) {
+  get_coords_bounds(bound?: any, zoom?: number) {
     const b = bound || this.map.getBounds();
     let z = zoom || this.map.getZoom();
 

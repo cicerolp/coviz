@@ -25,7 +25,11 @@ import {
   MatSliderModule,
   MatDatepickerModule,
   MatDividerModule,
-  MatGridListModule
+  MatGridListModule,
+  MatRadioModule,
+  MatIconModule,
+  MatStepperModule,
+  MatProgressSpinnerModule
 } from '@angular/material';
 
 import {
@@ -51,7 +55,12 @@ import {
     MatDatetimepickerModule,
     MatMomentDatetimeModule,
     MatDividerModule,
-    MatGridListModule
+    MatGridListModule,
+    MatRadioModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatStepperModule,
+    MatProgressSpinnerModule
   ],
   exports: [
     MatButtonModule,
@@ -69,7 +78,12 @@ import {
     MatDatepickerModule,
     MatDatetimepickerModule,
     MatDividerModule,
-    MatGridListModule
+    MatGridListModule,
+    MatRadioModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatStepperModule,
+    MatProgressSpinnerModule
   ]
 })
 export class MaterialModule { }

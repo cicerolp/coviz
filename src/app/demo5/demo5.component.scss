@@ -1,0 +1,26 @@
+
+.wizard-container {
+  display: flex; /* or inline-flex */
+
+  align-items: center;
+
+  flex-direction: column;
+
+  justify-content: space-around;
+  }
+
+.widgets-container {
+  height: 200px;
+
+  display: flex; /* or inline-flex */
+
+  align-items: stretch;
+  flex-direction: row;
+
+  margin-bottom: 10px;
+
+}
+
+.widgets-item {
+  flex: 1 1 100%;
+}

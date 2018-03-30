@@ -3,6 +3,7 @@ import { Subject } from 'rxjs/Subject';
 
 export interface Widget {
   uniqueId: string;
+  dataset: any;
   dim: string;
   data: Array<any>;
   subject: Subject<any>;
@@ -14,6 +15,8 @@ export interface Widget {
 
   register(dim: string, callback: any): void;
   unregister(callback: any): void;
+
+  setDataset(dataset: string): void;
 
   broadcast(): void;
 }

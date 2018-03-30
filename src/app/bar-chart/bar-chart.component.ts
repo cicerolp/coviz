@@ -1,10 +1,13 @@
-import { Component, ViewChild, OnInit, ElementRef, AfterViewInit, Input, ViewEncapsulation } from '@angular/core';
+import { Component, ViewChild, OnInit, ElementRef, AfterViewInit, Input, ViewEncapsulation, OnDestroy } from '@angular/core';
 
 import { Widget } from '../widget';
 
 import * as d3 from 'd3';
 import { Subject } from 'rxjs/Subject';
 import { DataService } from '../services/data.service';
+import { ConfigurationService } from '../services/configuration.service';
+import { SchemaService } from '../services/schema.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-bar-chart',
@@ -12,18 +15,29 @@ import { DataService } from '../services/data.service';
   templateUrl: './bar-chart.component.html',
   styleUrls: ['./bar-chart.component.scss']
 })
-export class BarChartComponent implements Widget, OnInit, AfterViewInit {
+export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestroy {
   uniqueId = 'id-' + Math.random().toString(36).substr(2, 16);
 
+  dataset: any;
   data = [];
   dim = '';
   subject = new Subject<any>();
   callbacks: any[] = [];
   selectedElts = new Array<string>();
 
-  constructor(private dataService: DataService) { }
+  constructor(private dataService: DataService,
+    private configService: ConfigurationService,
+    private schemaService: SchemaService,
+    private activatedRoute: ActivatedRoute) {
+    this.activatedRoute.params.subscribe(params => {
+      const param = params['dataset'];
+      if (param !== undefined) {
+        this.dataset = this.schemaService.get(param);
+      } else {
+        this.dataset = this.schemaService.get(this.configService.defaultDataset);
+      }
+    });
 
-  ngOnInit() {
     this.subject.subscribe(term => {
       this.dataService.query(term).subscribe(data => {
         this.data = data[0];
@@ -32,11 +46,18 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit {
     });
   }
 
+  ngOnInit() { }
+
+  setDataset(dataset: string) {
+    this.dataset = this.schemaService.get(dataset);
+  }
+
   setNextTerm(query: string) {
     this.subject.next(query);
   }
 
   register(dim: string, callback: any): void {
+    this.dim = dim;
     this.callbacks.push({ dim, callback });
   }
 
@@ -52,7 +73,13 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit {
 
   loadWidget = () => {
     const self = this;
-    const container = (d3.select('#' + this.uniqueId).node() as any).parentNode.getBoundingClientRect();
+    let container = (d3.select('#' + this.uniqueId).node() as any);
+
+    if (container === undefined || container.parentNode === undefined) {
+      return;
+    }
+
+    container = container.parentNode.getBoundingClientRect();
 
     const margin = { top: 20, right: 5, bottom: 20, left: 60 };
     const width = container.width - margin.left - margin.right;
@@ -75,7 +102,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit {
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
     // scale the range of the data
-    x.domain(this.data.map(function (d) { return d[0]; }));
+    x.domain(this.data.map(d => this.dataset.aliases[this.dim][d[0]]));
     y.domain([0, d3.max<number, number>(this.data, function (d) { return d[1]; })]);
 
     svg.selectAll('bar')
@@ -88,7 +115,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit {
           return 'bar';
         }
       })
-      .attr('x', function (d) { return x(d[0]); })
+      .attr('x', d => x(this.dataset.aliases[this.dim][d[0]]))
       .attr('width', x.bandwidth())
       .attr('y', function (d) { return y(d[1]); })
       .attr('height', function (d) { return height - y(d[1]); })
@@ -121,5 +148,9 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     window.addEventListener('resize', this.loadWidget);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', this.loadWidget);
   }
 }

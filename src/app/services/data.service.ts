@@ -20,9 +20,10 @@ export class DataService {
     return Observable.throw(error.json().error || 'Server error');
   }
 
+
   query(action: string): Observable<any> {
     return this.http
-      .get(this.config.ServerWithApiUrl + '/query' + action)
+      .get(this.config.ServerWithApiUrl + action)
       .map(response => response.json());
   }
 

@@ -1,6 +1,6 @@
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { HttpModule } from '@angular/http';
@@ -26,6 +26,17 @@ import { BarChartComponent } from './bar-chart/bar-chart.component';
 import { WidgetHostDirective } from './widget-host.directive';
 
 import { Md2Module, NoConflictStyleCompatibilityMode } from 'md2';
+import { Demo1Component } from './demo1/demo1.component';
+import { Demo2Component } from './demo2/demo2.component';
+import { Demo3Component } from './demo3/demo3.component';
+import { Demo4Component } from './demo4/demo4.component';
+import { Demo5Component } from './demo5/demo5.component';
+import { TemporalBandComponent } from './temporal-band/temporal-band.component';
+import { BoxPlotComponent } from './box-plot/box-plot.component';
+
+export function configProviderFactory(provider: SchemaService) {
+  return () => provider.load();
+}
 
 @NgModule({
   declarations: [
@@ -35,7 +46,14 @@ import { Md2Module, NoConflictStyleCompatibilityMode } from 'md2';
     LineChartComponent,
     CalendarComponent,
     BarChartComponent,
-    WidgetHostDirective
+    WidgetHostDirective,
+    Demo1Component,
+    Demo2Component,
+    Demo3Component,
+    Demo4Component,
+    Demo5Component,
+    TemporalBandComponent,
+    BoxPlotComponent
   ],
   imports: [
     BrowserModule,
@@ -53,10 +71,22 @@ import { Md2Module, NoConflictStyleCompatibilityMode } from 'md2';
     RoutingModule,
 
     Md2Module,
-    NoConflictStyleCompatibilityMode
+    NoConflictStyleCompatibilityMode,
   ],
-  providers: [GeocodingService, MapService, DataService, ConfigurationService, SchemaService],
+  providers: [
+    SchemaService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: configProviderFactory,
+      deps: [SchemaService],
+      multi: true
+    },
+    GeocodingService,
+    MapService,
+    DataService,
+    ConfigurationService
+  ],
   bootstrap: [AppComponent],
-  entryComponents: [BarChartComponent, LineChartComponent],
+  entryComponents: [BarChartComponent, LineChartComponent, CalendarComponent, TemporalBandComponent, BoxPlotComponent],
 })
 export class AppModule { }

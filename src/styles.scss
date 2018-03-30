@@ -37,6 +37,33 @@ html, body {
   cursor: crosshair !important;
 }
 
+#map > div.leaflet-control-container > div.leaflet-bottom.leaflet-right > div {
+  visibility: hidden;
+}
+
+/* .mat-card > section > form > md2-datepicker > div > button {
+  padding: 0;
+  width: 0;
+} */
+
+/* .mat-card > section > form > md2-datepicker > div > button > svg {
+  width: 24px;
+  height: 24px;
+} */
+
+/* .mat-card > section > form > md2-datepicker {
+  width: 24px;
+  min-width: 24px;
+} */
+
+/* .mat-card > section > form > md2-datepicker > div > div {
+  visibility: hidden;
+} */
+
+.mat-slider-horizontal {
+  min-width: 100% !important;
+}
+
 .over-map {
   z-index: 9000;
 }
@@ -64,3 +91,5 @@ html, body {
 .app-footer-item {
   flex: 1 1 100%;
 }
+
+[hidden] { display: none !important;}

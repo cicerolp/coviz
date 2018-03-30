@@ -1,0 +1,33 @@
+.map-card-footer {
+  position: relative;
+  top: 0;
+  left: 0;
+  font-size: 0.7em;
+  background: rgba(202, 210, 211, 0);
+  box-shadow: none !important;
+  padding: 0px !important;
+}
+
+.md2-datepicker-trigger {
+  padding: 15px 0 4px 35px !important;
+}
+
+.md2-datepicker-input {
+  height: 30px !important;
+  min-width: 0 !important;
+
+  padding-right: 0 !important;
+  line-height: 0 !important;
+}
+
+.day {
+  fill: #fff;
+  stroke: #ccc;
+}
+
+.month {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2px;
+}
+
