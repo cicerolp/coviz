@@ -10,6 +10,7 @@ import { MatHorizontalStepper } from '@angular/material';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { DataService } from '../services/data.service';
 import { BoxPlotComponent } from '../box-plot/box-plot.component';
+import { TimezoneService } from '../services/timezone.service';
 
 interface WidgetType {
   key: string;
@@ -53,7 +54,8 @@ export class Demo5Component implements OnInit, AfterViewInit {
   private widgets: Array<WidgetType> = [];
 
   dataset_values = [
-    { value: 'on_time_performance', viewValue: 'Flights' },
+    { value: 'on_time_performance_2017', viewValue: 'Flights 2017' },
+    { value: 'on_time_performance_2014', viewValue: 'Flights 2014' },
     { value: 'green_tripdata', viewValue: 'Green Taxis' },
     { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' }
   ];
@@ -107,6 +109,7 @@ export class Demo5Component implements OnInit, AfterViewInit {
   constructor(
     private formBuilder: FormBuilder,
 
+    private timezoneService: TimezoneService,
     private dataService: DataService,
     private schemaService: SchemaService,
 
@@ -118,7 +121,7 @@ export class Demo5Component implements OnInit, AfterViewInit {
     this.formGroup = this.formBuilder.group({
       formArray: this.formBuilder.array([
         this.formBuilder.group({
-          dataset: ['on_time_performance', Validators.required],
+          dataset: ['on_time_performance_2014', Validators.required],
           payload: ['', Validators.required],
           spatial: ['', Validators.required],
           temporal: ['', Validators.required],
@@ -152,7 +155,7 @@ export class Demo5Component implements OnInit, AfterViewInit {
   }
 
   getFormateDate(index: number, key: string): string {
-    return Math.round(((<Date>this.getFormValue(index, key)).valueOf() - 7.2e6) / 1000).toString();
+    return this.timezoneService.getFormatedDate((<Date>this.getFormValue(index, key))).toString();
   }
 
   getSourcePipeline() {
@@ -308,13 +311,13 @@ export class Demo5Component implements OnInit, AfterViewInit {
   seletectTemporalDim(event: any) {
     const temporalDim = this.dataset.temporalDimension[this.getFormValue(0, 'temporal')];
     this.formArray.get([1]).patchValue({
-      leftFrom: new Date(temporalDim.lower * 1000 + 7.2e6),
-      leftTo: new Date(temporalDim.upper * 1000 + 7.2e6)
+      leftFrom: this.timezoneService.getDateFromSeconds(temporalDim.lower),
+      leftTo: this.timezoneService.getDateFromSeconds(temporalDim.upper)
     });
 
     this.formArray.get([2]).patchValue({
-      rightFrom: new Date(temporalDim.lower * 1000 + 7.2e6),
-      rightTo: new Date(temporalDim.upper * 1000 + 7.2e6)
+      rightFrom: this.timezoneService.getDateFromSeconds(temporalDim.lower),
+      rightTo: this.timezoneService.getDateFromSeconds(temporalDim.upper)
     });
   }
 

@@ -10,6 +10,7 @@ import { legendColor } from 'd3-svg-legend';
 import { Subject } from 'rxjs/Subject';
 import { DataService } from '../services/data.service';
 import { SchemaService } from '../services/schema.service';
+import { TimezoneService } from '../services/timezone.service';
 
 @Component({
   selector: 'app-calendar',
@@ -42,7 +43,11 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
   private min = Number.MAX_SAFE_INTEGER;
   private max = Number.MIN_SAFE_INTEGER;
 
-  constructor(fb: FormBuilder, private schemaService: SchemaService, private dataService: DataService) {
+  constructor(
+    fb: FormBuilder,
+    private timezoneService: TimezoneService,
+    private schemaService: SchemaService,
+    private dataService: DataService) {
     this.options = fb.group({
       fromDateTime: new FormControl(Date.now()),
       toDateTime: new FormControl(Date.now())
@@ -74,11 +79,8 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
     let finalDate: Date;
 
     if (data[0].length) {
-      initialDate = new Date(data[0][0][0] * 1000);
-      initialDate.setHours(0, 24 * 60, 0, 0);
-
-      finalDate = new Date(data[0][data[0].length - 1][0] * 1000);
-      finalDate.setHours(0, 24 * 60, 0, 0);
+      initialDate =  this.timezoneService.getDateFromSeconds(data[0][0][0]);
+      finalDate = this.timezoneService.getDateFromSeconds(data[0][data[0].length - 1][0]);
     } else {
       initialDate = new Date();
       finalDate = new Date();
@@ -96,8 +98,7 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
     // format the data
     data[0].forEach(d => {
-      d[0] = new Date(d[0] * 1000);
-      d[0].setHours(0, 24 * 60, 0, 0);
+      d[0] = this.timezoneService.getDateFromSeconds(d[0]);
       d[0] = this.dateFormatter(d[0]);
 
       this.min = Math.min(this.min, d[1]);

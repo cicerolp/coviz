@@ -142,7 +142,7 @@ export class Demo3Component implements OnInit, AfterViewInit {
   ];
 
   dataset_values = [
-    { value: 'on_time_performance', viewValue: 'Flights' }
+    { value: 'on_time_performance_2014', viewValue: 'Flights' }
     // { value: 'green_tripdata', viewValue: 'Green Taxis' }
   ];
 
@@ -494,16 +494,9 @@ export class Demo3Component implements OnInit, AfterViewInit {
   ngOnInit() {
     this.mapService.load();
 
-    this.activatedRoute.params.subscribe(params => {
-      const param = params['dataset'];
-      if (param !== undefined) {
-        this.dataset = this.schemaService.get(param);
-      } else {
-        this.dataset = this.schemaService.get(this.configService.defaultDataset);
-      }
+    this.dataset = this.schemaService.get(this.dataset_values[0].value);
 
-      this.initialize();
-    });
+    this.initialize();
   }
 
   ngAfterViewInit() {

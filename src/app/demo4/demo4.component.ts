@@ -38,6 +38,7 @@ import { CalendarComponent } from '../calendar/calendar.component';
 import { ConfigurationService } from '../services/configuration.service';
 import { MatSidenav } from '@angular/material';
 import { TemporalBandComponent } from '../temporal-band/temporal-band.component';
+import { TimezoneService } from '../services/timezone.service';
 
 interface WidgetType {
   key: string;
@@ -152,7 +153,8 @@ export class Demo4Component implements OnInit, AfterViewInit {
 
   dataset_values = [
     { value: 'on_time_performance', viewValue: 'Flights' },
-    { value: 'green_tripdata', viewValue: 'Green Taxis' }
+    { value: 'green_tripdata', viewValue: 'Green Taxis' },
+    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' }
   ];
 
   color: any;
@@ -197,6 +199,7 @@ export class Demo4Component implements OnInit, AfterViewInit {
   };
 
   constructor(
+    private timezoneService: TimezoneService,
     private configService: ConfigurationService,
     private schemaService: SchemaService,
 
@@ -236,7 +239,7 @@ export class Demo4Component implements OnInit, AfterViewInit {
 
       const labels = ({ i, genLength, generatedLabels }) => {
         if (i === 0) {
-          return 'Absent';
+          return 'Undefined';
         } else if (i === genLength - 1) {
           return '0.75 to 1';
         }
@@ -407,7 +410,7 @@ export class Demo4Component implements OnInit, AfterViewInit {
   }
 
   getFormateDate(key: string): string {
-    return Math.round((<Date>this.options.get(key).value).valueOf() / 1000).toString();
+    return this.timezoneService.getFormatedDate((<Date>this.options.get(key).value)).toString();
   }
 
   getSourcePipeline() {
@@ -636,10 +639,10 @@ export class Demo4Component implements OnInit, AfterViewInit {
     this.color = this.color_map['pipeline'];
 
     this.options.patchValue({
-      leftFrom: new Date(this.dataset.temporalDimension[this.temporalDim].lower * 1000 + 7.2e6),
-      leftTo: new Date(this.dataset.temporalDimension[this.temporalDim].upper * 1000 + 7.2e6),
-      rightFrom: new Date(this.dataset.temporalDimension[this.temporalDim].lower * 1000 + 7.2e6),
-      rightTo: new Date(this.dataset.temporalDimension[this.temporalDim].upper * 1000 + 7.2e6)
+      leftFrom: this.timezoneService.getDateFromSeconds(this.dataset.temporalDimension[this.temporalDim].lower),
+      leftTo: this.timezoneService.getDateFromSeconds(this.dataset.temporalDimension[this.temporalDim].upper),
+      rightFrom: this.timezoneService.getDateFromSeconds(this.dataset.temporalDimension[this.temporalDim].lower),
+      rightTo: this.timezoneService.getDateFromSeconds(this.dataset.temporalDimension[this.temporalDim].upper)
     });
 
     this.loadLegend();

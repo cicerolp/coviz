@@ -101,7 +101,8 @@ export class Demo1Component implements OnInit, AfterViewInit {
 
   dataset_values = [
     { value: 'on_time_performance', viewValue: 'Flights' },
-    { value: 'green_tripdata', viewValue: 'Green Taxis' }
+    { value: 'green_tripdata', viewValue: 'Green Taxis' },
+    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' }
   ];
 
   color_map = {

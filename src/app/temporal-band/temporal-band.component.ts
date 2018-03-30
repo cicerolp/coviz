@@ -11,6 +11,7 @@ import { DataService } from '../services/data.service';
 import { SchemaService } from '../services/schema.service';
 import { ActivatedRoute } from '@angular/router';
 import { ConfigurationService } from '../services/configuration.service';
+import { TimezoneService } from '../services/timezone.service';
 
 @Component({
   selector: 'app-temporal-band',
@@ -38,7 +39,9 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   options: FormGroup;
 
-  constructor(fb: FormBuilder, private dataService: DataService,
+  constructor(fb: FormBuilder,
+    private timezoneService: TimezoneService,
+    private dataService: DataService,
     private configService: ConfigurationService,
     private schemaService: SchemaService,
     private activatedRoute: ActivatedRoute) {
@@ -62,11 +65,8 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
         let finalDate: Date;
 
         if (data[0].length) {
-          initialDate = new Date(data[0][0][0] * 1000);
-          initialDate.setHours(0, 24 * 60, 0, 0);
-
-          finalDate = new Date(data[0][data[0].length - 1][0] * 1000);
-          finalDate.setHours(0, 24 * 60, 0, 0);
+          initialDate = this.timezoneService.getDateFromSeconds(data[0][0][0]);
+          finalDate = this.timezoneService.getDateFromSeconds(data[0][data[0].length - 1][0]);
         } else {
           initialDate = new Date();
           finalDate = new Date();
@@ -79,9 +79,8 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         // format the data
-        data[0].forEach(function (d) {
-          d[0] = new Date(d[0] * 1000);
-          d[0].setHours(0, 24 * 60, 0, 0);
+        data[0].forEach((d) => {
+          d[0] = this.timezoneService.getDateFromSeconds(d[0]);
         });
 
         this.data = d3.range(this.numCurves).map(d => []);
@@ -203,8 +202,8 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   broadcast(): void {
     const interval = [
-      this.options.get('fromDateTime').value.valueOf() / 1000 - 7200,
-      this.options.get('toDateTime').value.valueOf() / 1000 - 7200
+      this.timezoneService.getFormatedDate(this.options.get('fromDateTime').value),
+      this.timezoneService.getFormatedDate(this.options.get('toDateTime').value)
     ];
     for (const pair of this.callbacks) {
       pair.callback(pair.dim, interval);

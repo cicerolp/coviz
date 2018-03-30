@@ -33,6 +33,7 @@ import { Demo4Component } from './demo4/demo4.component';
 import { Demo5Component } from './demo5/demo5.component';
 import { TemporalBandComponent } from './temporal-band/temporal-band.component';
 import { BoxPlotComponent } from './box-plot/box-plot.component';
+import { TimezoneService } from './services/timezone.service';
 
 export function configProviderFactory(provider: SchemaService) {
   return () => provider.load();
@@ -84,7 +85,8 @@ export function configProviderFactory(provider: SchemaService) {
     GeocodingService,
     MapService,
     DataService,
-    ConfigurationService
+    ConfigurationService,
+    TimezoneService
   ],
   bootstrap: [AppComponent],
   entryComponents: [BarChartComponent, LineChartComponent, CalendarComponent, TemporalBandComponent, BoxPlotComponent],

@@ -11,6 +11,7 @@ import { DataService } from '../services/data.service';
 import { SchemaService } from '../services/schema.service';
 import { ConfigurationService } from '../services/configuration.service';
 import { ActivatedRoute } from '@angular/router';
+import { TimezoneService } from '../services/timezone.service';
 
 @Component({
   selector: 'app-line-chart',
@@ -35,6 +36,7 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
 
   constructor(
     fb: FormBuilder,
+    private timezoneService: TimezoneService,
     private dataService: DataService,
     private configService: ConfigurationService,
     private schemaService: SchemaService,
@@ -61,11 +63,8 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
         let finalDate: Date;
 
         if (data[0].length) {
-          initialDate = new Date(data[0][0][0] * 1000);
-          initialDate.setHours(0, 24 * 60, 0, 0);
-
-          finalDate = new Date(data[0][data[0].length - 1][0] * 1000);
-          finalDate.setHours(0, 24 * 60, 0, 0);
+          initialDate = this.timezoneService.getDateFromSeconds(data[0][0][0]);
+          finalDate = this.timezoneService.getDateFromSeconds(data[0][data[0].length - 1][0]);
         } else {
           initialDate = new Date();
           finalDate = new Date();
@@ -80,9 +79,8 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
         if (data[0].length) {
           // this.data = this.completeCurve(this.data, initialDate, finalDate, this.dataset.timeStep);
           // format the data
-          this.data.forEach(function (d) {
-            d[0] = new Date(d[0] * 1000);
-            d[0].setHours(0, 24 * 60, 0, 0);
+          this.data.forEach((d) => {
+            d[0] = this.timezoneService.getDateFromSeconds(d[0]);
           });
         }
 
@@ -157,8 +155,8 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
 
   broadcast(): void {
     const interval = [
-      this.options.get('fromDateTime').value.valueOf() / 1000 - 7200,
-      this.options.get('toDateTime').value.valueOf() / 1000 - 7200
+      this.timezoneService.getFormatedDate(this.options.get('fromDateTime').value),
+      this.timezoneService.getFormatedDate(this.options.get('toDateTime').value)
     ];
     for (const pair of this.callbacks) {
       pair.callback(pair.dim, interval);

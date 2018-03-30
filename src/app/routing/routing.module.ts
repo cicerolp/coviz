@@ -24,7 +24,7 @@ const routes: Routes = [
   },
   {
     path: 'demo2',
-    redirectTo: 'demo2/on_time_performance'
+    redirectTo: 'demo2/green_tripdata'
   },
   {
     path: 'demo2/:dataset',
@@ -36,7 +36,7 @@ const routes: Routes = [
   },
   {
     path: 'demo4',
-    redirectTo: 'demo4/on_time_performance'
+    redirectTo: 'demo4/yellow_tripdata'
   },
   {
     path: 'demo4/:dataset',
