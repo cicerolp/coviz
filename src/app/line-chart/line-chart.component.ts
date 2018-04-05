@@ -205,11 +205,8 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
 
     // scale the range of the data
     // x.domain([curr_lower_bound, curr_upper_bound]);
-    x.domain(d3.extent<number, number>(this.data, function (d) { return d[0]; }));
-    y.domain([
-      Math.min(0, d3.min<number, number>(this.data, function (d) { return d[1]; })),
-      d3.max<number, number>(this.data, function (d) { return d[1]; })
-    ]);
+    x.domain(d3.extent<number, number>(this.data, (d) => d[0]));
+    y.domain(d3.extent<number, number>(this.data, (d) => d[1]));
 
     // add the area
     svg.append('path')

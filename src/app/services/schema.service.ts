@@ -181,18 +181,20 @@ export class SchemaService {
       'local': 'Manhattan',
       'geometry': 'rect',
       'geometry_size': 0,
-      'resolution': 6,
+      'resolution': 8,
       'composition': 'lighter',
       'color': 'ryw',
 
       'datasetName': 'yellow_tripdata',
-      'timeStep': 14400,
+      'timeStep': 3600,
       'temporalDimension': {
         'pickup_datetime': { 'lower': 0, 'upper': 0 }
       },
       'spatialDimension': ['pickup'],
-      'categoricalDimension': ['passenger_count', 'payment_type'],
-      'payloads': ['trip_distance', 'total_amount'],
+      // 'categoricalDimension': ['passenger_count', 'payment_type'],
+      'categoricalDimension': [ ],
+      // 'payloads': ['trip_distance', 'total_amount'],
+      'payloads': ['total_amount'],
       'payloadValues': {
         'trip_distance': {
           'quantile': { 'min_value': 0, 'max_value': 25, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },

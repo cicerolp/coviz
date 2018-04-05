@@ -127,9 +127,9 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
     const domain: [number, number] = [this.min, this.max];
 
     const colorLegend = legendColor()
-      .labelFormat(d3.format('.2'))
+      .labelFormat(d3.format('.2f'))
       .orient('horizontal')
-      .shapeWidth(70)
+      .shapeWidth(100)
       .shapePadding(0)
       .shapeHeight(5)
       .scale(d3.scaleQuantize<string>().domain(domain).range(

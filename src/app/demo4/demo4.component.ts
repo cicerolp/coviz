@@ -162,7 +162,8 @@ export class Demo4Component implements OnInit, AfterViewInit {
   pipeline_range = [
     'rgba(178,171,210,0.75)',
     'rgba( 44,123,182,0.75)',
-    'rgba(255,255,191,0.75)',
+    // 'rgba(255,255,191,0.75)',
+    'rgba(250,250,250,0.75)',
     'rgba(215, 25, 28,0.75)'
   ];
 
@@ -370,7 +371,7 @@ export class Demo4Component implements OnInit, AfterViewInit {
           '/group=' + ref.key
         );
       } else if (ref.type === 'temporal') {
-        ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
+        ref.widget.setYLabel('cdf(v)');
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
         ref.widget.setNextTerm(
           '/pipeline' +
