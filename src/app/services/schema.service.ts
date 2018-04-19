@@ -53,10 +53,10 @@ export class SchemaService {
     'hurdat2': {
       'local': 'USA',
       'geometry': 'direction',
-      'geometry_size': 0,
-      'resolution': 2,
+      'geometry_size': 2,
+      'resolution': 3,
       'composition': 'color',
-      'color': 'ryw',
+      'color': 'fixed',
 
       'datasetName': 'hurdat2',
       'timeStep': 3600,

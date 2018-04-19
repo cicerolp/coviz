@@ -174,8 +174,12 @@ export class Demo6Component implements OnInit, AfterViewInit {
     },
     'payload': (count) => d3.scaleQuantize<string>()
       .domain([parseFloat(this.getPayloadInfo('min_value')), parseFloat(this.getPayloadInfo('max_value'))])
-      .range(this.payload_range)(count)
+      .range(this.payload_range)(count),
+
+    'fixed': 'orange'
   };
+
+  cluster_map = [];
 
   constructor(
     private configService: ConfigurationService,
@@ -234,19 +238,11 @@ export class Demo6Component implements OnInit, AfterViewInit {
     });
 
     this.CanvasLayer.createTile = (coords, done) => {
-      /* const query = '/query' +
-        '/dataset=' + this.dataset.datasetName +
-        this.getAggr() +
-        this.getCategoricalConst() +
-        this.getTemporalConst() +
-        '/const=' + this.dataset.spatialDimension[0] +
-        '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
-        '/group=' + this.dataset.spatialDimension[0]; */
-
       const query = '/query' +
         '/dataset=' + this.dataset.datasetName +
         '/aggr=quantile.direction_t.(0.25:0.5:0.75)' +
-        this.getCategoricalConst() +
+        // this.getCategoricalConst() +
+        this.getClusterConst() +
         this.getTemporalConst() +
         '/const=' + this.dataset.spatialDimension[0] +
         '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
@@ -259,7 +255,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
       tile.setAttribute('height', tileSize.y.toString());
 
       const ctx = tile.getContext('2d');
-      ctx.globalCompositeOperation = this.options.get('composition').value;
+      // ctx.globalCompositeOperation = this.options.get('composition').value;
       ctx.clearRect(0, 0, tileSize.x, tileSize.y);
 
       this.dataService.query(query).subscribe(data => {
@@ -279,16 +275,32 @@ export class Demo6Component implements OnInit, AfterViewInit {
               const mid_x = (datum.x0 + datum.x1) / 2;
               const mid_y = (datum.y0 + datum.y1) / 2;
 
-              ctx.beginPath();              
-              ctx.lineWidth = geom_size;
-              ctx.moveTo(mid_x, mid_y);
-              ctx.lineTo(Math.cos(datum.q2) * radius + mid_x, Math.sin(datum.q2) * radius + mid_y);    
-              ctx.stroke(); 
+              const cos_x = Math.cos(datum.q2);
+              const sin_y = Math.sin(datum.q2);
+
+              const x = cos_x * radius + mid_x;
+              const y = sin_y * radius + mid_y;
+
+              var gradient = ctx.createLinearGradient(
+                cos_x + mid_x,
+                sin_y + mid_y,
+                x,
+                y
+              );
+
+              gradient.addColorStop(0, 'orange');
+              gradient.addColorStop(1, 'blue');
 
               ctx.beginPath();
               ctx.arc(mid_x, mid_y, radius, datum.q1, datum.q3, false);
-              // ctx.arc(mid_x, mid_y, radius, 0, 2 * Math.PI);
               ctx.fill();
+
+              ctx.beginPath();
+              ctx.lineWidth = geom_size;
+              ctx.moveTo(mid_x, mid_y);
+              ctx.lineTo(x, y);
+              ctx.strokeStyle = gradient;
+              ctx.stroke();
             },
           };
 
@@ -333,10 +345,6 @@ export class Demo6Component implements OnInit, AfterViewInit {
             'q3': data[0][i + 2][3]
           };
 
-          if (data[0][i + 1][3] < data[0][i + 0][3] || data[0][i + 1][3] > data[0][i + 2][3]) {
-            console.log(datum);
-          }
-
           config().draw(datum, this.options.get('geom_size').value);
         }
 
@@ -363,6 +371,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
           '/query/dataset=' + this.dataset.datasetName +
           this.getAggr() +
           this.getCategoricalConst(ref.key) +
+          this.getClusterConst() +
           this.getTemporalConst() +
           this.getRegionConst() +
           '/group=' + ref.key
@@ -374,6 +383,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
           '/query/dataset=' + this.dataset.datasetName +
           this.getAggr() +
           this.getCategoricalConst() +
+          this.getClusterConst() +
           this.getTemporalConst() +
           this.getRegionConst() +
           '/group=' + ref.key
@@ -383,7 +393,10 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
     // update count
     this.dataService.query('/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
-      this.getCategoricalConst() + this.getTemporalConst() + this.getRegionConst())
+      this.getCategoricalConst() +
+      this.getClusterConst() +
+      this.getTemporalConst() +
+      this.getRegionConst())
       .subscribe(data => {
         this.currentCount = data[0];
       });
@@ -421,6 +434,43 @@ export class Demo6Component implements OnInit, AfterViewInit {
     this.loadWidgetsData();
     this.setMapData();
     this.loadLegend();
+  }
+
+  setClusters = (event) => {
+    const query = '/clustering' +
+      '/dataset=' + this.dataset.datasetName +
+      '/clusters=' + this.options.get('clusters').value +
+      '/iterations=100' +
+      '/cluster_by=' + this.dataset.identifier +
+      '/fields=(' + 'direction:wind' + ')';
+
+    this.dataService.query(query).subscribe(data => {
+      this.cluster_map = data[0];
+
+      this.loadWidgetsData();
+      this.setMapData();
+    });
+  }
+
+  getClusterConst() {
+    if (this.cluster_map.length <= 1) {
+      return '/const=' + this.dataset.identifier + '.values.(all)';
+    }
+
+    let cluster_id = this.options.get('cluster').value - 1;
+
+    let values = '/const=' + this.dataset.identifier + '.values.(';
+    for (const elt of this.cluster_map[cluster_id]) {
+      values += elt + ':';
+    }
+
+    if (this.cluster_map[cluster_id].length > 0) {
+      values = values.substr(0, values.length - 1);
+    }
+
+    values += ')';
+
+    return values;
   }
 
   setCategoricalData = (dim: string, selected: Array<string>) => {
@@ -535,6 +585,9 @@ export class Demo6Component implements OnInit, AfterViewInit {
       geom_size: new FormControl(this.dataset.geometry_size),
       resolution: new FormControl(this.dataset.resolution),
       composition: new FormControl(this.dataset.composition),
+
+      clusters: new FormControl(1),
+      cluster: new FormControl(1),
 
       aggr: new FormControl('count'),
       payload: new FormControl(this.dataset.payloads[0]),
