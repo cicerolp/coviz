@@ -1,0 +1,105 @@
+<mat-sidenav-container class="app-container over-map">
+  <mat-sidenav #sidenav position="end" [mode]="mode.value" opened="false" class="app-sidenav" [formGroup]="options">
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Map Settings</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <section>
+          <span class="badge badge-primary">Geometry:</span>
+          <mat-form-field class="app-section">
+            <mat-select formControlName="geometry" (selectionChange)="setMapData()">
+              <mat-option *ngFor="let opt of geometry_values" [value]="opt.value">
+                {{opt.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </section>
+        <section>
+          <span class="badge badge-primary">Global Composition:</span>
+          <mat-form-field class="app-section">
+            <mat-select formControlName="composition" (selectionChange)="setMapData()">
+              <mat-option *ngFor="let opt of composition_values" [value]="opt.value">
+                {{opt.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </section>
+        <section>
+          <span class="badge badge-primary">Dataset:</span>
+          <mat-form-field class="app-section">
+            <mat-select formControlName="dataset" (selectionChange)="setDataset($event)">
+              <mat-option *ngFor="let opt of dataset_values" [value]="opt.value">
+                {{opt.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </section>
+      </mat-card-content>
+
+      <mat-card-footer align="end">
+        <button mat-raised-button color="warn" (click)="sidenav.toggle()">Close</button>
+      </mat-card-footer>
+    </mat-card>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <div id="map">
+      <app-navigator></app-navigator>
+      <button mat-raised-button color="primary" class="on-map" (click)="sidenav.toggle()">Open Config</button>
+      <svg [style.visibility]="options.get('aggr').value !== 'count' ? 'visible' : 'hidden'" id="svg-color-quant" class="on-map"></svg>
+
+      <mat-card class="map-card on-map" [formGroup]="options">
+        <div #mapwidgets>
+          <section>
+            <span class="badge badge-info">Zoom:</span> {{currentZoom}} of {{maximumZoom}}
+          </section>
+          <section>
+            <span class="badge badge-info">Count:</span> {{currentCount}} of {{maximumCount}}
+          </section>
+          <section>
+            <span class="badge badge-primary">Geometry Factor:</span> {{this.options.get('geom_size').value}}
+            <mat-slider min="0" max="25" step="1" thumbLabel="true" tickInterval="auto" formControlName="geom_size" (change)="setMapData()"></mat-slider>
+          </section>
+          <section>
+            <span class="badge badge-primary">Resolution:</span> {{this.options.get('resolution').value}}
+            <mat-slider min="1" max="25" step="1" thumbLabel="true" tickInterval="auto" formControlName="resolution" (change)="setMapData()"></mat-slider>
+          </section>
+          <section>
+            <span class="badge badge-danger">Aggregation:</span>
+            <mat-radio-group class="app-radio-group" formControlName="aggr" (change)="setAggr()">
+              <mat-radio-button class="app-radio-button" *ngFor="let opt of aggr_values" [value]="opt.value">
+                {{opt.viewValue}}
+              </mat-radio-button>
+            </mat-radio-group>
+          </section>
+          <section *ngIf="options.get('aggr').value !== 'count'">
+            <span class="badge badge-danger">Payload:</span>
+            <mat-form-field class="app-section">
+              <mat-select formControlName="payload" (selectionChange)="setAggr()">
+                <mat-option *ngFor="let opt of dataset.payloads" [value]="opt">
+                  {{opt}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+        </div>
+      </mat-card>
+
+    </div>
+
+    <div *ngIf="options.get('aggr').value === 'quantile' || options.get('aggr').value === 'cdf'" class="app-footer-toolbar app-footer-container over-map">
+      <section class="app-footer-item">
+        <span class="badge badge-warning">Payload Parameter: {{ getPayloadInfo('value') }}</span>
+        <mat-slider [min]="getPayloadInfo('min')" [max]="getPayloadInfo('max')" [step]="getPayloadInfo('step')" thumbLabel="true"
+          tickInterval="auto" [ngModel]="getPayloadInfo('value')" (ngModelChange)="setPayloadInfo('value', $event)" (change)="setMapData()"></mat-slider>
+      </section>
+    </div>
+
+    <div class="app-footer app-footer-container over-map">
+      <ng-template class="flex-item" #container></ng-template>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

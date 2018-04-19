@@ -34,6 +34,7 @@ import { Demo5Component } from './demo5/demo5.component';
 import { TemporalBandComponent } from './temporal-band/temporal-band.component';
 import { BoxPlotComponent } from './box-plot/box-plot.component';
 import { TimezoneService } from './services/timezone.service';
+import { Demo6Component } from './demo6/demo6.component';
 
 export function configProviderFactory(provider: SchemaService) {
   return () => provider.load();
@@ -54,7 +55,8 @@ export function configProviderFactory(provider: SchemaService) {
     Demo4Component,
     Demo5Component,
     TemporalBandComponent,
-    BoxPlotComponent
+    BoxPlotComponent,
+    Demo6Component
   ],
   imports: [
     BrowserModule,

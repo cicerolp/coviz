@@ -57,7 +57,8 @@ export class Demo5Component implements OnInit, AfterViewInit {
     { value: 'on_time_performance_2017', viewValue: 'Flights 2017' },
     { value: 'on_time_performance_2014', viewValue: 'Flights 2014' },
     { value: 'green_tripdata', viewValue: 'Green Taxis' },
-    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' }
+    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' },
+    { value: 'health', viewValue: 'Health' }
   ];
 
   group_values = [
@@ -230,7 +231,7 @@ export class Demo5Component implements OnInit, AfterViewInit {
     this.widgets = [];
 
     this.createHistograms(this.container);
-    this.createBoxplots(this.boxplotCtn);
+    // this.createBoxplots(this.boxplotCtn);
   }
 
   createHistograms(viewContainerRef) {

@@ -8,6 +8,92 @@ import { ConfigurationService } from './configuration.service';
 @Injectable()
 export class SchemaService {
   datasets = {
+    'health': {
+      'local': 'France',
+      'geometry': 'rect',
+      'geometry_size': 0,
+      'resolution': 6,
+      'composition': 'lighter',
+      'color': 'ryw',
+
+      'datasetName': 'health',
+      'timeStep': 86400,
+      'temporalDimension': {
+        'timestamp': { 'lower': 0, 'upper': 0 }
+      },
+      'spatialDimension': ['coord'],
+      // 'categoricalDimension': ['is_dead', 'age', 'action_id', 'user_id'],
+      // 'categoricalDimension': ['category_id', 'action_id'],
+      'categoricalDimension': ['is_dead', 'age', 'category_id'],
+      'payloads': ['action', 'category'],
+      'payloadValues': {
+        'action': {
+          'quantile': { 'min_value': 0, 'max_value': 52, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
+          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 42, 'min': 0, 'max': 52, 'step': 1 },
+          'mean': { 'min_value': 0, 'max_value': 52 },
+          'variance': { 'min_value': 0, 'max_value': 100 },
+          'pipeline': { 'min_value': 0, 'max_value': 1 }
+        },
+        'category': {
+          'quantile': { 'min_value': 0, 'max_value': 10, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
+          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 8, 'min': 0, 'max': 10, 'step': 1 },
+          'mean': { 'min_value': 0, 'max_value': 10 },
+          'variance': { 'min_value': 0, 'max_value': 100 },
+          'pipeline': { 'min_value': 0, 'max_value': 1 }
+        }
+      },
+      'aliases': {
+        'is_dead': ['No', 'Yes'],
+        'age': ['<55', '55-61', '62-66', '67-70', '71-74', '75-79', '80-85', '>85'],
+        'category_id': ['Per', 'Div', 'Resp', 'Rehab', 'Fact', 'Nut', 'Ins', 'MMD', 'BMI', 'IAH', 'Worth'],
+        'action_id': ['PERFPARK', 'NEURO', 'AERO', 'RNU', 'FIT', 'PERFDIV', 'PERFKETAM', 'PERFANTID', 'PERFANTIV', 'PERFPAR', 'PERFCHIMIO', 'ETS', 'PERFATBC', 'TRACHEO', 'REH', 'LUMIN', 'RRECH', 'PPC', 'NUTENT', 'VENTRACH', 'ENR', 'PERFIMMUNO', 'ASPI', 'INS', 'COMPL', 'PERFANTIB', 'INCONNU', 'VEN', 'RRE', 'PERF', 'PERFRINC', 'TAVIE', 'HOSP', 'RME', 'VISPERF', 'MAD', 'OXY', 'EDUCTHERAP', 'VISPPC', 'HAD', 'PERFHTAP', 'PERFSANG', 'underweight', 'healthy', 'overweight', 'obese', 'minimal', 'moderated', 'serious', 'normal', 'borderline', 'sleepy', 'excessively sleepy']
+      }
+    },
+
+    'hurdat2': {
+      'local': 'USA',
+      'geometry': 'direction',
+      'geometry_size': 0,
+      'resolution': 2,
+      'composition': 'color',
+      'color': 'ryw',
+
+      'datasetName': 'hurdat2',
+      'timeStep': 3600,
+
+      'identifier': 'hurricane',
+      'trajectory': 'direction_t',
+
+      'temporalDimension': {
+        'datetime': { 'lower': 0, 'upper': 0 },
+        'datetime_begin': { 'lower': 0, 'upper': 0 },
+        'datetime_end': { 'lower': 0, 'upper': 0 }
+      },      
+      'spatialDimension': ['coord'],
+      'categoricalDimension': ['hurricane'],
+      'payloads': ['wind', 'pressure'],
+
+      'payloadValues': {
+        'wind': {
+          'quantile': { 'min_value': 20, 'max_value': 100, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
+          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 10, 'min': 0, 'max': 25, 'step': 1 },
+          'mean': { 'min_value': 20, 'max_value': 100 },
+          'variance': { 'min_value': 0, 'max_value': 25 },
+          'pipeline': { 'min_value': 0, 'max_value': 1 }
+        },
+        'pressure': {
+          'quantile': { 'min_value': 0, 'max_value': 25, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
+          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 15, 'min': 0, 'max': 50, 'step': 1 },
+          'mean': { 'min_value': 0, 'max_value': 25 },
+          'variance': { 'min_value': 0, 'max_value': 250 },
+          'pipeline': { 'min_value': 0, 'max_value': 1 }
+        }
+      },
+      'aliases': {
+        'hurricane': ['Credit', 'Cash', 'No Charge', 'Dispute', 'Voided Trip', 'Unknown']
+      }
+    },
+
     'green_tripdata': {
       'local': 'Manhattan',
       'geometry': 'rect',
@@ -45,7 +131,6 @@ export class SchemaService {
         'payment_type': ['Credit', 'Cash', 'No Charge', 'Dispute', 'Voided Trip', 'Unknown'],
         'passenger_count': ['1', '2', '3', '+4']
       }
-
     },
 
     'on_time_performance': {

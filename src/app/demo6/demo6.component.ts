@@ -49,11 +49,11 @@ interface DimConstraints {
 }
 
 @Component({
-  selector: 'app-demo2',
-  templateUrl: './demo2.component.html',
-  styleUrls: ['./demo2.component.scss']
+  selector: 'app-demo6',
+  templateUrl: './demo6.component.html',
+  styleUrls: ['./demo6.component.scss']
 })
-export class Demo2Component implements OnInit, AfterViewInit {
+export class Demo6Component implements OnInit, AfterViewInit {
   @ViewChild('sidenav') sidenav: MatSidenav;
   @ViewChild('mapwidgets') mapwidgets: ElementRef;
 
@@ -130,7 +130,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   geometry_values = [
     { value: 'rect', viewValue: 'Rectangle' },
-    { value: 'circle', viewValue: 'Circle' }
+    { value: 'circle', viewValue: 'Circle' },
+    { value: 'direction', viewValue: 'Direction' }
   ];
 
   composition_values = [
@@ -233,9 +234,18 @@ export class Demo2Component implements OnInit, AfterViewInit {
     });
 
     this.CanvasLayer.createTile = (coords, done) => {
-      const query = '/query' +
+      /* const query = '/query' +
         '/dataset=' + this.dataset.datasetName +
         this.getAggr() +
+        this.getCategoricalConst() +
+        this.getTemporalConst() +
+        '/const=' + this.dataset.spatialDimension[0] +
+        '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
+        '/group=' + this.dataset.spatialDimension[0]; */
+
+      const query = '/query' +
+        '/dataset=' + this.dataset.datasetName +
+        '/aggr=quantile.direction_t.(0.25:0.5:0.75)' +
         this.getCategoricalConst() +
         this.getTemporalConst() +
         '/const=' + this.dataset.spatialDimension[0] +
@@ -253,11 +263,48 @@ export class Demo2Component implements OnInit, AfterViewInit {
       ctx.clearRect(0, 0, tileSize.x, tileSize.y);
 
       this.dataService.query(query).subscribe(data => {
+        const config = () => {
+          const drawfuncs = {
+            circle: (datum, geom_size) => {
+              const radius = ((datum.x1 - datum.x0) / 2) + geom_size;
+              ctx.beginPath();
+              ctx.arc((datum.x0 + datum.x1) / 2, (datum.y0 + datum.y1) / 2, radius, 0, 2 * Math.PI);
+              ctx.fill();
+            },
+            rect: (datum, geom_size) => {
+              ctx.fillRect(datum.x0 - geom_size, datum.y0 - geom_size, (datum.x1 - datum.x0) + geom_size, (datum.y1 - datum.y0) + geom_size);
+            },
+            direction: (datum, geom_size) => {
+              const radius = ((datum.x1 - datum.x0) / 2) + geom_size;
+              const mid_x = (datum.x0 + datum.x1) / 2;
+              const mid_y = (datum.y0 + datum.y1) / 2;
+
+              ctx.beginPath();              
+              ctx.lineWidth = geom_size;
+              ctx.moveTo(mid_x, mid_y);
+              ctx.lineTo(Math.cos(datum.q2) * radius + mid_x, Math.sin(datum.q2) * radius + mid_y);    
+              ctx.stroke(); 
+
+              ctx.beginPath();
+              ctx.arc(mid_x, mid_y, radius, datum.q1, datum.q3, false);
+              // ctx.arc(mid_x, mid_y, radius, 0, 2 * Math.PI);
+              ctx.fill();
+            },
+          };
+
+          return {
+            draw: drawfuncs[this.options.get('geometry').value],
+            color: this.color
+          };
+        };
+
         if (data[0] === undefined) {
           return tile;
         }
 
-        for (const d of data[0]) {
+        for (let i = 0; i < data[0].length; i += 3) {
+          let d = data[0][i];
+
           if (d[2] < coords.z + this.options.get('resolution').value) {
             d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
             d[1] = Mercator.lat2tiley(Mercator.tiley2lat(d[1] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
@@ -274,27 +321,23 @@ export class Demo2Component implements OnInit, AfterViewInit {
           const x1 = (Mercator.lon2tilex(lon1, coords.z) - coords.x) * 256;
           const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
 
-          const config = () => {
-            const drawfuncs = {
-              circle: (geom_size) => {
-                const radius = ((x1 - x0) / 2) + geom_size;
-                ctx.beginPath();
-                ctx.arc((x0 + x1) / 2, (y0 + y1) / 2, radius, 0, 2 * Math.PI);
-                ctx.fill();
-              },
-              rect: (geom_size) => {
-                ctx.fillRect(x0 - geom_size, y0 - geom_size, (x1 - x0) + geom_size, (y1 - y0) + geom_size);
-              }
-            };
+          ctx.fillStyle = config().color(1000);
 
-            return {
-              draw: drawfuncs[this.options.get('geometry').value],
-              color: this.color
-            };
+          const datum = {
+            'x0': x0,
+            'x1': x1,
+            'y0': y0,
+            'y1': y1,
+            'q1': data[0][i + 0][3],
+            'q2': data[0][i + 1][3],
+            'q3': data[0][i + 2][3]
           };
 
-          ctx.fillStyle = config().color(d[3]);
-          config().draw(this.options.get('geom_size').value);
+          if (data[0][i + 1][3] < data[0][i + 0][3] || data[0][i + 1][3] > data[0][i + 2][3]) {
+            console.log(datum);
+          }
+
+          config().draw(datum, this.options.get('geom_size').value);
         }
 
         done(null, tile);
@@ -468,6 +511,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
       } else {
         this.dataset = this.schemaService.get(this.configService.defaultDataset);
       }
+
+
 
       this.initialize();
     });

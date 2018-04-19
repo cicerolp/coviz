@@ -120,6 +120,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     // scale the range of the data
     x.domain(this.data.map(d => this.dataset.aliases[this.dim][d[0]]));
     y.domain([0, d3.max<number, number>(this.data, function (d) { return d[1]; })]);
+    // y.domain(d3.extent<number, number>(this.data, (d) => d[1]));
 
     svg.selectAll('bar')
       .data(this.data)
