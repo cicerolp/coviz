@@ -75,7 +75,14 @@
             <span class="badge  badge-danger">Selected Cluster:</span> {{this.options.get('cluster').value}}
             <mat-slider min="1" [max]="this.options.get('clusters').value" step="1" thumbLabel="true" tickInterval="auto" formControlName="cluster"
               (change)="setClusters()"></mat-slider>
-          </section>          
+          </section>
+
+          <section>
+            <div *ngFor="let field of getFieldsControls(); let i = index">
+              <mat-checkbox [formControl]="field" (change)="setClusters()">{{dataset.payloads[i]}}</mat-checkbox>
+            </div>
+          </section>
+
         </div>
       </mat-card>
 

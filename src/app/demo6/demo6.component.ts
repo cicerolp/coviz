@@ -9,7 +9,7 @@ import {
   Renderer2
 } from '@angular/core';
 
-import { FormBuilder, FormGroup, FormControl, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, FormsModule, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { GeocodingService } from '../services/geocoding.service';
@@ -131,7 +131,9 @@ export class Demo6Component implements OnInit, AfterViewInit {
   geometry_values = [
     { value: 'rect', viewValue: 'Rectangle' },
     { value: 'circle', viewValue: 'Circle' },
-    { value: 'direction', viewValue: 'Direction' }
+    { value: 'direction_a', viewValue: 'Direction A' },
+    { value: 'direction_b', viewValue: 'Direction B' },
+    { value: 'stacked_circle', viewValue: 'Stacked Circle' }
   ];
 
   composition_values = [
@@ -238,9 +240,19 @@ export class Demo6Component implements OnInit, AfterViewInit {
     });
 
     this.CanvasLayer.createTile = (coords, done) => {
+
+      let sectors = 5;
+      let inverse_values = '';
+      for (let a = 0; a <= 2 * Math.PI; a += (2 * Math.PI) / (sectors - 1)) {
+        inverse_values += a + ':';
+      }
+
+      inverse_values = inverse_values.substring(0, inverse_values.length - 1);
+
       const query = '/query' +
         '/dataset=' + this.dataset.datasetName +
-        '/aggr=quantile.direction_t.(0.25:0.5:0.75)' +
+        // '/aggr=quantile.direction_t.(0.25:0.5:0.75)' +
+        '/aggr=inverse.direction_t.(' + inverse_values + ')' +
         // this.getCategoricalConst() +
         this.getClusterConst() +
         this.getTemporalConst() +
@@ -255,7 +267,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
       tile.setAttribute('height', tileSize.y.toString());
 
       const ctx = tile.getContext('2d');
-      // ctx.globalCompositeOperation = this.options.get('composition').value;
+      ctx.globalCompositeOperation = this.options.get('composition').value;
       ctx.clearRect(0, 0, tileSize.x, tileSize.y);
 
       this.dataService.query(query).subscribe(data => {
@@ -270,8 +282,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
             rect: (datum, geom_size) => {
               ctx.fillRect(datum.x0 - geom_size, datum.y0 - geom_size, (datum.x1 - datum.x0) + geom_size, (datum.y1 - datum.y0) + geom_size);
             },
-            direction: (datum, geom_size) => {
-              const radius = ((datum.x1 - datum.x0) / 2) + geom_size;
+            direction_a: (datum, geom_size) => {
+              const radius = ((datum.x1 - datum.x0) / 2);
               const mid_x = (datum.x0 + datum.x1) / 2;
               const mid_y = (datum.y0 + datum.y1) / 2;
 
@@ -281,18 +293,14 @@ export class Demo6Component implements OnInit, AfterViewInit {
               const x = cos_x * radius + mid_x;
               const y = sin_y * radius + mid_y;
 
-              var gradient = ctx.createLinearGradient(
-                cos_x + mid_x,
-                sin_y + mid_y,
-                x,
-                y
-              );
+              var gradient = ctx.createLinearGradient(cos_x + mid_x, sin_y + mid_y, x, y);
 
               gradient.addColorStop(0, 'orange');
               gradient.addColorStop(1, 'blue');
 
               ctx.beginPath();
               ctx.arc(mid_x, mid_y, radius, datum.q1, datum.q3, false);
+              ctx.fillStyle = 'orange';
               ctx.fill();
 
               ctx.beginPath();
@@ -302,6 +310,89 @@ export class Demo6Component implements OnInit, AfterViewInit {
               ctx.strokeStyle = gradient;
               ctx.stroke();
             },
+
+            direction_b: (datum, geom_size) => {
+              const radius = ((datum.x1 - datum.x0) / 2);
+              const mid_x = (datum.x0 + datum.x1) / 2;
+              const mid_y = (datum.y0 + datum.y1) / 2;
+
+              const cos_x = Math.cos(datum.q2);
+              const sin_y = Math.sin(datum.q2);
+
+              const x = cos_x * radius + mid_x;
+              const y = sin_y * radius + mid_y;
+
+              var gradient = ctx.createLinearGradient(cos_x + mid_x, sin_y + mid_y, x, y);
+
+              gradient.addColorStop(0, 'orange');
+              gradient.addColorStop(1, 'blue');
+
+              ctx.beginPath();
+              ctx.arc(mid_x, mid_y, radius, datum.q1, datum.q3, false);
+              ctx.strokeStyle = 'blue';
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.lineWidth = geom_size;
+              ctx.moveTo(mid_x, mid_y);
+              ctx.lineTo(x, y);
+              ctx.strokeStyle = gradient;
+              ctx.stroke();
+            },
+
+            stacked_circle: (datum, geom_size) => {
+              const radius = ((datum.x1 - datum.x0) / 2);
+              const mid_x = (datum.x0 + datum.x1) / 2;
+              const mid_y = (datum.y0 + datum.y1) / 2;
+
+              let extents: [number, number] = [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+
+              let prev_value = 0;
+              for (let v = 0; v < datum.values.length; ++v) {
+                const diff = datum.values[v] - prev_value;
+                extents[0] = Math.min(extents[0], diff);
+                extents[1] = Math.max(extents[1], diff);
+
+                prev_value = datum.values[v];
+              }
+
+              const scale = d3.scaleLinear<string, string>().
+                // interpolate(d3.interpolateRgb).
+                domain(extents).
+                range(['orange', 'blue']);
+
+              prev_value = 0;
+              let colors = [];
+              for (let v = 0; v < datum.values.length; ++v) {
+                colors.push(scale(datum.values[v] - prev_value));
+
+                prev_value = datum.values[v];
+              }
+
+              console.log(extents);
+              console.log(colors);
+
+
+              let prev_theta = 0;
+              ctx.beginPath();
+              for (let v = 0; v < datum.values.length; ++v) {
+
+
+                let curr_theta = (2 * Math.PI) * datum.values[v];
+
+
+                // console.log(prev_theta + ' : ' + curr_theta);
+
+                ctx.arc(mid_x, mid_y, radius, prev_theta, curr_theta, false);
+                ctx.fillStyle = colors[v];
+                ctx.fill();
+
+
+                prev_theta = curr_theta;
+
+
+              }
+            }
           };
 
           return {
@@ -314,7 +405,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
           return tile;
         }
 
-        for (let i = 0; i < data[0].length; i += 3) {
+        for (let i = 0; i < data[0].length; i += sectors) {
           let d = data[0][i];
 
           if (d[2] < coords.z + this.options.get('resolution').value) {
@@ -335,14 +426,26 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
           ctx.fillStyle = config().color(1000);
 
+          /* const datum = {
+            'x0': x0,
+            'x1': x1,
+            'y0': y0,
+            'y1': y1,
+            'values': [data[0][i + 0][3], data[0][i + 1][3], data[0][i + 2][3]]
+          }; */
+
+          let values = [];
+
+          for (let s = 0; s < sectors; ++s) {
+            values.push(data[0][i + s][3]);
+          }
+
           const datum = {
             'x0': x0,
             'x1': x1,
             'y0': y0,
             'y1': y1,
-            'q1': data[0][i + 0][3],
-            'q2': data[0][i + 1][3],
-            'q3': data[0][i + 2][3]
+            'values': values
           };
 
           config().draw(datum, this.options.get('geom_size').value);
@@ -437,12 +540,24 @@ export class Demo6Component implements OnInit, AfterViewInit {
   }
 
   setClusters = (event) => {
+    let fields = '';
+
+    for (let i in this.getFieldsControls()) {
+      if (this.getFieldsControls()[i].value) {
+        fields += this.dataset.payloads[i] + ':';
+      }
+    }
+
+    if (fields.length > 1) {
+      fields = fields.substr(0, fields.length - 1);
+    }
+
     const query = '/clustering' +
       '/dataset=' + this.dataset.datasetName +
       '/clusters=' + this.options.get('clusters').value +
       '/iterations=100' +
       '/cluster_by=' + this.dataset.identifier +
-      '/fields=(' + 'direction:wind' + ')';
+      '/fields=(' + fields + ')';
 
     this.dataService.query(query).subscribe(data => {
       this.cluster_map = data[0];
@@ -578,7 +693,16 @@ export class Demo6Component implements OnInit, AfterViewInit {
     this.loadLayer();
   }
 
+  getFieldsControls() {
+    return (<FormArray>this.options.get('fields')).controls;
+  }
+
   initialize() {
+    let fields_array = [];
+    for (let field of this.dataset.payloads) {
+      fields_array.push(new FormControl(true));
+    }
+
     this.options = this.formBuilder.group({
       // visualization setup
       geometry: new FormControl(this.dataset.geometry),
@@ -592,7 +716,9 @@ export class Demo6Component implements OnInit, AfterViewInit {
       aggr: new FormControl('count'),
       payload: new FormControl(this.dataset.payloads[0]),
 
-      dataset: new FormControl(this.dataset.datasetName)
+      dataset: new FormControl(this.dataset.datasetName),
+
+      fields: new FormArray(fields_array)
     });
 
     this.color = this.color_map['count'];

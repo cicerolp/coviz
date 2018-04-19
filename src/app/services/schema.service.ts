@@ -52,7 +52,7 @@ export class SchemaService {
 
     'hurdat2': {
       'local': 'USA',
-      'geometry': 'direction',
+      'geometry': 'stacked_circle',
       'geometry_size': 2,
       'resolution': 3,
       'composition': 'color',
@@ -71,7 +71,7 @@ export class SchemaService {
       },      
       'spatialDimension': ['coord'],
       'categoricalDimension': ['hurricane'],
-      'payloads': ['wind', 'pressure'],
+      'payloads': ['wind', 'pressure', 'direction'],
 
       'payloadValues': {
         'wind': {
