@@ -52,9 +52,9 @@ export class SchemaService {
 
     'hurdat2': {
       'local': 'USA',
-      'geometry': 'stacked_circle',
-      'geometry_size': 2,
-      'resolution': 3,
+      'geometry': 'circle',
+      'geometry_size': 0,
+      'resolution': 2,
       'composition': 'color',
       'color': 'fixed',
 
