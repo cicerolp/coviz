@@ -240,12 +240,12 @@ export class Demo6Component implements OnInit, AfterViewInit {
     });
 
     this.CanvasLayer.createTile = (coords, done) => {
-      let sectors = 20;
+      const sectors = 10;
 
       const incre = (2 * Math.PI) / sectors;
 
       let inverse_values = '';
-      for (let a = incre; a <= 2 * Math.PI; a += incre) {
+      for (let a = incre; a < 2 * Math.PI; a += incre) {
         inverse_values += a + ':';
       }
 
@@ -266,7 +266,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
         '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
         '/group=' + this.dataset.spatialDimension[0];
 
-      /* const tile = document.createElement('canvas');
+      const tile = document.createElement('canvas');
 
       const tileSize = this.CanvasLayer.getTileSize();
       tile.setAttribute('width', tileSize.x.toString());
@@ -274,36 +274,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
       const ctx = tile.getContext('2d');
 
-      ctx.globalCompositeOperation = this.options.get('composition').value;
-      ctx.clearRect(0, 0, tileSize.x, tileSize.y); */
-
-      var dataset = [
-        { label: 'Abulia', count: 10 },
-        { label: 'Betelgeuse', count: 20 },
-        { label: 'Cantaloupe', count: 30 },
-        { label: 'Dijkstra', count: 40 }
-      ];
-
-
-      const tile = document.createElement('div');
-
-      const tileSize = this.CanvasLayer.getTileSize();
-
-      var svg = d3.select(tile)
-        .append('svg')
-        .attr('width', tileSize.x)
-        .attr('height', tileSize.y);
-
-
-      // var width = tileSize.x;
-      // var height = tileSize.y;
-
-      // tile.setAttribute('width', width);
-      // tile.setAttribute('height', height);
-
-      const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-      // console.log(tile);
+      // ctx.globalCompositeOperation = this.options.get('composition').value;
+      ctx.clearRect(0, 0, tileSize.x, tileSize.y);
 
       this.dataService.query(query).subscribe(data => {
         const config = () => {
@@ -379,17 +351,18 @@ export class Demo6Component implements OnInit, AfterViewInit {
               const mid_x = (datum.x0 + datum.x1) / 2;
               const mid_y = (datum.y0 + datum.y1) / 2;
 
-              const g_width = datum.x1 - datum.x0;
-              const g_height = datum.y1 - datum.y0;
+              const radius = Math.min(datum.x1 - datum.x0, datum.y1 - datum.y0) / 2;
 
-              let values: number[] = [];
+              const values: number[] = [];
               let prev_value = 0;
               for (let v = 0; v < datum.values.length; ++v) {
-                values.push((datum.values[v] - prev_value) * 100);
+                values.push(datum.values[v] - prev_value);
                 prev_value = datum.values[v];
-              }
 
-              let extents: [number, number] = d3.extent(values);
+              }
+              values.push(1.0 - prev_value);
+
+              const extents: [number, number] = d3.extent(values);
 
               const scale = d3.scaleQuantize<string>()
                 .domain(extents)
@@ -398,18 +371,74 @@ export class Demo6Component implements OnInit, AfterViewInit {
                 // .range(['rgba(215,25,28, 0.75)','rgba(253,174,97, 0.75)','rgba(171,217,233, 1.0)','rgba(44,123,182, 1.0)']);
                 .range(['rgba(241,238,246, 1.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
 
-              const radius = Math.min(g_width, g_height) / 2;
 
-              var arc = d3.arc<d3.PieArcDatum<number>>()
+              var beginAngle = 0;
+              var endAngle = 0;
+              var angle = (2 * Math.PI) / sectors;
+
+              for (var i = 0; i < values.length; ++i) {
+                beginAngle = endAngle;
+                endAngle = endAngle + angle;
+
+                ctx.beginPath();
+                ctx.moveTo(mid_x, mid_y);
+                ctx.arc(mid_x, mid_y, radius, beginAngle, endAngle);
+                ctx.lineTo(mid_x, mid_y);
+                
+                ctx.fillStyle = scale(values[i]);
+                ctx.fill();
+              }
+
+              const cos_x = Math.cos(datum.median);
+              const sin_y = Math.sin(datum.median);
+
+              const x = cos_x * radius + mid_x;
+              const y = sin_y * radius + mid_y;
+
+              ctx.beginPath();
+              ctx.moveTo(mid_x, mid_y);
+              ctx.lineTo(x, y);
+
+              ctx.lineWidth = 2.0 + geom_size;
+              ctx.strokeStyle = 'red';
+              ctx.stroke();
+
+
+              /* const mid_x = (datum.x0 + datum.x1) / 2;
+              const mid_y = (datum.y0 + datum.y1) / 2;
+ 
+              const g_width = datum.x1 - datum.x0;
+              const g_height = datum.y1 - datum.y0;
+ 
+              const values: number[] = [];
+              let prev_value = 0;
+              for (let v = 0; v < datum.values.length; ++v) {
+                values.push((datum.values[v] - prev_value) * 100);
+                prev_value = datum.values[v];
+              }
+              values.push((1.0 - prev_value) * 100);
+ 
+              const extents: [number, number] = d3.extent(values);
+ 
+              const scale = d3.scaleQuantize<string>()
+                .domain(extents)
+                // .range(['rgba(0, 0, 255, 0.5)', 'rgba(255, 165, 0, 1.0)']);
+                // .range(['rgba(255,237,160, 0.5)','rgba(254,178,76, 0.95)','rgba(240,59,32, 1.0)'])
+                // .range(['rgba(215,25,28, 0.75)','rgba(253,174,97, 0.75)','rgba(171,217,233, 1.0)','rgba(44,123,182, 1.0)']);
+                .range(['rgba(241,238,246, 1.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
+ 
+              const radius = Math.min(g_width, g_height) / 2;
+ 
+              const arc = d3.arc<d3.PieArcDatum<number>>()
                 .innerRadius(0)
                 .outerRadius(radius);
-
-              let pie = d3.pie()
+ 
+              const pie = d3.pie()
                 .endAngle(2.5 * Math.PI)
                 .startAngle(0.5 * Math.PI)
                 .value(d => sectors)
                 .sort(null);
-
+ 
               svg.append('g')
                 .selectAll('path')
                 .data(pie(values))
@@ -418,24 +447,25 @@ export class Demo6Component implements OnInit, AfterViewInit {
                 .attr('d', arc)
                 .attr('transform', 'translate(' + mid_x + ',' + mid_y + ')')
                 .attr('fill', d => scale(d.data));
-
-
+ 
+ 
               const cos_x = Math.cos(datum.median);
               const sin_y = Math.sin(datum.median);
-
+ 
               const x = cos_x * radius + mid_x;
               const y = sin_y * radius + mid_y;
-
-              var lineGenerator = d3.line();
-
+ 
+              const lineGenerator = d3.line();
+ 
               svg.append('g')
                 .append('path')
-                .attr("fill", "none")
-                .attr("stroke", "red")
+                .attr('fill', 'none')
+                .attr('stroke', 'red')
                 // .attr("stroke-linejoin", "round")
                 // .attr("stroke-linecap", "round")
-                .attr("stroke-width", 2.0 + geom_size)
-                .attr("d", lineGenerator([[mid_x, mid_y], [x, y]]));
+                .attr('stroke-width', 2.0 + geom_size)
+                .attr('d', lineGenerator([[mid_x, mid_y], [x, y]])); */
+
             }
           };
 
@@ -449,8 +479,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
           return tile;
         }
 
-        for (let i = 0; i < data[0].length; i += sectors) {
-          let d = data[0][i];
+        for (let i = 0; i < data[0].length; i += (sectors - 1)) {
+          const d = data[0][i];
 
           if (d[2] < coords.z + this.options.get('resolution').value) {
             d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
@@ -470,20 +500,12 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
           // ctx.fillStyle = config().color(1000);
 
-          // const datum = {
-          //   'x0': x0,
-          //   'x1': x1,
-          //   'y0': y0,
-          //   'y1': y1,
-          //   'values': [data[0][i + 0][3], data[0][i + 1][3], data[0][i + 2][3]]
-          // };
-
-          let values = [];
-          for (let s = 0; s < sectors; ++s) {
+          const values = [];
+          for (let s = 0; s < sectors - 1; ++s) {
             values.push(data[0][i + s][3]);
           }
 
-          // let values = [0.8, 1.0];
+          /* let values = [0.8]; */
 
           const datum = {
             'x0': x0,
@@ -491,7 +513,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
             'y0': y0,
             'y1': y1,
             'values': values,
-            'median': data[1][i / sectors][3]
+            'median': data[1][i / (sectors - 1)][3]
 
           };
           config().draw(datum, this.options.get('geom_size').value);
@@ -588,7 +610,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
   setClusters = () => {
     let fields = '';
 
-    for (let i in this.getFieldsControls()) {
+    for (const i in this.getFieldsControls()) {
       if (this.getFieldsControls()[i].value) {
         fields += this.dataset.payloads[i] + ':';
       }
@@ -618,7 +640,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
       return '/const=' + this.dataset.identifier + '.values.(all)';
     }
 
-    let cluster_id = this.options.get('cluster').value - 1;
+    const cluster_id = this.options.get('cluster').value - 1;
 
     let values = '/const=' + this.dataset.identifier + '.values.(';
     for (const elt of this.cluster_map[cluster_id]) {
@@ -744,8 +766,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
   }
 
   initialize() {
-    let fields_array = [];
-    for (let field of this.dataset.payloads) {
+    const fields_array = [];
+    for (const field of this.dataset.payloads) {
       fields_array.push(new FormControl(true));
     }
 

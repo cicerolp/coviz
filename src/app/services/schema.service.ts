@@ -54,7 +54,7 @@ export class SchemaService {
       'local': 'USA',
       'geometry': 'circle',
       'geometry_size': 0,
-      'resolution': 2,
+      'resolution': 3,
       'composition': 'color',
       'color': 'fixed',
 
