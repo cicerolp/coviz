@@ -50,6 +50,67 @@ export class SchemaService {
       }
     },
 
+    'cvrr-cross': {
+      'local': [0,0],
+      'geometry': 'circle',
+      'geometry_size': 0,
+      'resolution': 4,
+      'composition': 'color',
+      'color': 'fixed',
+
+      'datasetName': 'cvrr-cross',
+      'timeStep': 3600,
+
+      'identifier': 'trajectory',
+      'trajectory': 'direction_t',
+
+      'temporalDimension': {},
+      'spatialDimension': ['coord'],
+      'categoricalDimension': [],
+      'payloads': ['direction', 'speed']
+    },
+
+    'cvrr-i5sim': {
+      'local': [0,0],
+      'geometry': 'circle',
+      'geometry_size': 0,
+      'resolution': 4,
+      'composition': 'color',
+      'color': 'fixed',
+
+      'datasetName': 'cvrr-i5sim',
+      'timeStep': 3600,
+
+      'identifier': 'trajectory',
+      'trajectory': 'direction_t',
+
+      'temporalDimension': {},
+      'spatialDimension': ['coord'],
+      'categoricalDimension': [],
+      'payloads': ['direction', 'speed']
+    },
+
+
+    'cvrr-i5sim3': {
+      'local': [0,0],
+      'geometry': 'circle',
+      'geometry_size': 0,
+      'resolution': 4,
+      'composition': 'color',
+      'color': 'fixed',
+
+      'datasetName': 'cvrr-i5sim3',
+      'timeStep': 3600,
+
+      'identifier': 'trajectory',
+      'trajectory': 'direction_t',
+
+      'temporalDimension': {},
+      'spatialDimension': ['coord'],
+      'categoricalDimension': [],
+      'payloads': ['direction', 'speed']
+    },
+
     'hurdat2': {
       'local': 'USA',
       'geometry': 'circle',
@@ -71,27 +132,7 @@ export class SchemaService {
       },      
       'spatialDimension': ['coord'],
       'categoricalDimension': ['hurricane'],
-      'payloads': ['wind', 'pressure', 'direction'],
-
-      'payloadValues': {
-        'wind': {
-          'quantile': { 'min_value': 20, 'max_value': 100, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
-          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 10, 'min': 0, 'max': 25, 'step': 1 },
-          'mean': { 'min_value': 20, 'max_value': 100 },
-          'variance': { 'min_value': 0, 'max_value': 25 },
-          'pipeline': { 'min_value': 0, 'max_value': 1 }
-        },
-        'pressure': {
-          'quantile': { 'min_value': 0, 'max_value': 25, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
-          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 15, 'min': 0, 'max': 50, 'step': 1 },
-          'mean': { 'min_value': 0, 'max_value': 25 },
-          'variance': { 'min_value': 0, 'max_value': 250 },
-          'pipeline': { 'min_value': 0, 'max_value': 1 }
-        }
-      },
-      'aliases': {
-        'hurricane': ['Credit', 'Cash', 'No Charge', 'Dispute', 'Voided Trip', 'Unknown']
-      }
+      'payloads': ['wind', 'pressure', 'direction']
     },
 
     'green_tripdata': {

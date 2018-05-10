@@ -49,11 +49,11 @@ interface DimConstraints {
 }
 
 @Component({
-  selector: 'app-demo6',
-  templateUrl: './demo6.component.html',
-  styleUrls: ['./demo6.component.scss']
+  selector: 'app-demo7',
+  templateUrl: './demo7.component.html',
+  styleUrls: ['./demo7.component.scss']
 })
-export class Demo6Component implements OnInit, AfterViewInit {
+export class Demo7Component implements OnInit, AfterViewInit {
   @ViewChild('sidenav') sidenav: MatSidenav;
   @ViewChild('mapwidgets') mapwidgets: ElementRef;
 
@@ -138,12 +138,14 @@ export class Demo6Component implements OnInit, AfterViewInit {
   ];
 
   dataset_values = [
-    { value: 'hurdat2', viewValue: 'hurdat2' }
+    { value: 'cvrr-cross', viewValue: 'CVRR-CROSS' },
+    { value: 'cvrr-i5sim', viewValue: 'CVRR-I5SIM' },
+    { value: 'cvrr-i5sim3', viewValue: 'CVRR-I5SIM3' }
   ];
 
   color: any;
 
-color_map = {
+  color_map = {
     'count': (count) => {
       const lc = Math.log(count) / Math.log(100);
 
@@ -220,7 +222,8 @@ color_map = {
               '/dataset=' + this.dataset.datasetName +
 
               '/aggr=inverse.direction_t.(' + inverse_values + ')' +
-              '/aggr=quantile.direction_t.(0.5)' +
+              // '/aggr=quantile.direction_t.(0.5)' +
+              '/aggr=centroid.direction_t' +
 
               this.getClusterConst() +
               this.getTemporalConst() +
@@ -236,7 +239,7 @@ color_map = {
 
               '/aggr=count' +
 
-              this.getCategoricalConst() +
+              this.getClusterConst() +
               this.getTemporalConst() +
 
               '/const=' + this.dataset.spatialDimension[0] +
@@ -251,21 +254,19 @@ color_map = {
             for (let i = 0; i < data[0].length; i += (this.options.get('sectors').value - 1)) {
               const d = data[0][i];
 
-              if (d[2] < coords.z + this.options.get('resolution').value) {
-                d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-                d[1] = Mercator.lat2tiley(Mercator.tiley2lat(d[1] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-                d[2] = coords.z + this.options.get('resolution').value;
-              }
+              let n = 1 << (d[2] - coords.z);
 
-              const lon0 = Mercator.tilex2lon(d[0], d[2]);
-              const lat0 = Mercator.tiley2lat(d[1], d[2]);
-              const lon1 = Mercator.tilex2lon(d[0] + 1, d[2]);
-              const lat1 = Mercator.tiley2lat(d[1] + 1, d[2]);
+              let xmin = (coords.x) * n;
+              let xmax = (coords.x + 1) * n;
 
-              const x0 = (Mercator.lon2tilex(lon0, coords.z) - coords.x) * 256;
-              const y0 = (Mercator.lat2tiley(lat0, coords.z) - coords.y) * 256;
-              const x1 = (Mercator.lon2tilex(lon1, coords.z) - coords.x) * 256;
-              const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
+              let ymin = (coords.y) * n;
+              let ymax = (coords.y + 1) * n;
+
+              const x0 = ((d[0] - xmin) / (xmax - xmin)) * 256;
+              const x1 = ((d[0] - xmin + 1) / (xmax - xmin)) * 256;
+
+              const y0 = ((d[1] - ymin) / (ymax - ymin)) * 256;
+              const y1 = ((d[1] - ymin + 1) / (ymax - ymin)) * 256;
 
               const values = [];
               for (let s = 0; s < this.options.get('sectors').value - 1; ++s) {
@@ -290,21 +291,19 @@ color_map = {
             for (let i = 0; i < data[0].length; ++i) {
               const d = data[0][i];
 
-              if (d[2] < coords.z + this.options.get('resolution').value) {
-                d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-                d[1] = Mercator.lat2tiley(Mercator.tiley2lat(d[1] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-                d[2] = coords.z + this.options.get('resolution').value;
-              }
+              let n = 1 << (d[2] - coords.z);
 
-              const lon0 = Mercator.tilex2lon(d[0], d[2]);
-              const lat0 = Mercator.tiley2lat(d[1], d[2]);
-              const lon1 = Mercator.tilex2lon(d[0] + 1, d[2]);
-              const lat1 = Mercator.tiley2lat(d[1] + 1, d[2]);
+              let xmin = (coords.x) * n;
+              let xmax = (coords.x + 1) * n;
 
-              const x0 = (Mercator.lon2tilex(lon0, coords.z) - coords.x) * 256;
-              const y0 = (Mercator.lat2tiley(lat0, coords.z) - coords.y) * 256;
-              const x1 = (Mercator.lon2tilex(lon1, coords.z) - coords.x) * 256;
-              const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
+              let ymin = (coords.y) * n;
+              let ymax = (coords.y + 1) * n;
+
+              const x0 = ((d[0] - xmin) / (xmax - xmin)) * 256;
+              const x1 = ((d[0] - xmin + 1) / (xmax - xmin)) * 256;
+
+              const y0 = ((d[1] - ymin) / (ymax - ymin)) * 256;
+              const y1 = ((d[1] - ymin + 1) / (ymax - ymin)) * 256;
 
               const datum = {
                 'x0': x0,
@@ -338,11 +337,12 @@ color_map = {
             const extents: [number, number] = d3.extent(values);
 
             const scale = d3.scaleQuantize<string>()
-              .domain(extents)
+              .domain([0, 1])
               // .range(['rgba(0, 0, 255, 0.5)', 'rgba(255, 165, 0, 1.0)']);
               // .range(['rgba(255,237,160, 0.5)','rgba(254,178,76, 0.95)','rgba(240,59,32, 1.0)'])
               // .range(['rgba(215,25,28, 0.75)','rgba(253,174,97, 0.75)','rgba(171,217,233, 1.0)','rgba(44,123,182, 1.0)']);
-              .range(['rgba(241,238,246, 0.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
+              // .range(['rgba(241,238,246, 1.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
+              .range(['rgb(241,238,246)','rgb(189,201,225)','rgb(116,169,207)','rgb(43,140,190)','rgb(4,90,141)']);
 
 
             var beginAngle = 0;
@@ -380,65 +380,7 @@ color_map = {
           rect: (datum, geom_size) => {
             ctx.fillStyle = this.color(datum.count);
             ctx.fillRect(datum.x0 - geom_size, datum.y0 - geom_size, (datum.x1 - datum.x0) + geom_size, (datum.y1 - datum.y0) + geom_size);
-          },
-
-          /* direction_a: (datum, geom_size) => {
-            const radius = ((datum.x1 - datum.x0) / 2);
-            const mid_x = (datum.x0 + datum.x1) / 2;
-            const mid_y = (datum.y0 + datum.y1) / 2;
-
-            const cos_x = Math.cos(datum.values[1]);
-            const sin_y = Math.sin(datum.values[1]);
-
-            const x = cos_x * radius + mid_x;
-            const y = sin_y * radius + mid_y;
-
-            var gradient = ctx.createLinearGradient(cos_x + mid_x, sin_y + mid_y, x, y);
-
-            gradient.addColorStop(0, 'orange');
-            gradient.addColorStop(1, 'blue');
-
-            ctx.beginPath();
-            ctx.arc(mid_x, mid_y, radius, datum.values[0], datum.values[2], false);
-            ctx.fillStyle = 'orange';
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.lineWidth = geom_size;
-            ctx.moveTo(mid_x, mid_y);
-            ctx.lineTo(x, y);
-            ctx.strokeStyle = gradient;
-            ctx.stroke();
-          },
-
-          direction_b: (datum, geom_size) => {
-            const radius = ((datum.x1 - datum.x0) / 2);
-            const mid_x = (datum.x0 + datum.x1) / 2;
-            const mid_y = (datum.y0 + datum.y1) / 2;
-
-            const cos_x = Math.cos(datum.values[1]);
-            const sin_y = Math.sin(datum.values[1]);
-
-            const x = cos_x * radius + mid_x;
-            const y = sin_y * radius + mid_y;
-
-            var gradient = ctx.createLinearGradient(cos_x + mid_x, sin_y + mid_y, x, y);
-
-            gradient.addColorStop(0, 'orange');
-            gradient.addColorStop(1, 'blue');
-
-            ctx.beginPath();
-            ctx.arc(mid_x, mid_y, radius, datum.values[0], datum.values[2], false);
-            ctx.strokeStyle = 'blue';
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.lineWidth = geom_size;
-            ctx.moveTo(mid_x, mid_y);
-            ctx.lineTo(x, y);
-            ctx.strokeStyle = gradient;
-            ctx.stroke();
-          } */
+          }
         };
 
         return {
@@ -511,7 +453,7 @@ color_map = {
 
   setDataset(evnt: any) {
     this.sidenav.toggle();
-    const link = ['/demo6', this.options.get('dataset').value];
+    const link = ['/demo7', this.options.get('dataset').value];
     this.router.navigate(link);
   }
 
@@ -542,7 +484,7 @@ color_map = {
     this.setMapData();
   }
 
-  setClusters = () => {
+  executeClustering() {
     let fields = '';
 
     for (const i in this.getFieldsControls()) {
@@ -555,19 +497,31 @@ color_map = {
       fields = fields.substr(0, fields.length - 1);
     }
 
+    let group_by = '';
+    for (const i in this.getGroupByControls()) {
+      if (this.getGroupByControls()[i].value) {
+        group_by += '/group_by=' + this.dataset.spatialDimension[i] + '.tile.(0:0:0:' + this.getGroupByResolutionControls()[i].value + ')';
+      }
+    }
+
     const query = '/clustering' +
       '/dataset=' + this.dataset.datasetName +
       '/clusters=' + this.options.get('clusters').value +
-      '/iterations=100' +
+      '/iterations=' + this.options.get('iterations').value +
       '/cluster_by=' + this.dataset.identifier +
-      '/fields=(' + fields + ')';
+      '/fields=(' + fields + ')' +
+      group_by;
 
     this.dataService.query(query).subscribe(data => {
       this.cluster_map = data[0];
+      this.setClusters();
 
-      this.loadWidgetsData();
-      this.setMapData();
     });
+  }
+
+  setClusters = () => {
+    this.loadWidgetsData();
+    this.setMapData();
   }
 
   getClusterConst() {
@@ -700,10 +654,24 @@ color_map = {
     return (<FormArray>this.options.get('fields')).controls;
   }
 
+  getGroupByControls() {
+    return (<FormArray>this.options.get('group_by')).controls;
+  }
+
+  getGroupByResolutionControls() {
+    return (<FormArray>this.options.get('group_by_resolution')).controls;
+  }
+
   initialize() {
     const fields_array = [];
     for (const field of this.dataset.payloads) {
       fields_array.push(new FormControl(false));
+    }
+
+    const group_by_array = [[], []];
+    for (const field of this.dataset.spatialDimension) {
+      group_by_array[0].push(new FormControl(false));
+      group_by_array[1].push(new FormControl(8));
     }
 
     this.options = this.formBuilder.group({
@@ -716,23 +684,27 @@ color_map = {
       clusters: new FormControl(1),
       cluster: new FormControl(1),
 
-      sectors: new FormControl(7),
+      sectors: new FormControl(10),
+      iterations: new FormControl(10),
 
       aggr: new FormControl('count'),
       payload: new FormControl(this.dataset.payloads[0]),
 
       dataset: new FormControl(this.dataset.datasetName),
 
-      fields: new FormArray(fields_array)
+      fields: new FormArray(fields_array),
+
+      group_by: new FormArray(group_by_array[0]),
+      group_by_resolution: new FormArray(group_by_array[1])
     });
 
     this.color = this.color_map['count'];
     this.aggr = '/aggr=count';
 
-    this.geocodingService.geocode(this.dataset.local)
+    /* this.geocodingService.geocode(this.dataset.local)
       .subscribe(location => {
         this.mapService.flyTo(location);
-      }, error => console.error(error));
+      }, error => console.error(error)); */
 
     const viewContainerRef = this.container;
 

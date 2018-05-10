@@ -24,26 +24,37 @@ export class MapService {
 
   load() {
     this.map = L.map('map', {
-      worldCopyJump: true
-    }).setView(this.lastPosition.center, this.lastPosition.zoom);
+      crs: L.CRS.Simple
+    });
 
-    L.tileLayer('https://api.mapbox.com/styles/v1/cicerolp/cjc0c1nafgzqu2sru25nufh5r/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
+    // var bounds = [[0, 0], [100, 100]];
+    var bounds = [[-512, -512], [512, 512]];
+    /* var image = L.imageOverlay('assets/uqm_map_full.png', bounds)
+      .addTo(this.map); */
+
+    this.map.fitBounds(bounds);
+
+    /* this.map = L.map('map', {
+      worldCopyJump: true
+    }).setView(this.lastPosition.center, this.lastPosition.zoom); */
+
+    /* L.tileLayer('https://api.mapbox.com/styles/v1/cicerolp/cjc0c1nafgzqu2sru25nufh5r/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: '',
       maxZoom: 18,
       id: 'mapbox.streets',
       accessToken: 'pk.eyJ1IjoiY2ljZXJvbHAiLCJhIjoia1IxYmtfMCJ9.3EMmwKCCFN-hmsrQY4_wUQ'
-    }).addTo(this.map);
+    }).addTo(this.map); */
 
-    /* const DebugLayer = L.GridLayer.extend({
+    const DebugLayer = L.GridLayer.extend({
       createTile: function (coords) {
         const tile = document.createElement('div');
         tile.innerHTML = [coords.x, coords.y, coords.z].join(', ');
-        tile.style.outline = '1px solid darkgray';
+        tile.style.outline = '1px solid darkgrey';
         return tile;
       }
     });
 
-    this.map.addLayer(new DebugLayer()); */
+    this.map.addLayer(new DebugLayer());
 
     this.map.on('moveend', () => {
       this.lastPosition.center = this.map.getCenter();
@@ -51,9 +62,12 @@ export class MapService {
     });
   }
 
-  flyTo(location: Location): void {
-    // this.map.fitBounds(location.viewBounds, {});
+  flyTo(location: Location): void {    
     this.map.flyToBounds(location.viewBounds, { duration: 3.0 });
+  }
+
+  fitBounds(bounds): void {
+    this.map.fitBounds(bounds, {});
   }
 
   get_coords_bounds(bound?: any, zoom?: number) {
