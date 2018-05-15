@@ -223,7 +223,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
 
               '/aggr=inverse.direction_t.(' + inverse_values + ')' +
               // '/aggr=quantile.direction_t.(0.5)' +
-              '/aggr=centroid.direction_t' +
+              '/aggr=sector.direction_t' +
 
               this.getClusterConst() +
               this.getTemporalConst() +
