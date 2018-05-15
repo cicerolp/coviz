@@ -38,12 +38,13 @@ export class MapService {
       worldCopyJump: true
     }).setView(this.lastPosition.center, this.lastPosition.zoom); */
 
-    /* L.tileLayer('https://api.mapbox.com/styles/v1/cicerolp/cjc0c1nafgzqu2sru25nufh5r/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
+
+    /*L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: '',
       maxZoom: 18,
       id: 'mapbox.streets',
-      accessToken: 'pk.eyJ1IjoiY2ljZXJvbHAiLCJhIjoia1IxYmtfMCJ9.3EMmwKCCFN-hmsrQY4_wUQ'
-    }).addTo(this.map); */
+      accessToken: 'pk.eyJ1IjoiY2FscGFoaW5zIiwiYSI6ImNqaDduaGVtdDBhM28zM21qN2hoOTh1d2IifQ.JyQl2tr6nStL5271bNz7FA'
+    }).addTo(this.map);*/
 
     const DebugLayer = L.GridLayer.extend({
       createTile: function (coords) {
