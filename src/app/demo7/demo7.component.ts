@@ -159,6 +159,11 @@ export class Demo7Component implements OnInit, AfterViewInit {
 
   cluster_map = [];
 
+  fields_map = {
+    'direction': 'sector',
+    'speed': 'ks'
+  };
+
   constructor(
     private configService: ConfigurationService,
     private schemaService: SchemaService,
@@ -342,7 +347,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
               // .range(['rgba(255,237,160, 0.5)','rgba(254,178,76, 0.95)','rgba(240,59,32, 1.0)'])
               // .range(['rgba(215,25,28, 0.75)','rgba(253,174,97, 0.75)','rgba(171,217,233, 1.0)','rgba(44,123,182, 1.0)']);
               // .range(['rgba(241,238,246, 1.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
-              .range(['rgb(241,238,246)','rgb(189,201,225)','rgb(116,169,207)','rgb(43,140,190)','rgb(4,90,141)']);
+              .range(['rgb(241,238,246)', 'rgb(189,201,225)', 'rgb(116,169,207)', 'rgb(43,140,190)', 'rgb(4,90,141)']);
 
 
             var beginAngle = 0;
@@ -485,16 +490,13 @@ export class Demo7Component implements OnInit, AfterViewInit {
   }
 
   executeClustering() {
-    let fields = '';
+    let aggr = '';
 
     for (const i in this.getFieldsControls()) {
       if (this.getFieldsControls()[i].value) {
-        fields += this.dataset.payloads[i] + ':';
+        let field = this.dataset.payloads[i];
+        aggr += '/aggr=' + this.fields_map[field] + '.(' + field + ')'
       }
-    }
-
-    if (fields.length > 1) {
-      fields = fields.substr(0, fields.length - 1);
     }
 
     let group_by = '';
@@ -509,7 +511,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
       '/clusters=' + this.options.get('clusters').value +
       '/iterations=' + this.options.get('iterations').value +
       '/cluster_by=' + this.dataset.identifier +
-      '/fields=(' + fields + ')' +
+      aggr +
       group_by;
 
     this.dataService.query(query).subscribe(data => {
@@ -529,16 +531,21 @@ export class Demo7Component implements OnInit, AfterViewInit {
       return '/const=' + this.dataset.identifier + '.values.(all)';
     }
 
-    const cluster_id = this.options.get('cluster').value - 1;
+    /* const cluster_id = this.options.get('cluster').value - 1; */
 
     let values = '/const=' + this.dataset.identifier + '.values.(';
-    for (const elt of this.cluster_map[cluster_id]) {
-      values += elt + ':';
+
+    for (let cluster_id = 0; cluster_id < this.options.get('clusters').value; ++cluster_id) {
+      for (const elt of this.cluster_map[cluster_id]) {
+        values += elt + ':';
+      }
     }
 
-    if (this.cluster_map[cluster_id].length > 0) {
+    values = values.substr(0, values.length - 1);
+
+    /* if (this.cluster_map[cluster_id].length > 0) {
       values = values.substr(0, values.length - 1);
-    }
+    } */
 
     values += ')';
 
