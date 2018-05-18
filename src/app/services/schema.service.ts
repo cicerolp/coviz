@@ -54,7 +54,7 @@ export class SchemaService {
       'local': [0,0],
       'geometry': 'circle',
       'geometry_size': 0,
-      'resolution': 4,
+      'resolution': 5,
       'composition': 'color',
       'color': 'fixed',
 
@@ -74,7 +74,7 @@ export class SchemaService {
       'local': [0,0],
       'geometry': 'circle',
       'geometry_size': 0,
-      'resolution': 4,
+      'resolution': 5,
       'composition': 'color',
       'color': 'fixed',
 
@@ -95,7 +95,7 @@ export class SchemaService {
       'local': [0,0],
       'geometry': 'circle',
       'geometry_size': 0,
-      'resolution': 4,
+      'resolution': 5,
       'composition': 'color',
       'color': 'fixed',
 
@@ -115,7 +115,7 @@ export class SchemaService {
       'local': 'USA',
       'geometry': 'circle',
       'geometry_size': 0,
-      'resolution': 3,
+      'resolution': 5,
       'composition': 'color',
       'color': 'fixed',
 

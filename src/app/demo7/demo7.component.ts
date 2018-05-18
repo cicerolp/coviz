@@ -196,7 +196,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
       updateWhenIdle: false,
       updateWhenZooming: false,
       keepBuffer: 2,
-      updateInterval: 1000
+      updateInterval: 33
     });
 
     this.CanvasLayer.createTile = (coords, done) => {
@@ -211,7 +211,102 @@ export class Demo7Component implements OnInit, AfterViewInit {
       // ctx.globalCompositeOperation = this.options.get('composition').value;
       ctx.clearRect(0, 0, tileSize.x, tileSize.y);
 
-      const config = () => {
+      let scale = d3.scaleSequential(d3.interpolateRainbow)
+      .domain([0, this.options.get('clusters').value - 1]);
+
+      let draw = (datum, cluster: number) => {
+        // drawing
+        const mid_x = (datum.x0 + datum.x1) / 2;
+        const mid_y = (datum.y0 + datum.y1) / 2;
+
+        const radius = Math.min(datum.x1 - datum.x0, datum.y1 - datum.y0) / 2;
+
+        const cos_x = Math.cos(datum.median);
+        const sin_y = Math.sin(datum.median);
+
+        const x = cos_x * radius + mid_x;
+        const y = sin_y * radius + mid_y;
+
+        ctx.beginPath();
+        ctx.moveTo(mid_x, mid_y);
+        ctx.lineTo(x, y);
+
+        ctx.lineWidth = 2.0 + this.options.get('geom_size').value;
+        ctx.strokeStyle = scale(cluster);
+        ctx.stroke();
+      }
+
+      let data = [];
+      const promises = [];
+
+      let getPromise = (cluster: number) => {
+        return new Promise((resolve, reject) => {
+          let query = '/query' +
+            '/dataset=' + this.dataset.datasetName +
+            '/aggr=sector.direction_t' +
+            this.getClusterConst(cluster) +
+            this.getTemporalConst() +
+            '/const=' + this.dataset.spatialDimension[0] +
+            '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
+            '/group=' + this.dataset.spatialDimension[0];
+
+          this.dataService.query(query).subscribe(response => {
+            data.push({
+              'cluster': cluster,
+              'data': response[0]
+            });
+            resolve(true);
+          });
+        });
+      };
+
+      if (this.options.get('show_all_clusters').value && this.cluster_map.length !== 0) {
+        for (const cluster in this.cluster_map) {
+          promises.push(getPromise(Number(cluster)));
+        }        
+      } else {        
+        promises.push(getPromise(this.options.get('cluster').value - 1));
+      }
+
+      Promise.all(promises).then(() => {
+        for (let v of data) {
+          
+          let cluster: number = v.cluster;
+
+          for (let d of v.data) {
+            // pre-process
+            let n = 1 << (d[2] - coords.z);
+
+            let xmin = (coords.x) * n;
+            let xmax = (coords.x + 1) * n;
+
+            let ymin = (coords.y) * n;
+            let ymax = (coords.y + 1) * n;
+
+            const x0 = ((d[0] - xmin) / (xmax - xmin)) * 256;
+            const x1 = ((d[0] - xmin + 1) / (xmax - xmin)) * 256;
+
+            const y0 = ((d[1] - ymin) / (ymax - ymin)) * 256;
+            const y1 = ((d[1] - ymin + 1) / (ymax - ymin)) * 256;
+
+            const datum = {
+              'x0': x0,
+              'x1': x1,
+              'y0': y0,
+              'y1': y1,
+              'median': d[3]
+            };
+
+            draw(datum, cluster);
+          }
+        }
+
+        done(null, tile);
+      });
+
+      return tile;
+
+      /* const config = () => {
         const query_func = {
           circle: () => {
             const incre = (2 * Math.PI) / this.options.get('sectors').value;
@@ -330,42 +425,42 @@ export class Demo7Component implements OnInit, AfterViewInit {
 
             const radius = Math.min(datum.x1 - datum.x0, datum.y1 - datum.y0) / 2;
 
-            const values: number[] = [];
-            let prev_value = 0;
-            for (let v = 0; v < datum.values.length; ++v) {
-              values.push(datum.values[v] - prev_value);
-              prev_value = datum.values[v];
+            // const values: number[] = [];
+            // let prev_value = 0;
+            // for (let v = 0; v < datum.values.length; ++v) {
+            //   values.push(datum.values[v] - prev_value);
+            //   prev_value = datum.values[v];
 
-            }
-            values.push(1.0 - prev_value);
+            // }
+            // values.push(1.0 - prev_value);
 
-            const extents: [number, number] = d3.extent(values);
+            // const extents: [number, number] = d3.extent(values);
 
-            const scale = d3.scaleQuantize<string>()
-              .domain([0, 1])
-              // .range(['rgba(0, 0, 255, 0.5)', 'rgba(255, 165, 0, 1.0)']);
-              // .range(['rgba(255,237,160, 0.5)','rgba(254,178,76, 0.95)','rgba(240,59,32, 1.0)'])
-              // .range(['rgba(215,25,28, 0.75)','rgba(253,174,97, 0.75)','rgba(171,217,233, 1.0)','rgba(44,123,182, 1.0)']);
-              // .range(['rgba(241,238,246, 1.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
-              .range(['rgb(241,238,246)', 'rgb(189,201,225)', 'rgb(116,169,207)', 'rgb(43,140,190)', 'rgb(4,90,141)']);
+            // const scale = d3.scaleQuantize<string>()
+            //   .domain([0, 1])
+            //   // .range(['rgba(0, 0, 255, 0.5)', 'rgba(255, 165, 0, 1.0)']);
+            //   // .range(['rgba(255,237,160, 0.5)','rgba(254,178,76, 0.95)','rgba(240,59,32, 1.0)'])
+            //   // .range(['rgba(215,25,28, 0.75)','rgba(253,174,97, 0.75)','rgba(171,217,233, 1.0)','rgba(44,123,182, 1.0)']);
+            //   // .range(['rgba(241,238,246, 1.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
+            //   .range(['rgb(241,238,246)', 'rgb(189,201,225)', 'rgb(116,169,207)', 'rgb(43,140,190)', 'rgb(4,90,141)']);
 
 
-            var beginAngle = 0;
-            var endAngle = 0;
-            var angle = (2 * Math.PI) / this.options.get('sectors').value;
+            // var beginAngle = 0;
+            // var endAngle = 0;
+            // var angle = (2 * Math.PI) / this.options.get('sectors').value;
 
-            for (var i = 0; i < values.length; ++i) {
-              beginAngle = endAngle;
-              endAngle = endAngle + angle;
+            // for (var i = 0; i < values.length; ++i) {
+            //   beginAngle = endAngle;
+            //   endAngle = endAngle + angle;
 
-              ctx.beginPath();
-              ctx.moveTo(mid_x, mid_y);
-              ctx.arc(mid_x, mid_y, radius, beginAngle, endAngle);
-              ctx.lineTo(mid_x, mid_y);
+            //   ctx.beginPath();
+            //   ctx.moveTo(mid_x, mid_y);
+            //   ctx.arc(mid_x, mid_y, radius, beginAngle, endAngle);
+            //   ctx.lineTo(mid_x, mid_y);
 
-              ctx.fillStyle = scale(values[i]);
-              ctx.fill();
-            }
+            //   ctx.fillStyle = scale(values[i]);
+            //   ctx.fill();
+            // }
 
             const cos_x = Math.cos(datum.median);
             const sin_y = Math.sin(datum.median);
@@ -393,19 +488,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
           query: query_func[this.options.get('geometry').value],
           execute: execute_func[this.options.get('geometry').value],
         };
-      };
-
-      this.dataService.query(config().query()).subscribe(data => {
-        if (data[0] === undefined) {
-          return tile;
-        }
-
-        config().execute(data);
-
-        done(null, tile);
-      });
-
-      return tile;
+      }; */
     };
 
     this.mapService.map.addLayer(this.CanvasLayer);
@@ -526,28 +609,50 @@ export class Demo7Component implements OnInit, AfterViewInit {
     this.setMapData();
   }
 
-  getClusterConst() {
-    if (this.cluster_map.length <= 1) {
+  getClusterConst(cluster?: number) {
+    if (this.cluster_map.length === 0) {
       return '/const=' + this.dataset.identifier + '.values.(all)';
     }
 
-    /* const cluster_id = this.options.get('cluster').value - 1; */
-
     let values = '/const=' + this.dataset.identifier + '.values.(';
 
-    for (let cluster_id = 0; cluster_id < this.options.get('clusters').value; ++cluster_id) {
+    if (cluster === undefined) {
+      cluster = this.options.get('cluster').value - 1;
+    }
+
+    for (const elt of this.cluster_map[cluster]) {
+      values += elt + ':';
+    }
+
+    if (this.cluster_map[cluster].length > 0) {
+      values = values.substr(0, values.length - 1);
+    }
+
+    values += ')';
+
+    /* let values = '/const=' + this.dataset.identifier + '.values.(';
+
+    if (this.options.get('show_all_clusters').value) {
+      for (let cluster of this.cluster_map) {
+        for (const elt of cluster) {
+          values += elt + ':';
+        }
+      }
+
+      values = values.substr(0, values.length - 1);
+    } else {
+      const cluster_id = this.options.get('cluster').value - 1;
+
       for (const elt of this.cluster_map[cluster_id]) {
         values += elt + ':';
       }
+
+      if (this.cluster_map[cluster_id].length > 0) {
+        values = values.substr(0, values.length - 1);
+      }
     }
 
-    values = values.substr(0, values.length - 1);
-
-    /* if (this.cluster_map[cluster_id].length > 0) {
-      values = values.substr(0, values.length - 1);
-    } */
-
-    values += ')';
+    values += ')'; */
 
     return values;
   }
@@ -672,12 +777,12 @@ export class Demo7Component implements OnInit, AfterViewInit {
   initialize() {
     const fields_array = [];
     for (const field of this.dataset.payloads) {
-      fields_array.push(new FormControl(false));
+      fields_array.push(new FormControl(true));
     }
 
     const group_by_array = [[], []];
     for (const field of this.dataset.spatialDimension) {
-      group_by_array[0].push(new FormControl(false));
+      group_by_array[0].push(new FormControl(true));
       group_by_array[1].push(new FormControl(8));
     }
 
@@ -688,11 +793,12 @@ export class Demo7Component implements OnInit, AfterViewInit {
       resolution: new FormControl(this.dataset.resolution),
       composition: new FormControl(this.dataset.composition),
 
-      clusters: new FormControl(1),
+      clusters: new FormControl(8),
       cluster: new FormControl(1),
+      show_all_clusters: new FormControl(true),
 
-      sectors: new FormControl(10),
-      iterations: new FormControl(10),
+      sectors: new FormControl(35),
+      iterations: new FormControl(0),
 
       aggr: new FormControl('count'),
       payload: new FormControl(this.dataset.payloads[0]),
