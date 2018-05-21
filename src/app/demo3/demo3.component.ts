@@ -492,7 +492,7 @@ export class Demo3Component implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.mapService.load();
+    this.mapService.load_CRSEPSG3857();
 
     this.dataset = this.schemaService.get(this.dataset_values[0].value);
 

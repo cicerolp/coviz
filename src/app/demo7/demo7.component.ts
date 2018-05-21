@@ -736,7 +736,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.mapService.load();
+    this.mapService.load_CRSSimple();
 
     this.activatedRoute.params.subscribe(params => {
       const param = params['dataset'];
@@ -745,8 +745,6 @@ export class Demo7Component implements OnInit, AfterViewInit {
       } else {
         this.dataset = this.schemaService.get(this.configService.defaultDataset);
       }
-
-
 
       this.initialize();
     });

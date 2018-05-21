@@ -374,7 +374,7 @@ export class Demo1Component implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.mapService.load();
+    this.mapService.load_CRSEPSG3857();
 
     this.activatedRoute.params.subscribe(params => {
       const param = params['dataset'];

@@ -22,30 +22,43 @@ export class MapService {
 
   constructor(private http: HttpClient) { }
 
-  load() {
+  load_CRSSimple() {
     this.map = L.map('map', {
       crs: L.CRS.Simple
     });
 
-    // var bounds = [[0, 0], [100, 100]];
     var bounds = [[-512, -512], [512, 512]];
-    /* var image = L.imageOverlay('assets/uqm_map_full.png', bounds)
-      .addTo(this.map); */
-
     this.map.fitBounds(bounds);
 
-    /* this.map = L.map('map', {
+    this.addDebugLayer();
+
+    this.map.on('moveend', () => {
+      this.lastPosition.center = this.map.getCenter();
+      this.lastPosition.zoom = this.map.getZoom();
+    });
+  }
+
+  load_CRSEPSG3857() {
+    this.map = L.map('map', {
       worldCopyJump: true
-    }).setView(this.lastPosition.center, this.lastPosition.zoom); */
+    }).setView(this.lastPosition.center, this.lastPosition.zoom);
 
-
-    /*L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
+    L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: '',
       maxZoom: 18,
       id: 'mapbox.streets',
       accessToken: 'pk.eyJ1IjoiY2FscGFoaW5zIiwiYSI6ImNqaDduaGVtdDBhM28zM21qN2hoOTh1d2IifQ.JyQl2tr6nStL5271bNz7FA'
-    }).addTo(this.map);*/
+    }).addTo(this.map);
 
+    // this.addDebugLayer();
+
+    this.map.on('moveend', () => {
+      this.lastPosition.center = this.map.getCenter();
+      this.lastPosition.zoom = this.map.getZoom();
+    });
+  }
+
+  private addDebugLayer() {
     const DebugLayer = L.GridLayer.extend({
       createTile: function (coords) {
         const tile = document.createElement('div');
@@ -56,11 +69,6 @@ export class MapService {
     });
 
     this.map.addLayer(new DebugLayer());
-
-    this.map.on('moveend', () => {
-      this.lastPosition.center = this.map.getCenter();
-      this.lastPosition.zoom = this.map.getZoom();
-    });
   }
 
   flyTo(location: Location): void {    
