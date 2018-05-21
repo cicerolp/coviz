@@ -36,6 +36,7 @@ import { BoxPlotComponent } from './box-plot/box-plot.component';
 import { TimezoneService } from './services/timezone.service';
 import { Demo6Component } from './demo6/demo6.component';
 import { Demo7Component } from './demo7/demo7.component';
+import { DensityChartComponent } from './density-chart/density-chart.component';
 
 export function configProviderFactory(provider: SchemaService) {
   return () => provider.load();
@@ -46,19 +47,22 @@ export function configProviderFactory(provider: SchemaService) {
     AppComponent,
     NavbarComponent,
     NavigatorComponent,
-    LineChartComponent,
-    CalendarComponent,
-    BarChartComponent,
     WidgetHostDirective,
+
     Demo1Component,
     Demo2Component,
     Demo3Component,
     Demo4Component,
     Demo5Component,
-    TemporalBandComponent,
-    BoxPlotComponent,
     Demo6Component,
-    Demo7Component
+    Demo7Component,
+
+    BoxPlotComponent,
+    LineChartComponent,
+    CalendarComponent,
+    BarChartComponent,
+    TemporalBandComponent,
+    DensityChartComponent
   ],
   imports: [
     BrowserModule,
@@ -93,6 +97,13 @@ export function configProviderFactory(provider: SchemaService) {
     TimezoneService
   ],
   bootstrap: [AppComponent],
-  entryComponents: [BarChartComponent, LineChartComponent, CalendarComponent, TemporalBandComponent, BoxPlotComponent],
+  entryComponents: [
+    BarChartComponent,
+    LineChartComponent,
+    CalendarComponent,
+    TemporalBandComponent,
+    BoxPlotComponent,
+    DensityChartComponent
+  ],
 })
 export class AppModule { }

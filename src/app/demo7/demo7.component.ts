@@ -37,6 +37,8 @@ import { WidgetHostDirective } from '../widget-host.directive';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { ConfigurationService } from '../services/configuration.service';
 import { MatSidenav } from '@angular/material';
+import { DensityChartComponent } from '../density-chart/density-chart.component';
+import { DensityWidget } from '../density-widget';
 
 interface WidgetType {
   key: string;
@@ -212,7 +214,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
       ctx.clearRect(0, 0, tileSize.x, tileSize.y);
 
       let scale = d3.scaleSequential(d3.interpolateRainbow)
-      .domain([0, this.options.get('clusters').value - 1]);
+        .domain([0, this.options.get('clusters').value - 1]);
 
       let draw = (datum, cluster: number) => {
         // drawing
@@ -263,14 +265,14 @@ export class Demo7Component implements OnInit, AfterViewInit {
       if (this.options.get('show_all_clusters').value && this.cluster_map.length !== 0) {
         for (const cluster in this.cluster_map) {
           promises.push(getPromise(Number(cluster)));
-        }        
-      } else {        
+        }
+      } else {
         promises.push(getPromise(this.options.get('cluster').value - 1));
       }
 
       Promise.all(promises).then(() => {
         for (let v of data) {
-          
+
           let cluster: number = v.cluster;
 
           for (let d of v.data) {
@@ -501,8 +503,46 @@ export class Demo7Component implements OnInit, AfterViewInit {
 
   loadWidgetsData() {
     for (const ref of this.widgets) {
-      if (ref.type === 'categorical') {
-        ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
+      if (ref.type === 'density') {
+        this.dataService.query('/query/dataset=' + this.dataset.datasetName +
+          '/aggr=quantile.' + ref.key + '_t.(0.0:1.0)' +
+          this.getCategoricalConst() +
+          this.getClusterConst() +
+          this.getTemporalConst() +
+          this.getRegionConst())
+          .subscribe(response => {
+            const min = response[0][0][0];
+            const max = response[0][1][0];
+
+            let values:number[] = [];
+
+            values.push(min);
+
+            let inverse_values = '';
+            const shift = (max - min) / 10.0;
+
+            for (let value = min + shift; value < max; value += shift) {
+              inverse_values += value + ":";
+              values.push(value);
+            }
+            inverse_values = inverse_values.substring(0, inverse_values.length - 1);
+
+            values.push(max);
+
+            (<DensityWidget>ref.widget).setValues(values);
+
+            ref.widget.setNextTerm(
+              '/query/dataset=' + this.dataset.datasetName +
+              '/aggr=inverse.' + ref.key + '_t.(' + inverse_values + ')' +
+              this.getCategoricalConst() +
+              this.getClusterConst() +
+              this.getTemporalConst() +
+              this.getRegionConst()
+            );
+          });
+
+
+        /* ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
@@ -512,7 +552,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
           this.getTemporalConst() +
           this.getRegionConst() +
           '/group=' + ref.key
-        );
+        ); */
       } else if (ref.type === 'temporal') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
@@ -616,16 +656,28 @@ export class Demo7Component implements OnInit, AfterViewInit {
 
     let values = '/const=' + this.dataset.identifier + '.values.(';
 
-    if (cluster === undefined) {
-      cluster = this.options.get('cluster').value - 1;
-    }
+    if (cluster === undefined && this.options.get('show_all_clusters').value) {
 
-    for (const elt of this.cluster_map[cluster]) {
-      values += elt + ':';
-    }
+      for (const cluster of this.cluster_map) {
+        for (const elt of cluster) {
+          values += elt + ':';
+        }        
+      }
 
-    if (this.cluster_map[cluster].length > 0) {
       values = values.substr(0, values.length - 1);
+
+    } else {
+      if (cluster === undefined) {
+        cluster = this.options.get('cluster').value - 1;
+      }
+  
+      for (const elt of this.cluster_map[cluster]) {
+        values += elt + ':';
+      }
+
+      if (this.cluster_map[cluster].length > 0) {
+        values = values.substr(0, values.length - 1);
+      }
     }
 
     values += ')';
@@ -826,21 +878,17 @@ export class Demo7Component implements OnInit, AfterViewInit {
 
     this.widgets = [];
 
-    for (const dim of Object.keys(this.dataset.temporalDimension)) {
-      const component = this.componentFactory.resolveComponentFactory(LineChartComponent);
+    for (const dim of this.dataset.payloads) {
+      const component = this.componentFactory.resolveComponentFactory(DensityChartComponent);
 
       const componentRef = viewContainerRef.createComponent(component);
-      const componentInstance = <LineChartComponent>componentRef.instance;
+      const componentInstance = <DensityChartComponent>componentRef.instance;
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
-      const lower = this.dataset.temporalDimension[dim].lower;
-      const upper = this.dataset.temporalDimension[dim].upper;
-      this.temporal[dim] = '/const=' + dim + '.interval.(' + lower + ':' + upper + ')';
-
       componentInstance.setXLabel(dim);
-      componentInstance.register(dim, this.setTemporalData);
-      this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
+      // componentInstance.register(dim, this.setTemporalData);
+      this.widgets.push({ key: dim, type: 'density', widget: componentInstance });
     }
 
     // refresh input data
