@@ -43,7 +43,14 @@ export class MapService {
       worldCopyJump: true
     }).setView(this.lastPosition.center, this.lastPosition.zoom);
 
-    L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
+    
+    L.tileLayer(
+      // dark
+      'https://api.mapbox.com/styles/v1/calpahins/cjh7nygud63km2sq5zp0pikfw/tiles/256/{z}/{x}/{y}?access_token={accessToken}', 
+      // mapbox light
+      // 'https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}'
+    {
+
       attribution: '',
       maxZoom: 18,
       id: 'mapbox.streets',
@@ -62,8 +69,9 @@ export class MapService {
     const DebugLayer = L.GridLayer.extend({
       createTile: function (coords) {
         const tile = document.createElement('div');
-        tile.innerHTML = [coords.x, coords.y, coords.z].join(', ');
-        tile.style.outline = '1px solid darkgrey';
+        // tile.innerHTML = ;
+        tile.innerHTML = '<span style=\'color: darkgrey;\'>' + [coords.x, coords.y, coords.z].join(', ') + '</span>'
+        tile.style.outline = '1px solid black';
         return tile;
       }
     });
