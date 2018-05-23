@@ -140,7 +140,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
   ];
 
   dataset_values = [
-    { value: 'hurdat2', viewValue: 'hurdat2' }
+    { value: 'hurdat2', viewValue: 'hurdat2' },
+    { value: 'hurdat2_resample', viewValue: 'hurdat2_resample' }
   ];
 
   color: any;
@@ -162,7 +163,9 @@ export class Demo6Component implements OnInit, AfterViewInit {
   fields_map = {
     'wind': 'ks',
     'pressure': 'ks',
-    'direction': 'sector'
+    'direction': 'sector',
+    'x': 'ksw',
+    'y': 'ksw'
   };
 
   constructor(
@@ -580,7 +583,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
   setDataset(evnt: any) {
     this.sidenav.toggle();
-    const link = ['/demo7', this.options.get('dataset').value];
+    const link = ['/demo6', this.options.get('dataset').value];
     this.router.navigate(link);
   }
 
@@ -884,6 +887,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
       const componentInstance = <DensityChartComponent>componentRef.instance;
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
+
+      console.log(dim);
 
       componentInstance.setXLabel(dim);
       // componentInstance.register(dim, this.setTemporalData);

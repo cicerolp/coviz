@@ -67,7 +67,7 @@ export class SchemaService {
       'temporalDimension': {},
       'spatialDimension': ['coord'],
       'categoricalDimension': [],
-      'payloads': ['direction', 'speed']
+      'payloads': ['direction', 'speed', 'x', 'y']
     },
 
     'cvrr-i5sim': {
@@ -87,7 +87,7 @@ export class SchemaService {
       'temporalDimension': {},
       'spatialDimension': ['coord'],
       'categoricalDimension': [],
-      'payloads': ['direction', 'speed']
+      'payloads': ['direction', 'speed', 'x', 'y']
     },
 
 
@@ -108,7 +108,7 @@ export class SchemaService {
       'temporalDimension': {},
       'spatialDimension': ['coord'],
       'categoricalDimension': [],
-      'payloads': ['direction', 'speed']
+      'payloads': ['direction', 'speed', 'x', 'y']
     },
 
     'hurdat2': {
@@ -132,7 +132,31 @@ export class SchemaService {
       },      
       'spatialDimension': ['coord'],
       'categoricalDimension': ['hurricane'],
-      'payloads': ['wind', 'pressure', 'direction']
+      'payloads': ['wind', 'pressure', 'x', 'y']
+    },
+
+    'hurdat2_resample': {
+      'local': 'USA',
+      'geometry': 'circle',
+      'geometry_size': 0,
+      'resolution': 5,
+      'composition': 'color',
+      'color': 'fixed',
+
+      'datasetName': 'hurdat2_resample',
+      'timeStep': 3600,
+
+      'identifier': 'hurricane',
+      'trajectory': 'direction_t',
+
+      'temporalDimension': {
+        'datetime': { 'lower': 0, 'upper': 0 },
+        'datetime_begin': { 'lower': 0, 'upper': 0 },
+        'datetime_end': { 'lower': 0, 'upper': 0 }
+      },      
+      'spatialDimension': ['coord'],
+      'categoricalDimension': ['hurricane'],
+      'payloads': ['wind', 'pressure', 'direction', 'x', 'y']
     },
 
     'green_tripdata': {

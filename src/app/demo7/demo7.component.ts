@@ -163,7 +163,9 @@ export class Demo7Component implements OnInit, AfterViewInit {
 
   fields_map = {
     'direction': 'sector',
-    'speed': 'ks'
+    'speed': 'ks',
+    'x': 'ksw',
+    'y': 'ksw'
   };
 
   constructor(
@@ -519,7 +521,7 @@ export class Demo7Component implements OnInit, AfterViewInit {
             values.push(min);
 
             let inverse_values = '';
-            const shift = (max - min) / 10.0;
+            const shift = (max - min) / 20.0;
 
             for (let value = min + shift; value < max; value += shift) {
               inverse_values += value + ":";
