@@ -12,6 +12,9 @@ import {
 import { FormBuilder, FormGroup, FormControl, FormsModule, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
+import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+
 import { GeocodingService } from '../services/geocoding.service';
 import { DataService } from '../services/data.service';
 import { MapService } from '../services/map.service';
@@ -158,6 +161,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
     }
   };
 
+  geojson: any;
+  geojson_color = new Map<number, number>();
   cluster_map = [];
 
   fields_map = {
@@ -169,6 +174,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
   };
 
   constructor(
+    private httpService: HttpClient,
+
     private configService: ConfigurationService,
     private schemaService: SchemaService,
 
@@ -196,307 +203,52 @@ export class Demo6Component implements OnInit, AfterViewInit {
   }
 
   loadLayer() {
-    this.CanvasLayer = new L.GridLayer({
-      updateWhenIdle: false,
-      updateWhenZooming: false,
-      keepBuffer: 2,
-      updateInterval: 33
+    let self = this;
+
+    let scale = d3.scaleSequential(d3.interpolateWarm)
+    .domain([0, this.options.get('clusters').value - 1]);
+
+    this.CanvasLayer = L.geoJSON(this.geojson, {
+      style: function(feature) {
+        let id = Number(feature.properties.id);
+        
+        if (self.geojson_color.has(id)) {
+          return {
+            color: scale(self.geojson_color.get(id)),
+            weight: 0.90,
+            opacity: 0.85,
+          };
+        } else {
+          return {
+            color: scale(0),
+            weight: 0.90,
+            opacity: 1.0
+          };
+        }
+      },
+      filter: function(feature, layer) {
+        let id = Number(feature.properties.id);
+
+        if (self.geojson_color.size === 0) {
+          return true;
+        } else if (self.geojson_color.has(id)) {
+          if (self.options.get('show_all_clusters').value) {
+            return true;
+          } else if (self.options.get('cluster').value - 1 === self.geojson_color.get(id)) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      } 
     });
-
-    this.CanvasLayer.createTile = (coords, done) => {
-      const tile = document.createElement('canvas');
-
-      const tileSize = this.CanvasLayer.getTileSize();
-      tile.setAttribute('width', tileSize.x.toString());
-      tile.setAttribute('height', tileSize.y.toString());
-
-      const ctx = tile.getContext('2d');
-
-      // ctx.globalCompositeOperation = this.options.get('composition').value;
-      ctx.clearRect(0, 0, tileSize.x, tileSize.y);
-
-      let scale = d3.scaleSequential(d3.interpolateRainbow)
-        .domain([0, this.options.get('clusters').value - 1]);
-
-      let draw = (datum, cluster: number) => {
-        // drawing
-        const mid_x = (datum.x0 + datum.x1) / 2;
-        const mid_y = (datum.y0 + datum.y1) / 2;
-
-        const radius = Math.min(datum.x1 - datum.x0, datum.y1 - datum.y0) / 2;
-
-        const cos_x = Math.cos(datum.median);
-        const sin_y = Math.sin(datum.median);
-
-        const x = cos_x * radius + mid_x;
-        const y = sin_y * radius + mid_y;
-
-        ctx.beginPath();
-        ctx.moveTo(mid_x, mid_y);
-        ctx.lineTo(x, y);
-
-        ctx.lineWidth = 2.0 + this.options.get('geom_size').value;
-        ctx.strokeStyle = scale(cluster);
-        ctx.stroke();
-      }
-
-      let data = [];
-      const promises = [];
-
-      let getPromise = (cluster: number) => {
-        return new Promise((resolve, reject) => {
-          let query = '/query' +
-            '/dataset=' + this.dataset.datasetName +
-            '/aggr=sector.direction_t' +
-            this.getClusterConst(cluster) +
-            this.getTemporalConst() +
-            '/const=' + this.dataset.spatialDimension[0] +
-            '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
-            '/group=' + this.dataset.spatialDimension[0];
-
-          this.dataService.query(query).subscribe(response => {
-            data.push({
-              'cluster': cluster,
-              'data': response[0]
-            });
-            resolve(true);
-          });
-        });
-      };
-
-      if (this.options.get('show_all_clusters').value && this.cluster_map.length !== 0) {
-        for (const cluster in this.cluster_map) {
-          promises.push(getPromise(Number(cluster)));
-        }
-      } else {
-        promises.push(getPromise(this.options.get('cluster').value - 1));
-      }
-
-      Promise.all(promises).then(() => {
-        for (let v of data) {
-
-          let cluster: number = v.cluster;
-
-          for (let d of v.data) {
-            // pre-process
-            let n = 1 << (d[2] - coords.z);
-
-            let xmin = (coords.x) * n;
-            let xmax = (coords.x + 1) * n;
-
-            let ymin = (coords.y) * n;
-            let ymax = (coords.y + 1) * n;
-
-            const x0 = ((d[0] - xmin) / (xmax - xmin)) * 256;
-            const x1 = ((d[0] - xmin + 1) / (xmax - xmin)) * 256;
-
-            const y0 = ((d[1] - ymin) / (ymax - ymin)) * 256;
-            const y1 = ((d[1] - ymin + 1) / (ymax - ymin)) * 256;
-
-            const datum = {
-              'x0': x0,
-              'x1': x1,
-              'y0': y0,
-              'y1': y1,
-              'median': d[3]
-            };
-
-            draw(datum, cluster);
-          }
-        }
-
-        done(null, tile);
-      });
-
-      return tile;
-
-      /* const config = () => {
-        const query_func = {
-          circle: () => {
-            const incre = (2 * Math.PI) / this.options.get('sectors').value;
-
-            let inverse_values = '';
-            for (let a = incre; a < 2 * Math.PI; a += incre) {
-              inverse_values += a + ':';
-            }
-
-            inverse_values = inverse_values.substring(0, inverse_values.length - 1);
-
-            return '/query' +
-              '/dataset=' + this.dataset.datasetName +
-
-              '/aggr=inverse.direction_t.(' + inverse_values + ')' +
-              // '/aggr=quantile.direction_t.(0.5)' +
-              '/aggr=sector.direction_t' +
-
-              this.getClusterConst() +
-              this.getTemporalConst() +
-
-              '/const=' + this.dataset.spatialDimension[0] +
-              '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
-              '/group=' + this.dataset.spatialDimension[0];
-          },
-
-          rect: () => {
-            return '/query' +
-              '/dataset=' + this.dataset.datasetName +
-
-              '/aggr=count' +
-
-              this.getClusterConst() +
-              this.getTemporalConst() +
-
-              '/const=' + this.dataset.spatialDimension[0] +
-              '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
-              '/group=' + this.dataset.spatialDimension[0];
-          }
-        };
-
-
-        const execute_func = {
-          circle: (data) => {
-            for (let i = 0; i < data[0].length; i += (this.options.get('sectors').value - 1)) {
-              const d = data[0][i];
-
-              let n = 1 << (d[2] - coords.z);
-
-              let xmin = (coords.x) * n;
-              let xmax = (coords.x + 1) * n;
-
-              let ymin = (coords.y) * n;
-              let ymax = (coords.y + 1) * n;
-
-              const x0 = ((d[0] - xmin) / (xmax - xmin)) * 256;
-              const x1 = ((d[0] - xmin + 1) / (xmax - xmin)) * 256;
-
-              const y0 = ((d[1] - ymin) / (ymax - ymin)) * 256;
-              const y1 = ((d[1] - ymin + 1) / (ymax - ymin)) * 256;
-
-              const values = [];
-              for (let s = 0; s < this.options.get('sectors').value - 1; ++s) {
-                values.push(data[0][i + s][3]);
-              }
-
-              const datum = {
-                'x0': x0,
-                'x1': x1,
-                'y0': y0,
-                'y1': y1,
-                'values': values,
-                'median': data[1][i / (this.options.get('sectors').value - 1)][3]
-
-              };
-
-              config().draw(datum, this.options.get('geom_size').value);
-            }
-          },
-
-          rect: (data) => {
-            for (let i = 0; i < data[0].length; ++i) {
-              const d = data[0][i];
-
-              let n = 1 << (d[2] - coords.z);
-
-              let xmin = (coords.x) * n;
-              let xmax = (coords.x + 1) * n;
-
-              let ymin = (coords.y) * n;
-              let ymax = (coords.y + 1) * n;
-
-              const x0 = ((d[0] - xmin) / (xmax - xmin)) * 256;
-              const x1 = ((d[0] - xmin + 1) / (xmax - xmin)) * 256;
-
-              const y0 = ((d[1] - ymin) / (ymax - ymin)) * 256;
-              const y1 = ((d[1] - ymin + 1) / (ymax - ymin)) * 256;
-
-              const datum = {
-                'x0': x0,
-                'x1': x1,
-                'y0': y0,
-                'y1': y1,
-                'count': d[3]
-              };
-
-              config().draw(datum, this.options.get('geom_size').value);
-            }
-          }
-        };
-
-        const draw_func = {
-          circle: (datum, geom_size) => {
-            const mid_x = (datum.x0 + datum.x1) / 2;
-            const mid_y = (datum.y0 + datum.y1) / 2;
-
-            const radius = Math.min(datum.x1 - datum.x0, datum.y1 - datum.y0) / 2;
-
-            // const values: number[] = [];
-            // let prev_value = 0;
-            // for (let v = 0; v < datum.values.length; ++v) {
-            //   values.push(datum.values[v] - prev_value);
-            //   prev_value = datum.values[v];
-
-            // }
-            // values.push(1.0 - prev_value);
-
-            // const extents: [number, number] = d3.extent(values);
-
-            // const scale = d3.scaleQuantize<string>()
-            //   .domain([0, 1])
-            //   // .range(['rgba(0, 0, 255, 0.5)', 'rgba(255, 165, 0, 1.0)']);
-            //   // .range(['rgba(255,237,160, 0.5)','rgba(254,178,76, 0.95)','rgba(240,59,32, 1.0)'])
-            //   // .range(['rgba(215,25,28, 0.75)','rgba(253,174,97, 0.75)','rgba(171,217,233, 1.0)','rgba(44,123,182, 1.0)']);
-            //   // .range(['rgba(241,238,246, 1.0)', 'rgba(189,201,225, 1.0)', 'rgba(116,169,207, 1.0)', 'rgba(5,112,176, 1.0)']);
-            //   .range(['rgb(241,238,246)', 'rgb(189,201,225)', 'rgb(116,169,207)', 'rgb(43,140,190)', 'rgb(4,90,141)']);
-
-
-            // var beginAngle = 0;
-            // var endAngle = 0;
-            // var angle = (2 * Math.PI) / this.options.get('sectors').value;
-
-            // for (var i = 0; i < values.length; ++i) {
-            //   beginAngle = endAngle;
-            //   endAngle = endAngle + angle;
-
-            //   ctx.beginPath();
-            //   ctx.moveTo(mid_x, mid_y);
-            //   ctx.arc(mid_x, mid_y, radius, beginAngle, endAngle);
-            //   ctx.lineTo(mid_x, mid_y);
-
-            //   ctx.fillStyle = scale(values[i]);
-            //   ctx.fill();
-            // }
-
-            const cos_x = Math.cos(datum.median);
-            const sin_y = Math.sin(datum.median);
-
-            const x = cos_x * radius + mid_x;
-            const y = sin_y * radius + mid_y;
-
-            ctx.beginPath();
-            ctx.moveTo(mid_x, mid_y);
-            ctx.lineTo(x, y);
-
-            ctx.lineWidth = 2.0 + geom_size;
-            ctx.strokeStyle = 'red';
-            ctx.stroke();
-          },
-
-          rect: (datum, geom_size) => {
-            ctx.fillStyle = this.color(datum.count);
-            ctx.fillRect(datum.x0 - geom_size, datum.y0 - geom_size, (datum.x1 - datum.x0) + geom_size, (datum.y1 - datum.y0) + geom_size);
-          }
-        };
-
-        return {
-          draw: draw_func[this.options.get('geometry').value],
-          query: query_func[this.options.get('geometry').value],
-          execute: execute_func[this.options.get('geometry').value],
-        };
-      }; */
-    };
 
     this.mapService.map.addLayer(this.CanvasLayer);
     this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
+
+    return;
   }
 
   onMapZoomEnd() {
@@ -516,7 +268,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
             const min = response[0][0][0];
             const max = response[0][1][0];
 
-            let values:number[] = [];
+            let values: number[] = [];
 
             values.push(min);
 
@@ -588,7 +340,10 @@ export class Demo6Component implements OnInit, AfterViewInit {
   }
 
   setMapData() {
-    this.CanvasLayer.redraw();
+    this.mapService.map.removeLayer(this.CanvasLayer);
+    this.loadLayer();
+
+    // this.CanvasLayer.redraw();
   }
 
   setAggr() {
@@ -641,8 +396,16 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
     this.dataService.query(query).subscribe(data => {
       this.cluster_map = data[0];
-      this.setClusters();
 
+      this.geojson_color.clear();
+
+      for (let i in this.cluster_map) {
+        for (let elt of this.cluster_map[i]) {
+          this.geojson_color.set(elt, Number(i));
+        }
+      }
+
+      this.setClusters();
     });
   }
 
@@ -663,7 +426,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
       for (const cluster of this.cluster_map) {
         for (const elt of cluster) {
           values += elt + ':';
-        }        
+        }
       }
 
       values = values.substr(0, values.length - 1);
@@ -672,7 +435,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
       if (cluster === undefined) {
         cluster = this.options.get('cluster').value - 1;
       }
-  
+
       for (const elt of this.cluster_map[cluster]) {
         values += elt + ':';
       }
@@ -809,9 +572,6 @@ export class Demo6Component implements OnInit, AfterViewInit {
     this.marker.register(this.setRegionData);
 
     this.mapService.disableEvent(this.mapwidgets);
-
-    // load visualizations
-    this.loadLayer();
   }
 
   getFieldsControls() {
@@ -888,8 +648,6 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
-      console.log(dim);
-
       componentInstance.setXLabel(dim);
       // componentInstance.register(dim, this.setTemporalData);
       this.widgets.push({ key: dim, type: 'density', widget: componentInstance });
@@ -897,7 +655,18 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
     // refresh input data
     this.loadWidgetsData();
-    this.loadMapCard();
+
+    this.httpService.get('./assets/geojson/' + this.dataset.datasetName + '.geojson').subscribe(data => {
+      this.geojson = data;
+
+      // load map
+      this.loadLayer();
+      this.loadMapCard();
+    },
+      (err: HttpErrorResponse) => {
+        console.log(err.message);
+      }
+    );
   }
 
   getPayloadInfo(key: string) {
