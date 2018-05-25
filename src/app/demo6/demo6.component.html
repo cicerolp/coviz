@@ -70,6 +70,9 @@
           <section>
             <span class="badge  badge-danger"># of Clusters:</span> {{this.options.get('clusters').value}}
             <mat-slider min="1" max="32" step="1" thumbLabel="true" tickInterval="auto" formControlName="clusters"></mat-slider>
+            <div>
+              <mat-checkbox formControlName="hotline" (change)="setMapData()">Hotline</mat-checkbox>
+            </div>
           </section>
 
           <section>

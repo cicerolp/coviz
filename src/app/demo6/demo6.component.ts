@@ -20,7 +20,10 @@ import { DataService } from '../services/data.service';
 import { MapService } from '../services/map.service';
 
 import * as d3 from 'd3';
+
 import * as L from 'leaflet';
+import 'leaflet-hotline';
+
 import * as moment from 'moment';
 import { legendColor } from 'd3-svg-legend';
 
@@ -161,7 +164,8 @@ export class Demo6Component implements OnInit, AfterViewInit {
     }
   };
 
-  geojson: any;
+  geojson_data: any;
+  hotline_data = new Map<number, any>();
   geojson_color = new Map<number, number>();
   cluster_map = [];
 
@@ -206,44 +210,56 @@ export class Demo6Component implements OnInit, AfterViewInit {
     let self = this;
 
     let scale = d3.scaleSequential(d3.interpolateWarm)
-    .domain([0, this.options.get('clusters').value - 1]);
+      .domain([0, this.options.get('clusters').value - 1]);
 
-    this.CanvasLayer = L.geoJSON(this.geojson, {
-      style: function(feature) {
-        let id = Number(feature.properties.id);
-        
-        if (self.geojson_color.has(id)) {
-          return {
-            color: scale(self.geojson_color.get(id)),
-            weight: 0.90,
-            opacity: 0.85,
-          };
-        } else {
-          return {
-            color: scale(0),
-            weight: 0.90,
-            opacity: 1.0
-          };
-        }
-      },
-      filter: function(feature, layer) {
-        let id = Number(feature.properties.id);
-
-        if (self.geojson_color.size === 0) {
+    let filter = (id) => {
+      if (self.geojson_color.size === 0) {
+        return true;
+      } else if (self.geojson_color.has(id)) {
+        if (self.options.get('show_all_clusters').value) {
           return true;
-        } else if (self.geojson_color.has(id)) {
-          if (self.options.get('show_all_clusters').value) {
-            return true;
-          } else if (self.options.get('cluster').value - 1 === self.geojson_color.get(id)) {
-            return true;
-          } else {
-            return false;
-          }
+        } else if (self.options.get('cluster').value - 1 === self.geojson_color.get(id)) {
+          return true;
         } else {
           return false;
         }
-      } 
-    });
+      } else {
+        return false;
+      }
+    }
+
+    if (this.options.get('hotline').value) {
+      var coords = [];
+      this.hotline_data.forEach((value, key, map) => {
+        if (filter(Number(key))) {
+          coords.push(value);
+        }
+      });
+
+      this.CanvasLayer = L.hotline(coords, {
+        outlineWidth: 0,
+        weight: 1.0,
+        palette: {
+          0.0: 'blue',
+          1.0: 'gold'
+        }
+      });
+    } else {
+      this.CanvasLayer = L.geoJSON(this.geojson_data, {
+        style: function (feature) {
+          let id = Number(feature.properties.id);
+
+          if (self.geojson_color.has(id)) {
+            return { color: scale(self.geojson_color.get(id)), weight: 0.90, opacity: 0.85, };
+          } else {
+            return { color: scale(0), weight: 0.90, opacity: 1.0 };
+          }
+        },
+        filter: function (feature, layer) {
+          return filter(Number(feature.properties.id));
+        }
+      });
+    }
 
     this.mapService.map.addLayer(this.CanvasLayer);
     this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
@@ -594,7 +610,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
 
     const group_by_array = [[], []];
     for (const field of this.dataset.spatialDimension) {
-      group_by_array[0].push(new FormControl(true));
+      group_by_array[0].push(new FormControl(false));
       group_by_array[1].push(new FormControl(8));
     }
 
@@ -606,6 +622,7 @@ export class Demo6Component implements OnInit, AfterViewInit {
       composition: new FormControl(this.dataset.composition),
 
       clusters: new FormControl(8),
+      hotline: new FormControl(false),
       cluster: new FormControl(1),
       show_all_clusters: new FormControl(true),
 
@@ -656,8 +673,26 @@ export class Demo6Component implements OnInit, AfterViewInit {
     // refresh input data
     this.loadWidgetsData();
 
-    this.httpService.get('./assets/geojson/' + this.dataset.datasetName + '.geojson').subscribe(data => {
-      this.geojson = data;
+    this.httpService.get('./assets/geojson/' + this.dataset.datasetName + '.geojson').subscribe(response => {
+      this.geojson_data = response;
+
+      const data: any = response;
+      for (let feature of data.features) {
+        let coordinates = feature.geometry.coordinates;
+
+        let array = new Array();
+
+        for (let elt in coordinates) {
+          array.push([
+            coordinates[elt][1],
+            coordinates[elt][0],
+
+            Number(elt) / (coordinates.length - 1)
+          ]);
+        }
+
+        this.hotline_data.set(feature.properties.id, array);
+      }
 
       // load map
       this.loadLayer();
