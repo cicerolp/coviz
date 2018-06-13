@@ -146,8 +146,8 @@ export class Demo7Component implements OnInit, AfterViewInit {
   ];
 
   dataset_values = [
-    { value: 'hurdat2', viewValue: 'hurdat2' },
-    { value: 'hurdat2_resample', viewValue: 'hurdat2_resample' }
+    { value: 'cvrr-i5sim', viewValue: 'cvrr-i5sim' },
+    { value: 'cvrr-i5sim3', viewValue: 'cvrr-i5sim3' }
   ];
 
   color: any;
