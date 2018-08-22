@@ -5,7 +5,7 @@ import * as moment from 'moment';
 @Injectable()
 export class TimezoneService {
 
-  private offset = 3600 * 0 * 1000;
+  private offset = 3600 * 3 * 1000;
 
   constructor() { }
 
