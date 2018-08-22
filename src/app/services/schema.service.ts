@@ -170,11 +170,11 @@ export class SchemaService {
       'datasetName': 'on_time_performance_2014',
       'timeStep': 14400,
       'temporalDimension': {
-        'crs_dep_time': { 'lower': 0, 'upper': 0 }
+        'crs_arr_time': { 'lower': 0, 'upper': 0 }
       },
-      'spatialDimension': ['origin_airport', 'dest_airport'],
-      'categoricalDimension': ['unique_carrier', 'dep_on_time', 'arr_on_time'],
-      'payloads': ['dep_delay', 'arr_delay'],
+      'spatialDimension': ['dest_airport'],
+      'categoricalDimension': ['unique_carrier', 'arr_on_time'],
+      'payloads': ['arr_delay'],
       'payloadValues': {
         'dep_delay': {
           'quantile': { 'min_value': -10, 'max_value': 25, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
@@ -213,11 +213,11 @@ export class SchemaService {
       'datasetName': 'on_time_performance_2017',
       'timeStep': 14400,
       'temporalDimension': {
-        'crs_dep_time': { 'lower': 0, 'upper': 0 }
+        'crs_arr_time': { 'lower': 0, 'upper': 0 }
       },
-      'spatialDimension': ['origin_airport', 'dest_airport'],
-      'categoricalDimension': ['unique_carrier', 'dep_on_time', 'arr_on_time'],
-      'payloads': ['dep_delay', 'arr_delay'],
+      'spatialDimension': ['dest_airport'],
+      'categoricalDimension': ['unique_carrier', 'arr_on_time'],
+      'payloads': ['arr_delay'],
       'payloadValues': {
         'dep_delay': {
           'quantile': { 'min_value': -10, 'max_value': 25, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },

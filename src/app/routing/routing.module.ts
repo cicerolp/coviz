@@ -13,12 +13,11 @@ import { Demo7Component } from '../demo7/demo7.component';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'demo1/on_time_performance',
-    pathMatch: 'full'
+    component: Demo1Component
   },
   {
     path: 'demo1',
-    redirectTo: 'demo1/health'
+    component: Demo1Component
   },
   {
     path: 'demo1/:dataset',
@@ -26,7 +25,7 @@ const routes: Routes = [
   },
   {
     path: 'demo2',
-    redirectTo: 'demo2/health'
+    component: Demo2Component
   },
   {
     path: 'demo2/:dataset',
@@ -38,7 +37,7 @@ const routes: Routes = [
   },
   {
     path: 'demo4',
-    redirectTo: 'demo4/health'
+    component: Demo4Component
   },
   {
     path: 'demo4/:dataset',
