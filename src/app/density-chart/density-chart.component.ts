@@ -1,6 +1,7 @@
 import { Component, ViewChild, OnInit, ElementRef, AfterViewInit, Input, ViewEncapsulation, OnDestroy } from '@angular/core';
 
 import { Widget } from '../widget';
+import { DensityWidget } from '../density-widget';
 
 import * as d3 from 'd3';
 import { Subject } from 'rxjs/Subject';
@@ -10,13 +11,16 @@ import { SchemaService } from '../services/schema.service';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
-  selector: 'app-bar-chart',
+  selector: 'app-density-chart',
   encapsulation: ViewEncapsulation.None,
-  templateUrl: './bar-chart.component.html',
-  styleUrls: ['./bar-chart.component.scss']
+  templateUrl: './density-chart.component.html',
+  styleUrls: ['./density-chart.component.scss']
 })
-export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestroy {
+export class DensityChartComponent implements DensityWidget, OnInit, AfterViewInit, OnDestroy {
   uniqueId = 'id-' + Math.random().toString(36).substr(2, 16);
+
+  values = [];
+  densities = [];
 
   dataset: any;
   data = [];
@@ -27,7 +31,9 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
   xLabel = '';
   yLabel = '';
-  yFormat = d3.format('.2s');
+
+  yFormat = d3.format('.2f');
+  xFormat = d3.format('.2f');
 
   constructor(private dataService: DataService,
     private configService: ConfigurationService,
@@ -43,8 +49,25 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     });
 
     this.subject.subscribe(term => {
-      this.dataService.query(term).subscribe(data => {
-        this.data = data[0];
+      this.dataService.query(term).subscribe(response => {
+        this.data = [];
+        this.densities = [];
+
+        let prev_density = 0.0;
+        for (let d = 0; d < response[0].length; ++d) {
+          this.densities.push(response[0][d] - prev_density);
+          prev_density = response[0][d];
+        }
+        this.densities.push(1.0 - prev_density);
+
+
+        for (let i = 0; i < this.densities.length; ++i) {
+          this.data.push({
+            'x': (this.values[i] + this.values[i + 1]) / 2.0,
+            'y': this.densities[i]
+          })
+        }
+
         this.loadWidget();
       });
     });
@@ -62,10 +85,15 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
   setFormatter(formatter: any) {
     this.yFormat = formatter;
+    this.xFormat = formatter;
   }
 
   setDataset(dataset: string) {
     this.dataset = this.schemaService.get(dataset);
+  }
+
+  setValues(values: number[]) {
+    this.values = values;
   }
 
   setNextTerm(query: string) {
@@ -102,7 +130,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     const height = container.height - margin.top - margin.bottom;
 
     // set the ranges
-    const x = d3.scaleBand()
+    const x = d3.scaleBand<number>()
       .range([0, width])
       .padding(0.025);
 
@@ -118,9 +146,8 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
     // scale the range of the data
-    x.domain(this.data.map(d => this.dataset.aliases[this.dim][d[0]]));
-    y.domain([0, d3.max<number, number>(this.data, function (d) { return d[1]; })]);
-    // y.domain(d3.extent<number, number>(this.data, (d) => d[1]));
+    x.domain(this.data.map(d => d.x));
+    y.domain([0, d3.max(this.data, d => d.y)]);
 
     svg.selectAll('bar')
       .data(this.data)
@@ -132,10 +159,10 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
           return 'bar';
         }
       })
-      .attr('x', d => x(this.dataset.aliases[this.dim][d[0]]))
+      .attr('x', d => x(d.x))
       .attr('width', x.bandwidth())
-      .attr('y', (d) => y(d[1]))
-      .attr('height', (d) => height - y(d[1]))
+      .attr('y', (d) => y(d.y))
+      .attr('height', (d) => height - y(d.y))
       .on('click', function (d) {
         if (d3.select(this).attr('class') === 'bar') {
           d3.select(this).attr('class', 'bar-selected');
@@ -152,7 +179,9 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
       });
 
     // add the X axis
-    const xAxis = d3.axisBottom(x);
+    const xAxis = d3.axisBottom(x)
+      .tickFormat(self.xFormat);
+
     svg.append('g')
       .attr('transform', 'translate(0,' + height + ')')
       .call(xAxis);

@@ -100,9 +100,11 @@ export class Demo1Component implements OnInit, AfterViewInit {
   ];
 
   dataset_values = [
-    { value: 'on_time_performance', viewValue: 'Flights' },
-    { value: 'green_tripdata', viewValue: 'Green Taxis' },
-    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' }
+    { value: 'health', viewValue: 'Health' },
+    // { value: 'green_tripdata', viewValue: 'Green Taxis' },
+    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' },
+    { value: 'on_time_performance_2014', viewValue: 'Flights 2014' },
+    { value: 'on_time_performance_2017', viewValue: 'Flights 2017' }
   ];
 
   color_map = {
@@ -113,23 +115,23 @@ export class Demo1Component implements OnInit, AfterViewInit {
       const g = Math.floor(256 * Math.min(1, Math.max(0, lc - 1)));
       const b = Math.floor(256 * Math.min(1, Math.max(0, lc - 2)));
 
-      return 'rgba(' + r + ',' + g + ',' + b + ',' + 1.0 + ')';
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.75 + ')';
     },
     'threshold': d3.scaleThreshold<number, string>()
       .domain([100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000])
-      .range(['rgb(158,1,66, 1.0)', 'rgb(213,62,79, 1.0)',
-        'rgb(244,109,67, 1.0)', 'rgb(253,174,97, 1.0)',
-        'rgb(254,224,139, 1.0)', 'rgb(230,245,152, 1.0)',
-        'rgb(171,221,164, 1.0)', 'rgb(102,194,165, 1.0)',
-        'rgb(50,136,189, 1.0)', 'rgb(94,79,162, 1.0)']),
+      .range(['rgb(158,1,66, 1.0)', 'rgb(213,62,79, 0.75)',
+        'rgb(244,109,67, 1.0)', 'rgb(253,174,97, 0.75)',
+        'rgb(254,224,139, 1.0)', 'rgb(230,245,152, 0.75)',
+        'rgb(171,221,164, 1.0)', 'rgb(102,194,165, 0.75)',
+        'rgb(50,136,189, 1.0)', 'rgb(94,79,162, 0.75)']),
 
     'quantize': d3.scaleQuantize<string>()
       .domain([0, 100000])
-      .range(['rgb(158,1,66, 1.0)', 'rgb(213,62,79, 1.0)',
-        'rgb(244,109,67, 1.0)', 'rgb(253,174,97, 1.0)',
-        'rgb(254,224,139, 1.0)', 'rgb(230,245,152, 1.0)',
-        'rgb(171,221,164, 1.0)', 'rgb(102,194,165, 1.0)',
-        'rgb(50,136,189, 1.0)', 'rgb(94,79,162, 1.0)'])
+      .range(['rgb(158,1,66, 1.0)', 'rgb(213,62,79, 0.75)',
+        'rgb(244,109,67, 1.0)', 'rgb(253,174,97, 0.75)',
+        'rgb(254,224,139, 1.0)', 'rgb(230,245,152, 0.75)',
+        'rgb(171,221,164, 1.0)', 'rgb(102,194,165, 0.75)',
+        'rgb(50,136,189, 1.0)', 'rgb(94,79,162, 0.75)'])
   };
 
   color_values = [
@@ -373,7 +375,7 @@ export class Demo1Component implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.mapService.load();
+    this.mapService.load_CRSEPSG3857();
 
     this.activatedRoute.params.subscribe(params => {
       const param = params['dataset'];

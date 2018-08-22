@@ -9,15 +9,21 @@ import {
   Renderer2
 } from '@angular/core';
 
-import { FormBuilder, FormGroup, FormControl, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, FormsModule, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+
+import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 import { GeocodingService } from '../services/geocoding.service';
 import { DataService } from '../services/data.service';
 import { MapService } from '../services/map.service';
 
 import * as d3 from 'd3';
+
 import * as L from 'leaflet';
+import 'leaflet-hotline';
+
 import * as moment from 'moment';
 import { legendColor } from 'd3-svg-legend';
 
@@ -37,7 +43,8 @@ import { WidgetHostDirective } from '../widget-host.directive';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { ConfigurationService } from '../services/configuration.service';
 import { MatSidenav } from '@angular/material';
-import { TemporalBandComponent } from '../temporal-band/temporal-band.component';
+import { DensityChartComponent } from '../density-chart/density-chart.component';
+import { DensityWidget } from '../density-widget';
 
 interface WidgetType {
   key: string;
@@ -50,11 +57,11 @@ interface DimConstraints {
 }
 
 @Component({
-  selector: 'app-demo3',
-  templateUrl: './demo3.component.html',
-  styleUrls: ['./demo3.component.scss']
+  selector: 'app-demo6',
+  templateUrl: './demo6.component.html',
+  styleUrls: ['./demo6.component.scss']
 })
-export class Demo3Component implements OnInit, AfterViewInit {
+export class Demo6Component implements OnInit, AfterViewInit {
   @ViewChild('sidenav') sidenav: MatSidenav;
   @ViewChild('mapwidgets') mapwidgets: ElementRef;
 
@@ -89,13 +96,11 @@ export class Demo3Component implements OnInit, AfterViewInit {
   mode = new FormControl('over');
   options: FormGroup;
 
-  bandQuantiles = '0.5';
-
   aggr_values = [
     { value: 'count', viewValue: 'Count' },
-    // { value: 'mean', viewValue: 'Mean' },
+    { value: 'mean', viewValue: 'Mean' },
     // { value: 'variance', viewValue: 'Variance' },
-    // { value: 'quantile', viewValue: 'Quantile' },
+    { value: 'quantile', viewValue: 'Quantile' },
     { value: 'cdf', viewValue: 'CDF' }
   ];
 
@@ -133,32 +138,19 @@ export class Demo3Component implements OnInit, AfterViewInit {
 
   geometry_values = [
     { value: 'rect', viewValue: 'Rectangle' },
-    { value: 'circle', viewValue: 'Circle' }
+    { value: 'circle', viewValue: 'Stacked Circle' }
   ];
 
   composition_values = [
-    { value: 'lighter', viewValue: 'Lighter' },
     { value: 'color', viewValue: 'Color' }
   ];
 
   dataset_values = [
-    { value: 'on_time_performance_2014', viewValue: 'Flights 2014' }
+    { value: 'hurdat2', viewValue: 'hurdat2' },
+    { value: 'hurdat2_resample', viewValue: 'hurdat2_resample' }
   ];
 
   color: any;
-
-  payload_range = [
-    'rgba(103,  0, 31, 0.75)',
-    'rgba(178, 24, 43, 0.75)',
-    'rgba(214, 96, 77, 0.75)',
-    'rgba(244,165,130, 0.75)',
-    'rgba(253,219,199, 0.75)',
-    'rgba(209,229,240, 0.75)',
-    'rgba(146,197,222, 0.75)',
-    'rgba( 67,147,195, 0.75)',
-    'rgba( 33,102,172, 0.75)',
-    'rgba(  5, 48, 97, 0.75)'
-  ];
 
   color_map = {
     'count': (count) => {
@@ -169,13 +161,25 @@ export class Demo3Component implements OnInit, AfterViewInit {
       const b = Math.floor(256 * Math.min(1, Math.max(0, lc - 2)));
 
       return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.75 + ')';
-    },
-    'payload': (count) => d3.scaleQuantize<string>()
-      .domain([parseFloat(this.getPayloadInfo('min_value')), parseFloat(this.getPayloadInfo('max_value'))])
-      .range(this.payload_range)(count),
+    }
+  };
+
+  geojson_data: any;
+  hotline_data = new Map<number, any>();
+  geojson_color = new Map<number, number>();
+  cluster_map = [];
+
+  fields_map = {
+    'wind': 'ks',
+    'pressure': 'ks',
+    'direction': 'sector',
+    'x': 'ksw',
+    'y': 'ksw'
   };
 
   constructor(
+    private httpService: HttpClient,
+
     private configService: ConfigurationService,
     private schemaService: SchemaService,
 
@@ -202,108 +206,65 @@ export class Demo3Component implements OnInit, AfterViewInit {
     });
   }
 
-  loadLegend() {
-    const svg = d3.select('#svg-color-quant');
-    svg.selectAll('*').remove();
-
-    if (this.options.get('aggr').value !== 'count') {
-      svg.append('g')
-        .attr('class', 'legendQuant')
-        .attr('transform', 'translate(0, 0)');
-
-      const domain: [number, number] = [parseFloat(this.getPayloadInfo('min_value')), parseFloat(this.getPayloadInfo('max_value'))];
-
-      const colorLegend = legendColor()
-        .ascending(true)
-        .labelFormat(d3.format('.2'))
-        .scale(d3.scaleQuantize<string>().domain(domain).range(this.payload_range));
-
-      svg.select('.legendQuant')
-        .call(colorLegend);
-    }
-  }
-
   loadLayer() {
-    this.CanvasLayer = new L.GridLayer({
-      updateWhenIdle: false,
-      updateWhenZooming: false,
-      keepBuffer: 2,
-      updateInterval: 1000
-    });
+    let self = this;
 
-    this.CanvasLayer.createTile = (coords, done) => {
-      const query = '/query' +
-        '/dataset=' + this.dataset.datasetName +
-        this.getAggr() +
-        this.getCategoricalConst() +
-        this.getTemporalConst() +
-        '/const=' + this.dataset.spatialDimension[0] +
-        '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
-        '/group=' + this.dataset.spatialDimension[0];
+    let scale = d3.scaleSequential(d3.interpolateWarm)
+      .domain([0, this.options.get('clusters').value - 1]);
 
-      const tile = document.createElement('canvas');
-
-      const tileSize = this.CanvasLayer.getTileSize();
-      tile.setAttribute('width', tileSize.x.toString());
-      tile.setAttribute('height', tileSize.y.toString());
-
-      const ctx = tile.getContext('2d');
-      ctx.globalCompositeOperation = this.options.get('composition').value;
-      ctx.clearRect(0, 0, tileSize.x, tileSize.y);
-
-      this.dataService.query(query).subscribe(data => {
-        if (data[0] === undefined) {
-          return tile;
+    let filter = (id) => {
+      if (self.geojson_color.size === 0) {
+        return true;
+      } else if (self.geojson_color.has(id)) {
+        if (self.options.get('show_all_clusters').value) {
+          return true;
+        } else if (self.options.get('cluster').value - 1 === self.geojson_color.get(id)) {
+          return true;
+        } else {
+          return false;
         }
+      } else {
+        return false;
+      }
+    }
 
-        for (const d of data[0]) {
-          if (d[2] < coords.z + this.options.get('resolution').value) {
-            d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-            d[1] = Mercator.lat2tiley(Mercator.tiley2lat(d[1] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-            d[2] = coords.z + this.options.get('resolution').value;
-          }
-
-          const lon0 = Mercator.tilex2lon(d[0], d[2]);
-          const lat0 = Mercator.tiley2lat(d[1], d[2]);
-          const lon1 = Mercator.tilex2lon(d[0] + 1, d[2]);
-          const lat1 = Mercator.tiley2lat(d[1] + 1, d[2]);
-
-          const x0 = (Mercator.lon2tilex(lon0, coords.z) - coords.x) * 256;
-          const y0 = (Mercator.lat2tiley(lat0, coords.z) - coords.y) * 256;
-          const x1 = (Mercator.lon2tilex(lon1, coords.z) - coords.x) * 256;
-          const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
-
-          const config = () => {
-            const drawfuncs = {
-              circle: (geom_size) => {
-                const radius = ((x1 - x0) / 2) + geom_size;
-                ctx.beginPath();
-                ctx.arc((x0 + x1) / 2, (y0 + y1) / 2, radius, 0, 2 * Math.PI);
-                ctx.fill();
-              },
-              rect: (geom_size) => {
-                ctx.fillRect(x0 - geom_size, y0 - geom_size, (x1 - x0) + geom_size, (y1 - y0) + geom_size);
-              }
-            };
-
-            return {
-              draw: drawfuncs[this.options.get('geometry').value],
-              color: this.color
-            };
-          };
-
-          ctx.fillStyle = config().color(d[3]);
-          config().draw(this.options.get('geom_size').value);
+    if (this.options.get('hotline').value) {
+      var coords = [];
+      this.hotline_data.forEach((value, key, map) => {
+        if (filter(Number(key))) {
+          coords.push(value);
         }
-
-        done(null, tile);
       });
 
-      return tile;
-    };
+      this.CanvasLayer = L.hotline(coords, {
+        outlineWidth: 0,
+        weight: 1.0,
+        palette: {
+          0.0: 'blue',
+          1.0: 'gold'
+        }
+      });
+    } else {
+      this.CanvasLayer = L.geoJSON(this.geojson_data, {
+        style: function (feature) {
+          let id = Number(feature.properties.id);
+
+          if (self.geojson_color.has(id)) {
+            return { color: scale(self.geojson_color.get(id)), weight: 0.90, opacity: 0.85, };
+          } else {
+            return { color: scale(0), weight: 0.90, opacity: 1.0 };
+          }
+        },
+        filter: function (feature, layer) {
+          return filter(Number(feature.properties.id));
+        }
+      });
+    }
 
     this.mapService.map.addLayer(this.CanvasLayer);
     this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
+
+    return;
   }
 
   onMapZoomEnd() {
@@ -312,26 +273,64 @@ export class Demo3Component implements OnInit, AfterViewInit {
 
   loadWidgetsData() {
     for (const ref of this.widgets) {
-      if (ref.type === 'categorical') {
-        ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
+      if (ref.type === 'density') {
+        this.dataService.query('/query/dataset=' + this.dataset.datasetName +
+          '/aggr=quantile.' + ref.key + '_t.(0.0:1.0)' +
+          this.getCategoricalConst() +
+          this.getClusterConst() +
+          this.getTemporalConst() +
+          this.getRegionConst())
+          .subscribe(response => {
+            const min = response[0][0][0];
+            const max = response[0][1][0];
+
+            let values: number[] = [];
+
+            values.push(min);
+
+            let inverse_values = '';
+            const shift = (max - min) / 10.0;
+
+            for (let value = min + shift; value < max; value += shift) {
+              inverse_values += value + ":";
+              values.push(value);
+            }
+            inverse_values = inverse_values.substring(0, inverse_values.length - 1);
+
+            values.push(max);
+
+            (<DensityWidget>ref.widget).setValues(values);
+
+            ref.widget.setNextTerm(
+              '/query/dataset=' + this.dataset.datasetName +
+              '/aggr=inverse.' + ref.key + '_t.(' + inverse_values + ')' +
+              this.getCategoricalConst() +
+              this.getClusterConst() +
+              this.getTemporalConst() +
+              this.getRegionConst()
+            );
+          });
+
+
+        /* ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
           this.getAggr() +
           this.getCategoricalConst(ref.key) +
+          this.getClusterConst() +
           this.getTemporalConst() +
           this.getRegionConst() +
           '/group=' + ref.key
-        );
+        ); */
       } else if (ref.type === 'temporal') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
-        (<TemporalBandComponent>ref.widget).setNumCurves(this.getAggrTemporalBands());
-
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
-          this.getAggrTemporalBand() +
+          this.getAggr() +
           this.getCategoricalConst() +
+          this.getClusterConst() +
           this.getTemporalConst() +
           this.getRegionConst() +
           '/group=' + ref.key
@@ -341,7 +340,10 @@ export class Demo3Component implements OnInit, AfterViewInit {
 
     // update count
     this.dataService.query('/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
-      this.getCategoricalConst() + this.getTemporalConst() + this.getRegionConst())
+      this.getCategoricalConst() +
+      this.getClusterConst() +
+      this.getTemporalConst() +
+      this.getRegionConst())
       .subscribe(data => {
         this.currentCount = data[0];
       });
@@ -349,12 +351,15 @@ export class Demo3Component implements OnInit, AfterViewInit {
 
   setDataset(evnt: any) {
     this.sidenav.toggle();
-    const link = ['/demo2', this.options.get('dataset').value];
+    const link = ['/demo6', this.options.get('dataset').value];
     this.router.navigate(link);
   }
 
   setMapData() {
-    this.CanvasLayer.redraw();
+    this.mapService.map.removeLayer(this.CanvasLayer);
+    this.loadLayer();
+
+    // this.CanvasLayer.redraw();
   }
 
   setAggr() {
@@ -378,7 +383,111 @@ export class Demo3Component implements OnInit, AfterViewInit {
 
     this.loadWidgetsData();
     this.setMapData();
-    this.loadLegend();
+  }
+
+  executeClustering() {
+    let aggr = '';
+
+    for (const i in this.getFieldsControls()) {
+      if (this.getFieldsControls()[i].value) {
+        let field = this.dataset.payloads[i];
+        aggr += '/aggr=' + this.fields_map[field] + '.(' + field + ')'
+      }
+    }
+
+    let group_by = '';
+    for (const i in this.getGroupByControls()) {
+      if (this.getGroupByControls()[i].value) {
+        group_by += '/group_by=' + this.dataset.spatialDimension[i] + '.tile.(0:0:0:' + this.getGroupByResolutionControls()[i].value + ')';
+      }
+    }
+
+    const query = '/clustering' +
+      '/dataset=' + this.dataset.datasetName +
+      '/clusters=' + this.options.get('clusters').value +
+      '/iterations=' + this.options.get('iterations').value +
+      '/cluster_by=' + this.dataset.identifier +
+      aggr +
+      group_by;
+
+    this.dataService.query(query).subscribe(data => {
+      this.cluster_map = data[0];
+
+      this.geojson_color.clear();
+
+      for (let i in this.cluster_map) {
+        for (let elt of this.cluster_map[i]) {
+          this.geojson_color.set(elt, Number(i));
+        }
+      }
+
+      this.setClusters();
+    });
+  }
+
+  setClusters = () => {
+    this.loadWidgetsData();
+    this.setMapData();
+  }
+
+  getClusterConst(cluster?: number) {
+    if (this.cluster_map.length === 0) {
+      return '/const=' + this.dataset.identifier + '.values.(all)';
+    }
+
+    let values = '/const=' + this.dataset.identifier + '.values.(';
+
+    if (cluster === undefined && this.options.get('show_all_clusters').value) {
+
+      for (const cluster of this.cluster_map) {
+        for (const elt of cluster) {
+          values += elt + ':';
+        }
+      }
+
+      values = values.substr(0, values.length - 1);
+
+    } else {
+      if (cluster === undefined) {
+        cluster = this.options.get('cluster').value - 1;
+      }
+
+      for (const elt of this.cluster_map[cluster]) {
+        values += elt + ':';
+      }
+
+      if (this.cluster_map[cluster].length > 0) {
+        values = values.substr(0, values.length - 1);
+      }
+    }
+
+    values += ')';
+
+    /* let values = '/const=' + this.dataset.identifier + '.values.(';
+
+    if (this.options.get('show_all_clusters').value) {
+      for (let cluster of this.cluster_map) {
+        for (const elt of cluster) {
+          values += elt + ':';
+        }
+      }
+
+      values = values.substr(0, values.length - 1);
+    } else {
+      const cluster_id = this.options.get('cluster').value - 1;
+
+      for (const elt of this.cluster_map[cluster_id]) {
+        values += elt + ':';
+      }
+
+      if (this.cluster_map[cluster_id].length > 0) {
+        values = values.substr(0, values.length - 1);
+      }
+    }
+
+    values += ')'; */
+
+    return values;
   }
 
   setCategoricalData = (dim: string, selected: Array<string>) => {
@@ -422,37 +531,6 @@ export class Demo3Component implements OnInit, AfterViewInit {
     this.loadWidgetsData();
   }
 
-  getAggrTemporalBands() {
-    const type = this.options.get('aggr').value;
-
-    if (type === 'count') {
-      return 1;
-    } else {
-      const values = this.bandQuantiles.split(':');
-      return values.length;
-    }
-  }
-
-  setAggrTemporalBand() {
-    this.loadWidgetsData();
-  }
-
-  getAggrTemporalBand(): string {
-    if (this.options.get('aggr').value === 'count') {
-      return this.getAggr();
-    }
-
-    const type = 'quantile';
-    const payload = this.options.get('payload').value;
-
-    let aggr = '/aggr=' + this.aggr_map[type].key;
-
-    aggr += '.' + payload + this.aggr_map[type].sufix;
-
-    aggr += '.(' + this.bandQuantiles + ')';
-    return aggr;
-  }
-
   getAggr() {
     return this.aggr;
   }
@@ -493,9 +571,16 @@ export class Demo3Component implements OnInit, AfterViewInit {
   ngOnInit() {
     this.mapService.load_CRSEPSG3857();
 
-    this.dataset = this.schemaService.get(this.dataset_values[0].value);
+    this.activatedRoute.params.subscribe(params => {
+      const param = params['dataset'];
+      if (param !== undefined) {
+        this.dataset = this.schemaService.get(param);
+      } else {
+        this.dataset = this.schemaService.get(this.configService.defaultDataset);
+      }
 
-    this.initialize();
+      this.initialize();
+    });
   }
 
   ngAfterViewInit() {
@@ -503,12 +588,32 @@ export class Demo3Component implements OnInit, AfterViewInit {
     this.marker.register(this.setRegionData);
 
     this.mapService.disableEvent(this.mapwidgets);
+  }
 
-    // load visualizations
-    this.loadLayer();
+  getFieldsControls() {
+    return (<FormArray>this.options.get('fields')).controls;
+  }
+
+  getGroupByControls() {
+    return (<FormArray>this.options.get('group_by')).controls;
+  }
+
+  getGroupByResolutionControls() {
+    return (<FormArray>this.options.get('group_by_resolution')).controls;
   }
 
   initialize() {
+    const fields_array = [];
+    for (const field of this.dataset.payloads) {
+      fields_array.push(new FormControl(true));
+    }
+
+    const group_by_array = [[], []];
+    for (const field of this.dataset.spatialDimension) {
+      group_by_array[0].push(new FormControl(false));
+      group_by_array[1].push(new FormControl(8));
+    }
+
     this.options = this.formBuilder.group({
       // visualization setup
       geometry: new FormControl(this.dataset.geometry),
@@ -516,19 +621,32 @@ export class Demo3Component implements OnInit, AfterViewInit {
       resolution: new FormControl(this.dataset.resolution),
       composition: new FormControl(this.dataset.composition),
 
+      clusters: new FormControl(8),
+      hotline: new FormControl(false),
+      cluster: new FormControl(1),
+      show_all_clusters: new FormControl(true),
+
+      sectors: new FormControl(35),
+      iterations: new FormControl(0),
+
       aggr: new FormControl('count'),
       payload: new FormControl(this.dataset.payloads[0]),
 
-      dataset: new FormControl(this.dataset.datasetName)
+      dataset: new FormControl(this.dataset.datasetName),
+
+      fields: new FormArray(fields_array),
+
+      group_by: new FormArray(group_by_array[0]),
+      group_by_resolution: new FormArray(group_by_array[1])
     });
 
     this.color = this.color_map['count'];
     this.aggr = '/aggr=count';
 
-    this.geocodingService.geocode(this.dataset.local)
+    /* this.geocodingService.geocode(this.dataset.local)
       .subscribe(location => {
         this.mapService.flyTo(location);
-      }, error => console.error(error));
+      }, error => console.error(error)); */
 
     const viewContainerRef = this.container;
 
@@ -539,38 +657,55 @@ export class Demo3Component implements OnInit, AfterViewInit {
 
     this.widgets = [];
 
-    for (const dim of Object.keys(this.dataset.temporalDimension)) {
-      const component = this.componentFactory.resolveComponentFactory(TemporalBandComponent);
+    for (const dim of this.dataset.payloads) {
+      const component = this.componentFactory.resolveComponentFactory(DensityChartComponent);
 
       const componentRef = viewContainerRef.createComponent(component);
-      const componentInstance = <TemporalBandComponent>componentRef.instance;
+      const componentInstance = <DensityChartComponent>componentRef.instance;
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
-      const lower = this.dataset.temporalDimension[dim].lower;
-      const upper = this.dataset.temporalDimension[dim].upper;
-      this.temporal[dim] = '/const=' + dim + '.interval.(' + lower + ':' + upper + ')';
-
       componentInstance.setXLabel(dim);
-      componentInstance.register(dim, this.setTemporalData);
-      this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
+      // componentInstance.register(dim, this.setTemporalData);
+      this.widgets.push({ key: dim, type: 'density', widget: componentInstance });
     }
 
     // refresh input data
     this.loadWidgetsData();
-    this.loadMapCard();
+
+    this.httpService.get('./assets/geojson/' + this.dataset.datasetName + '.geojson').subscribe(response => {
+      this.geojson_data = response;
+
+      const data: any = response;
+      for (let feature of data.features) {
+        let coordinates = feature.geometry.coordinates;
+
+        let array = new Array();
+
+        for (let elt in coordinates) {
+          array.push([
+            coordinates[elt][1],
+            coordinates[elt][0],
+
+            Number(elt) / (coordinates.length - 1)
+          ]);
+        }
+
+        this.hotline_data.set(feature.properties.id, array);
+      }
+
+      // load map
+      this.loadLayer();
+      this.loadMapCard();
+    },
+      (err: HttpErrorResponse) => {
+        console.log(err.message);
+      }
+    );
   }
 
-  getPayloadInfo(key: string, payload?, type?) {
-    if (payload === undefined) {
-      payload = this.options.get('payload').value;
-    }
-
-    if (type === undefined) {
-      type = this.options.get('aggr').value;
-    }
-
-    return d3.format('.2f')(this.dataset.payloadValues[payload][type][key]);
+  getPayloadInfo(key: string) {
+    return d3.format('.2f')(this.dataset.payloadValues[this.options.get('payload').value][this.options.get('aggr').value][key]);
   }
 
   setPayloadInfo(key: string, value: number) {

@@ -22,7 +22,23 @@ export class MapService {
 
   constructor(private http: HttpClient) { }
 
-  load() {
+  load_CRSSimple() {
+    this.map = L.map('map', {
+      crs: L.CRS.Simple
+    });
+
+    var bounds = [[-512, -512], [512, 512]];
+    this.map.fitBounds(bounds);
+
+    this.addDebugLayer();
+
+    this.map.on('moveend', () => {
+      this.lastPosition.center = this.map.getCenter();
+      this.lastPosition.zoom = this.map.getZoom();
+    });
+  }
+
+  load_CRSEPSG3857() {
     this.map = L.map('map', {
       worldCopyJump: true
     }).setView(this.lastPosition.center, this.lastPosition.zoom);
@@ -35,16 +51,7 @@ export class MapService {
       accessToken: 'pk.eyJ1IjoiY2FscGFoaW5zIiwiYSI6ImNqaDduaGVtdDBhM28zM21qN2hoOTh1d2IifQ.JyQl2tr6nStL5271bNz7FA'
     }).addTo(this.map);
 
-    /* const DebugLayer = L.GridLayer.extend({
-      createTile: function (coords) {
-        const tile = document.createElement('div');
-        tile.innerHTML = [coords.x, coords.y, coords.z].join(', ');
-        tile.style.outline = '1px solid darkgray';
-        return tile;
-      }
-    });
-
-    this.map.addLayer(new DebugLayer()); */
+    // this.addDebugLayer();
 
     this.map.on('moveend', () => {
       this.lastPosition.center = this.map.getCenter();
@@ -52,9 +59,26 @@ export class MapService {
     });
   }
 
-  flyTo(location: Location): void {
-    // this.map.fitBounds(location.viewBounds, {});
+  private addDebugLayer() {
+    const DebugLayer = L.GridLayer.extend({
+      createTile: function (coords) {
+        const tile = document.createElement('div');
+        // tile.innerHTML = ;
+        tile.innerHTML = '<span style=\'color: darkgrey;\'>' + [coords.x, coords.y, coords.z].join(', ') + '</span>'
+        tile.style.outline = '1px solid black';
+        return tile;
+      }
+    });
+
+    this.map.addLayer(new DebugLayer());
+  }
+
+  flyTo(location: Location): void {    
     this.map.flyToBounds(location.viewBounds, { duration: 3.0 });
+  }
+
+  fitBounds(bounds): void {
+    this.map.fitBounds(bounds, {});
   }
 
   get_coords_bounds(bound?: any, zoom?: number) {
