@@ -223,7 +223,8 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
 
     //
     const yScale = d3.scaleLinear().range([height, -margin.top]);
-    yScale.domain([d3.min(this.data.map(d => d[1])), d3.max(this.data.map(d => d[4] + (d[5] - d[4]) * 0.015))]);
+    //yScale.domain([d3.min(this.data.map(d => d[1])), d3.max(this.data.map(d => d[4] + (d[5] - d[4]) * 0.015))]);
+    yScale.domain([-30, 30]);
 
     const yAxis = d3.axisLeft(yScale)
       .tickFormat(self.yFormat)
@@ -287,12 +288,12 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
       .attr('class', 'spine')
       .merge(spines)
       .attr('x1', (function (d) { return xScale(d[0]) + xScale.bandwidth() / 2; }).bind(this))
-      .attr('y1', (function (d, i) {
-        return yScale(d[1]);
-
+      .attr('y1', (function (d) {
+        let value = Math.max(-30, d[1]);
+        return yScale(value);
       }).bind(this))
       .attr('x2', (function (d) { return xScale(d[0]) + xScale.bandwidth() / 2; }).bind(this))
-      .attr('y2', (function (d, i) { return yScale(d[5]); }).bind(this))
+      .attr('y2', (function (d) { return yScale(d[5]); }).bind(this))
       .attr('stroke', 'black');
 
     // bodies

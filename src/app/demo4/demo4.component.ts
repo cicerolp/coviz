@@ -162,8 +162,8 @@ export class Demo4Component implements OnInit, AfterViewInit {
   pipeline_range = [
     'rgba(178,171,210,0.75)',
     'rgba( 44,123,182,0.75)',
-    // 'rgba(255,255,191,0.75)',
-    'rgba(250,250,250,0.75)',
+    'rgba(255,255,191,0.75)',
+    // 'rgba(250,250,250,0.75)',
     'rgba(215, 25, 28,0.75)'
   ];
 

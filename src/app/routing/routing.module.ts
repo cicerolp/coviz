@@ -37,7 +37,7 @@ const routes: Routes = [
   },
   {
     path: 'demo4',
-    component: Demo4Component
+    redirectTo: 'demo4/yellow_tripdata'
   },
   {
     path: 'demo4/:dataset',
