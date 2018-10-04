@@ -49,6 +49,7 @@
     <div id="map">
       <app-navigator></app-navigator>
       <button mat-raised-button color="primary" class="on-map" (click)="sidenav.toggle()">Open Config</button>
+      <svg id="svg-color-quant" class="on-map"></svg>
 
       <mat-card class="map-card on-map" [formGroup]="options">
         <div #mapwidgets>

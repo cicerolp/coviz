@@ -54,7 +54,8 @@ export class Demo5Component implements OnInit, AfterViewInit {
   private widgets: Array<WidgetType> = [];
 
   dataset_values = [
-    { value: 'on_time_performance_demo5', viewValue: 'Flights 2017' }
+    { value: 'on_time_performance_demo5', viewValue: 'Flights 2017' },
+    { value: 'health', viewValue: 'Health' }
   ];
 
   group_values = [

@@ -1,0 +1,125 @@
+<mat-sidenav-container class="app-container over-map">
+  <mat-sidenav #sidenav position="end" [mode]="mode.value" opened="false" class="app-sidenav" [formGroup]="options">
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Map Settings</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <section>
+          <span class="badge badge-primary">Geometry:</span>
+          <mat-form-field class="app-section">
+            <mat-select formControlName="geometry" (selectionChange)="setMapData()">
+              <mat-option *ngFor="let opt of geometry_values" [value]="opt.value">
+                {{opt.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </section>
+        <section>
+          <span class="badge badge-primary">Global Composition:</span>
+          <mat-form-field class="app-section">
+            <mat-select formControlName="composition" (selectionChange)="setMapData()">
+              <mat-option *ngFor="let opt of composition_values" [value]="opt.value">
+                {{opt.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </section>
+        <section>
+          <span class="badge badge-primary">Dataset:</span>
+          <mat-form-field class="app-section">
+            <mat-select formControlName="dataset" (selectionChange)="setDataset($event)">
+              <mat-option *ngFor="let opt of dataset_values" [value]="opt.value">
+                {{opt.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </section>
+      </mat-card-content>
+
+      <mat-card-footer align="end">
+        <button mat-raised-button color="warn" (click)="sidenav.toggle()">Close</button>
+      </mat-card-footer>
+    </mat-card>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <div id="map">
+      <app-navigator></app-navigator>
+      <button mat-raised-button color="primary" class="on-map" (click)="sidenav.toggle()">Open Config</button>
+      <svg [style.visibility]="options.get('aggr').value !== 'count' ? 'visible' : 'hidden'" id="svg-color-quant" class="on-map"></svg>
+
+      <mat-card class="map-card on-map" [formGroup]="options">
+        <div #mapwidgets>
+          <section>
+            <span class="badge badge-info">Zoom:</span> {{currentZoom}} of {{maximumZoom}}
+          </section>
+          <section>
+            <span class="badge badge-info">Count:</span> {{currentCount}} of {{maximumCount}}
+          </section>
+          <section>
+            <span class="badge badge-primary">Geometry Factor:</span> {{this.options.get('geom_size').value}}
+            <mat-slider min="0" max="25" step="1" thumbLabel="true" tickInterval="auto" formControlName="geom_size" (change)="setMapData()"></mat-slider>
+          </section>
+          <section>
+            <span class="badge badge-primary">Resolution:</span> {{this.options.get('resolution').value}}
+            <mat-slider min="1" max="25" step="1" thumbLabel="true" tickInterval="auto" formControlName="resolution" (change)="setMapData()"></mat-slider>
+          </section>
+          <section>
+            <span class="badge  badge-danger"># of Clusters:</span> {{this.options.get('clusters').value}}
+            <mat-slider min="1" max="32" step="1" thumbLabel="true" tickInterval="auto" formControlName="clusters"></mat-slider>
+            <div>
+              <mat-checkbox formControlName="hotline" (change)="setMapData()">Hotline</mat-checkbox>
+            </div>
+          </section>
+
+          <section>
+            <span class="badge  badge-danger"># of Iterations:</span> {{this.options.get('iterations').value + 1}}
+            <mat-slider min="0" max="100" step="1" thumbLabel="true" tickInterval="auto" formControlName="iterations"></mat-slider>
+          </section>
+
+          <section>
+            <span class="badge  badge-danger">Selected Cluster:</span>
+            <span *ngIf="!this.options.get('show_all_clusters').value">{{this.options.get('cluster').value}}</span>
+            <br>
+            <br>
+            <div>
+              <mat-checkbox formControlName="show_all_clusters" (change)="setClusters()">Show all</mat-checkbox>
+            </div>
+            <mat-slider *ngIf="!this.options.get('show_all_clusters').value" min="1" [max]="this.options.get('clusters').value" step="1"
+              thumbLabel="true" tickInterval="auto" formControlName="cluster" (change)="setClusters()"></mat-slider>
+          </section>
+
+          <section>
+            <span class="badge  badge-danger">Attributes:</span>
+            <br>
+            <br>
+            <div *ngFor="let field of getFieldsControls(); let i = index">
+              <mat-checkbox [formControl]="field">{{dataset.payloads[i]}}</mat-checkbox>
+            </div>
+          </section>
+
+          <section>
+            <span class="badge  badge-danger">Group By:</span>
+            <br>
+            <br>
+            <div *ngFor="let group of getGroupByControls(); let i = index">
+              <mat-checkbox [formControl]="group">{{dataset.spatialDimension[i]}}: {{getGroupByResolutionControls()[i].value}}</mat-checkbox>
+              <mat-slider min="1" max="26" step="1" thumbLabel="true" tickInterval="auto" [formControl]="getGroupByResolutionControls()[i]"></mat-slider>
+            </div>
+          </section>
+
+          <section>
+            <button mat-raised-button color="primary" (click)="executeClustering()">Execute!</button>
+          </section>
+        </div>
+      </mat-card>
+
+    </div>
+    <div class="app-footer app-footer-container over-map">
+      <ng-template class="flex-item" #container></ng-template>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

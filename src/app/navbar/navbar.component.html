@@ -7,38 +7,8 @@
     <ul class="navbar-nav mr-auto">
       <li class="nav-item">
         <div class="btn-group">
-          <button class="btn" routerLink="/demo1" routerLinkActive="active">Home</button>
-          <div class="btn-group" ngbDropdown role="group" aria-label="Demos">
-            <button class="btn" ngbDropdownToggle>Demos</button>
-            <div class="dropdown-menu" ngbDropdownMenu>
-              <a routerLink="/demo1" routerLinkActive="active">
-                <button class="dropdown-item">Regular Queries</button>
-              </a>
-              <a routerLink="/demo2" routerLinkActive="active">
-                <button class="dropdown-item">Quantile Maps</button>
-              </a>
-              <a routerLink="/demo6" routerLinkActive="active">
-                <button class="dropdown-item">Trajectories - CRS.EPSG3857</button>
-              </a>
-              <a routerLink="/demo7" routerLinkActive="active">
-                <button class="dropdown-item">Trajectories - CRS.Simple</button>
-              </a>
-            </div>
-          </div>
-          <div class="btn-group" ngbDropdown role="group" aria-label="Use Cases">
-            <button class="btn" ngbDropdownToggle>Use Cases</button>
-            <div class="dropdown-menu" ngbDropdownMenu>
-              <a routerLink="/demo3" routerLinkActive="active">
-                <button class="dropdown-item">Probability of Flights Being Late</button>
-              </a>
-              <a routerLink="/demo5" routerLinkActive="active">
-                <button class="dropdown-item">Uncovering the Unexpected</button>
-              </a>
-              <a routerLink="/demo4" routerLinkActive="active">
-                <button class="dropdown-item">Exploring Outlierness in Taxi Trip Records</button>
-              </a>
-            </div>
-          </div>
+          <button class="btn btn-warning" routerLink="/demo2" routerLinkActive="active">Selection</button>
+          <button class="btn btn-danger" routerLink="/compare" routerLinkActive="active">Comparison</button>
         </div>
       </li>
     </ul>

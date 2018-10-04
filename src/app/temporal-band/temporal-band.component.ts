@@ -220,7 +220,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
     container = container.parentNode.getBoundingClientRect();
 
-    const margin = { top: 5, right: 15, bottom: 70, left: 55 };
+    const margin = { top: 8, right: 5, bottom: 35, left: 55 };
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
@@ -302,7 +302,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     xAxis(svg.select('.xAxis'));
     svg.select('#labelXAxis')
       .attr('x', (width / 2.0))
-      .attr('y', height + 35)
+      .attr('y', height + margin.bottom - 5)
       .style('text-anchor', 'middle')
       .text(this.xLabel);
 
@@ -342,7 +342,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('d', d => valueline(d.curve))
       .attr('fill', 'none')
       .attr('stroke', d => d.color)
-      .attr('stroke-width', 3);
+      .attr('stroke-width', 1);
   }
 
   setNumCurves(num: number) {

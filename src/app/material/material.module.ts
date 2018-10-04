@@ -29,7 +29,11 @@ import {
   MatRadioModule,
   MatIconModule,
   MatStepperModule,
-  MatProgressSpinnerModule
+  MatProgressSpinnerModule,
+  MatTabsModule,
+  MatExpansionModule,
+  MatChipsModule,
+  MatSnackBarModule
 } from '@angular/material';
 
 import {
@@ -60,7 +64,11 @@ import {
     MatFormFieldModule,
     MatIconModule,
     MatStepperModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatExpansionModule,
+    MatChipsModule,
+    MatSnackBarModule
   ],
   exports: [
     MatButtonModule,
@@ -83,7 +91,11 @@ import {
     MatFormFieldModule,
     MatIconModule,
     MatStepperModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatExpansionModule,
+    MatChipsModule,
+    MatSnackBarModule
   ]
 })
 export class MaterialModule { }

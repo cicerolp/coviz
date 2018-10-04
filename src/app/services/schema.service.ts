@@ -12,42 +12,41 @@ export class SchemaService {
       'local': 'France',
       'geometry': 'rect',
       'geometry_size': 0,
-      'resolution': 6,
+      'resolution': 5,
       'composition': 'lighter',
       'color': 'ryw',
 
-      'datasetName': 'health',
+      'datasetName': 'health-markers',
       'timeStep': 86400,
+
+      'identifier': 'event_id',
+      'trajectory': 'value_t',
+
       'temporalDimension': {
-        'timestamp': { 'lower': 0, 'upper': 0 }
+        'event_date': { 'lower': 0, 'upper': 0 }
       },
       'spatialDimension': ['coord'],
-      'categoricalDimension': ['is_dead', 'age', 'category_id'],
-      'payloads': ['action', 'category'],
+      'categoricalDimension': ['has_left', 'dead', 'gender', /* 'marker', */ 'age'],
+      'payloads': ['value'],
       'payloadValues': {
-        'action': {
+        'value': {
           'quantile': { 'min_value': 0, 'max_value': 52, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
           'cdf': { 'min_value': 0, 'max_value': 1, 'value': 42, 'min': 0, 'max': 52, 'step': 1 },
           'mean': { 'min_value': 0, 'max_value': 52 },
           'variance': { 'min_value': 0, 'max_value': 100 },
           'pipeline': { 'min_value': 0, 'max_value': 1 }
-        },
-        'category': {
-          'quantile': { 'min_value': 0, 'max_value': 10, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
-          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 8, 'min': 0, 'max': 10, 'step': 1 },
-          'mean': { 'min_value': 0, 'max_value': 10 },
-          'variance': { 'min_value': 0, 'max_value': 100 },
-          'pipeline': { 'min_value': 0, 'max_value': 1 }
         }
       },
       'aliases': {
-        'is_dead': ['No', 'Yes'],
+        'has_left' : ['No', 'Yes'],
 
-        'age': ['<55', '55-61', '62-66', '67-70', '71-74', '75-79', '80-85', '>85'],
+        'dead': ['No', 'Yes'],
 
-        'category_id': ['Per', 'Div', 'Resp', 'Rehab', 'Fact', 'Nut', 'Ins', 'MMD', 'BMI', 'IAH', 'Worth'],
+        'gender': ['M', 'F'],
 
-        'action_id': ['PERFPARK', 'NEURO', 'AERO', 'RNU', 'FIT', 'PERFDIV', 'PERFKETAM', 'PERFANTID', 'PERFANTIV', 'PERFPAR', 'PERFCHIMIO', 'ETS', 'PERFATBC', 'TRACHEO', 'REH', 'LUMIN', 'RRECH', 'PPC', 'NUTENT', 'VENTRACH', 'ENR', 'PERFIMMUNO', 'ASPI', 'INS', 'COMPL', 'PERFANTIB', 'INCONNU', 'VEN', 'RRE', 'PERF', 'PERFRINC', 'TAVIE', 'HOSP', 'RME', 'VISPERF', 'MAD', 'OXY', 'EDUCTHERAP', 'VISPPC', 'HAD', 'PERFHTAP', 'PERFSANG', 'underweight', 'healthy', 'overweight', 'obese', 'minimal', 'moderated', 'serious', 'normal', 'borderline', 'sleepy', 'excessively sleepy']
+        'marker': ['iah', 'bmi', 'epworth'],
+
+        'age': ['<55', '55-61', '62-66', '67-70', '71-74', '75-79', '80-85', '>85']
       }
     },
 

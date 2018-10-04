@@ -1,6 +1,6 @@
 input {
-  margin: 20px 0 0 60px;
-  width: 300px;
+  margin: 11px 0 0 49px;
+  width: 159px;
   height: 35px;
   border: 2px solid rgba(77, 156, 237, 0.7);
   font-size: 16px;
@@ -8,5 +8,5 @@ input {
 }
 
 #goto {
-  margin: 20px 0 0 370px;
+  margin: 10px 0 0 212px;
 }

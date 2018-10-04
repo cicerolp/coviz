@@ -154,7 +154,8 @@ export class Demo4Component implements OnInit, AfterViewInit {
   dataset_values = [
     { value: 'on_time_performance', viewValue: 'Flights' },
     { value: 'green_tripdata', viewValue: 'Green Taxis' },
-    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' }
+    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' },
+    { value: 'health', viewValue: 'Health' }
   ];
 
   color: any;

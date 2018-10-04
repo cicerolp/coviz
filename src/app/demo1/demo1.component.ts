@@ -1,4 +1,3 @@
-
 import {
   Component,
   ViewChild,
@@ -21,6 +20,7 @@ import { MapService } from '../services/map.service';
 import * as d3 from 'd3';
 import * as L from 'leaflet';
 import * as moment from 'moment';
+import { legendColor } from 'd3-svg-legend';
 
 import { Marker } from '../marker';
 import { Mercator } from '../mercator';
@@ -38,6 +38,7 @@ import { WidgetHostDirective } from '../widget-host.directive';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { ConfigurationService } from '../services/configuration.service';
 import { MatSidenav } from '@angular/material';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 interface WidgetType {
   key: string;
@@ -75,6 +76,8 @@ export class Demo1Component implements OnInit, AfterViewInit {
   currentCount = 0;
   maximumCount = 0;
 
+  coutingMinMax: [number, number] = [0, 0];
+
   // queries
   ///////////////////////////////////
   private region: DimConstraints = {};
@@ -102,21 +105,24 @@ export class Demo1Component implements OnInit, AfterViewInit {
   dataset_values = [
     { value: 'health', viewValue: 'Health' },
     // { value: 'green_tripdata', viewValue: 'Green Taxis' },
-    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' },
-    { value: 'on_time_performance_2014', viewValue: 'Flights 2014' },
-    { value: 'on_time_performance_2017', viewValue: 'Flights 2017' }
+    // { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' },
+    // { value: 'on_time_performance_2014', viewValue: 'Flights 2014' },
+    // { value: 'on_time_performance_2017', viewValue: 'Flights 2017' }
   ];
 
   color_map = {
     'ryw': (count) => {
-      const lc = Math.log(count) / Math.log(100);
+      const lc = Math.log(count) / Math.log(10000);
 
-      const r = Math.floor(256 * Math.min(1, lc));
+      /* const r = Math.floor(256 * Math.min(1, lc));
       const g = Math.floor(256 * Math.min(1, Math.max(0, lc - 1)));
       const b = Math.floor(256 * Math.min(1, Math.max(0, lc - 2)));
 
-      return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.75 + ')';
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.75 + ')'; */
+
+      return d3.interpolateSpectral(Math.min(1, 1 - lc));
     },
+
     'threshold': d3.scaleThreshold<number, string>()
       .domain([100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000])
       .range(['rgb(158,1,66, 1.0)', 'rgb(213,62,79, 0.75)',
@@ -134,12 +140,17 @@ export class Demo1Component implements OnInit, AfterViewInit {
         'rgb(50,136,189, 1.0)', 'rgb(94,79,162, 0.75)'])
   };
 
+  geojson_data: any;
+  geojson_color = new Map();
+
   color_values = [
     { value: 'ryw', viewValue: 'Red-Yellow-White', },
     { value: 'threshold', viewValue: 'Threshold', }
   ];
 
   constructor(
+    private httpService: HttpClient,
+
     private configService: ConfigurationService,
     private schemaService: SchemaService,
 
@@ -166,8 +177,125 @@ export class Demo1Component implements OnInit, AfterViewInit {
     });
   }
 
+  loadLegend() {
+    const svg = d3.select('#svg-color-quant');
+    svg.selectAll('*').remove();
+
+    svg.append('g')
+      .attr('class', 'legendQuant')
+      .attr('transform', 'translate(0, 0)');
+
+    const domain: [number, number] = this.coutingMinMax;
+
+    console.log('asdsd');
+    console.log(d3.interpolateSpectral(1));
+
+    const colorLegend = legendColor()
+      .ascending(true)
+      .labelFormat(d3.format('.2s'))
+      .scale(d3.scaleQuantize<string>()
+        .domain(domain)
+        .range(d3.range(10).map(i => {
+          return d3.interpolateSpectral(1 - (i / 10));
+        }))
+      );
+    //return d3.interpolateSpectral(1 - i);
+
+    svg.select('.legendQuant')
+      .call(colorLegend);
+  }
+
   loadLayer() {
-    this.CanvasLayer = new L.GridLayer({
+    let self = this;
+
+    this.coutingMinMax = [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+
+    const query = '/query' +
+      '/dataset=' + self.dataset.datasetName +
+      // self.getAggr() +
+      '/aggr=count' +
+      self.getCategoricalConst() +
+      self.getTemporalConst();
+    // '/const=' + 'department.values.(' + Number.parseInt(feature.properties.code) + ')';
+
+    const promises = [];
+
+    let getValue = (department) => {
+      return new Promise((resolve, reject) => {
+        let currQuery = query + '/const=' + 'department.values.(' + department + ')';
+
+        self.dataService.query(currQuery).subscribe(data => {
+          let value = Number.parseFloat(data[0]);
+
+          if (!isNaN(value)) {
+            self.coutingMinMax[0] = Math.min(self.coutingMinMax[0], value);
+            self.coutingMinMax[1] = Math.max(self.coutingMinMax[1], value);
+          }
+
+          self.geojson_color.set(department, value);
+
+          resolve(true);
+        });
+      });
+    }
+
+    for (let department = 0; department < 100; department++) {
+      promises.push(getValue(department));
+    }
+
+    let color = (value) => {
+      if (isNaN(value)) {
+        return { color: 'rgb(200, 200, 200)', weight: 1.0, opacity: 1.0 , fillOpacity: 0.75 };
+      } else {
+        const lc = value / self.coutingMinMax[1];
+        let color = d3.interpolateSpectral(1 - lc);
+
+        return { color: color, weight: 1.0, opacity: 1.0 , fillOpacity: 0.75 };
+      }
+    };
+
+    Promise.all(promises).then(() => {
+      self.loadLegend();
+
+      let scale = d3.scaleLinear()
+      .domain([self.coutingMinMax[0] / self.coutingMinMax[1] , 1])
+      .range([0, 1]);
+
+      this.CanvasLayer = L.geoJSON(this.geojson_data, {
+        style: (feature) => {
+          let value = self.geojson_color.get(Number.parseInt(feature.properties.code));
+          return color(value);          
+        },
+
+        onEachFeature: (feature, layer) => {
+          layer.on({
+            mouseover : (el) => {
+              let value = self.geojson_color.get(Number.parseInt(feature.properties.code));
+              let style = color(value);
+
+              style.color = 'black'
+              style.weight = 3;
+
+              el.target.setStyle(style);
+            },
+            mouseout  : (el) => {
+              let value = self.geojson_color.get(Number.parseInt(feature.properties.code));
+              let style = color(value);
+
+              el.target.setStyle(style);
+            },
+          });
+        }
+        /* filter: function (feature, layer) {
+          return filter(Number(feature.properties.id));
+        } */
+      });
+
+      this.mapService.map.addLayer(this.CanvasLayer);
+      this.mapService.map.on('zoomend', this.onMapZoomEnd, this);      
+    });
+
+    /* this.CanvasLayer = new L.GridLayer({
       updateWhenIdle: false,
       updateWhenZooming: false,
       keepBuffer: 2,
@@ -216,6 +344,9 @@ export class Demo1Component implements OnInit, AfterViewInit {
           const x1 = (Mercator.lon2tilex(lon1, coords.z) - coords.x) * 256;
           const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
 
+          this.coutingMinMax[0] = Math.min(this.coutingMinMax[0], d[3]);
+          this.coutingMinMax[1] = Math.max(this.coutingMinMax[1], d[3]);
+
           const config = () => {
             const drawfuncs = {
               circle: (geom_size) => {
@@ -242,11 +373,29 @@ export class Demo1Component implements OnInit, AfterViewInit {
         done(null, tile);
       });
 
-      return tile;
+      return tile; 
     };
 
+    this.CanvasLayer.on('load', this.onMapLoad, this);
+
     this.mapService.map.addLayer(this.CanvasLayer);
-    this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
+
+    this.mapService.map.on('viewreset', this.onMapViewReset, this);
+
+    this.mapService.map.on('zoomstart', this.onMapZoomStart, this);
+    this.mapService.map.on('zoomend', this.onMapZoomEnd, this);*/
+  }
+
+  onMapZoomStart() {
+    this.coutingMinMax = [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+  }
+
+  onMapViewReset() {
+    this.coutingMinMax = [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+  }
+
+  onMapLoad() {
+    this.loadLegend();
   }
 
   onMapZoomEnd() {
@@ -293,7 +442,12 @@ export class Demo1Component implements OnInit, AfterViewInit {
   }
 
   setMapData() {
-    this.CanvasLayer.redraw();
+    this.coutingMinMax = [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+
+    this.mapService.map.removeLayer(this.CanvasLayer);
+    this.loadLayer();
+
+    // this.CanvasLayer.redraw();
   }
 
   setCategoricalData = (dim: string, selected: Array<string>) => {
@@ -367,11 +521,12 @@ export class Demo1Component implements OnInit, AfterViewInit {
   }
 
   getRegionConst() {
-    let constrainsts = '';
+    /* let constrainsts = '';
     for (const key of Object.keys(this.region)) {
       constrainsts += this.region[key];
     }
-    return constrainsts;
+    return constrainsts; */
+    return '';
   }
 
   ngOnInit() {
@@ -394,9 +549,6 @@ export class Demo1Component implements OnInit, AfterViewInit {
     this.marker.register(this.setRegionData);
 
     this.mapService.disableEvent(this.mapwidgets);
-
-    // load visualizations
-    this.loadLayer();
   }
 
   initialize() {
@@ -459,6 +611,18 @@ export class Demo1Component implements OnInit, AfterViewInit {
 
     // refresh input data
     this.loadWidgetsData();
-    this.loadMapCard();
+
+    this.httpService.get('./assets/geojson/france-departements.geojson')
+      .subscribe(response => {
+        this.geojson_data = response;
+
+        // load map
+        this.loadLayer();
+        this.loadMapCard();        
+
+      }, (err: HttpErrorResponse) => {
+        console.log(err.message);
+      }
+      );
   }
 }

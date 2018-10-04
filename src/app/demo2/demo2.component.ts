@@ -36,7 +36,11 @@ import { LineChartComponent } from '../line-chart/line-chart.component';
 import { WidgetHostDirective } from '../widget-host.directive';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { ConfigurationService } from '../services/configuration.service';
-import { MatSidenav } from '@angular/material';
+import { MatSidenav, MatSnackBar, MatSnackBarConfig } from '@angular/material';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { TemporalBandComponent } from '../temporal-band/temporal-band.component';
+import { DataSharingService } from '../services/data-sharing.service';
+import { resolve } from 'q';
 
 interface WidgetType {
   key: string;
@@ -59,7 +63,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   private title = 'app';
   private marker: Marker;
-  private CanvasLayer: L.GridLayer;
+
+  private CommuneLayer: L.GridLayer;
+  private DepartmentLayer: L.GridLayer;
 
   // schema
   ///////////////////////////////////
@@ -71,9 +77,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
   currentZoom = 0;
   maximumZoom = 0;
 
-  currentCount = 0;
-  maximumCount = 0;
-
   // queries
   ///////////////////////////////////
   private region: DimConstraints = {};
@@ -83,15 +86,25 @@ export class Demo2Component implements OnInit, AfterViewInit {
   // widgets
   //////////////////////////////////
   @ViewChild('container', { read: ViewContainerRef }) container: ViewContainerRef;
+  @ViewChild('map', { read: ViewContainerRef }) footerCtnRef: ViewContainerRef;
+
   private widgets: Array<WidgetType> = [];
 
   mode = new FormControl('over');
   options: FormGroup;
 
+  bandQuantiles = '0.25:0.5:0.75';
+
+  marker_values = [
+    { value: 0, viewValue: 'Iah' },
+    { value: 1, viewValue: 'Bmi' },
+    { value: 2, viewValue: 'Epworth' }
+  ]
+
   aggr_values = [
     { value: 'count', viewValue: 'Count' },
     { value: 'mean', viewValue: 'Mean' },
-    // { value: 'variance', viewValue: 'Variance' },
+    { value: 'variance', viewValue: 'Variance' },
     { value: 'quantile', viewValue: 'Quantile' },
     { value: 'cdf', viewValue: 'CDF' }
   ];
@@ -99,84 +112,71 @@ export class Demo2Component implements OnInit, AfterViewInit {
   aggr_map = {
     'count': {
       key: 'count',
+      sufix: undefined,
       label: 'count',
       formatter: d3.format('.2s')
     },
     'mean': {
       key: 'average',
       sufix: '_g',
-      label: 'value',
+      label: 'average',
       formatter: d3.format('.2s')
     },
     'variance': {
       key: 'variance',
       sufix: '_g',
-      label: 'value',
+      label: 'variance',
       formatter: d3.format('.2s')
     },
     'quantile': {
       key: 'quantile',
       sufix: '_t',
-      label: 'value',
+      label: 'quantile',
       formatter: d3.format('.2s')
     },
     'cdf': {
       key: 'inverse',
       sufix: '_t',
-      label: 'quantile',
+      label: 'cdf',
       formatter: d3.format('.2f')
     },
   };
 
-  geometry_values = [
-    { value: 'rect', viewValue: 'Rectangle' },
-    { value: 'circle', viewValue: 'Circle' }
-  ];
-
-  composition_values = [
-    { value: 'lighter', viewValue: 'Lighter' },
-    { value: 'color', viewValue: 'Color' }
-  ];
-
   dataset_values = [
     { value: 'health', viewValue: 'Health' },
-    // { value: 'green_tripdata', viewValue: 'Green Taxis' },
-    { value: 'yellow_tripdata', viewValue: 'Yellow Taxis' },
-    { value: 'on_time_performance_2014', viewValue: 'Flights 2014' },
-    { value: 'on_time_performance_2017', viewValue: 'Flights 2017' }
   ];
 
   color: any;
 
-  payload_range = [
-    'rgba(158,  1, 66, 0.75)',
-    'rgba(213, 62, 79, 0.75)',
-    'rgba(244,109, 67, 0.75)',
-    'rgba(253,174, 97, 0.75)',
-    'rgba(254,224,139, 0.75)',
-    'rgba(230,245,152, 0.75)',
-    'rgba(171,221,164, 0.75)',
-    'rgba(102,194,165, 0.75)',
-    'rgba( 50,136,189, 0.75)',
-    'rgba( 94, 79,162, 0.75)'
-  ].reverse();
+  color_range = ['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee090', '#ffffbf', '#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695'].reverse();
+
+  prev_dim = '';
+  geojson = new Map();
+  geojson_curr = new Map();
+  geojson_valid = new Map();
+  geojson_value = new Map();
+  geojson_min_max = new Map();
+  geojson_selected = new Map();
 
   color_map = {
-    'count': (count) => {
-      const lc = Math.log(count) / Math.log(100);
+    'count': (value, dim) => d3.scaleQuantize<string>()
+      .domain(this.geojson_min_max.get(dim))
+      .range(this.color_range)(value),
 
-      const r = Math.floor(256 * Math.min(1, lc));
-      const g = Math.floor(256 * Math.min(1, Math.max(0, lc - 1)));
-      const b = Math.floor(256 * Math.min(1, Math.max(0, lc - 2)));
-
-      return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.75 + ')';
-    },
-    'payload': (count) => d3.scaleQuantize<string>()
-      .domain([parseFloat(this.getPayloadInfo('min_value')), parseFloat(this.getPayloadInfo('max_value'))])
-      .range(this.payload_range)(count)
+    'payload': (value, dim) => d3.scaleQuantize<string>()
+      .domain(this.geojson_min_max.get(dim))
+      .range(this.color_range)(value)
   };
 
+  info_name = '';
+  info_users = [0, 0];
+  info_events = [0, 0]
+
   constructor(
+    private sharing: DataSharingService,
+
+    private httpService: HttpClient,
+
     private configService: ConfigurationService,
     private schemaService: SchemaService,
 
@@ -190,128 +190,368 @@ export class Demo2Component implements OnInit, AfterViewInit {
     private renderer2: Renderer2,
     private componentFactory: ComponentFactoryResolver,
 
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+
+    public snackBar: MatSnackBar
   ) { }
+
+  // getters
+  /////////////////////////////////////////////////////////////////////////
+  updateInfo() {
+    this.updateInfoName();
+    this.updateInfoUsers();
+    this.updateInfoEvents();
+  }
+
+  getCurrentFeature() {
+    return this.geojson_curr.get(this.getCurrentMapDim());
+  }
+
+  updateInfoName() {
+    let feature = this.getCurrentFeature();
+    if (feature) {
+      this.info_name = '(' + feature.properties.code + ') ' + feature.properties.nom;
+    } else {
+      this.info_name = 'none';
+    }
+  }
+
+  updateInfoUsers() {
+    let query = '/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
+      this.getCategoricalConst() +
+      this.getTemporalConst() +
+      this.getRegionConst(this.getCurrentFeature()) +
+      this.getMarker() +
+      '/const=user_id.values.(all)/group=user_id';
+
+    this.dataService.query(query).subscribe(data => {
+      this.info_users[0] = data[0].length;
+    });
+
+    query = '/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
+      this.getRegionConst() +
+      this.getMarker() +
+      '/const=user_id.values.(all)/group=user_id';
+
+    this.dataService.query(query).subscribe(data => {
+      this.info_users[1] = data[0].length;
+    });
+  }
+
+  updateInfoEvents() {
+    let query = '/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
+      this.getCategoricalConst() +
+      this.getTemporalConst() +
+      this.getMarker() +
+      this.getRegionConst(this.getCurrentFeature());
+
+    this.dataService.query(query).subscribe(data => {
+      this.info_events[0] = data[0];
+    });
+
+    query = '/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
+      this.getMarker() +
+      this.getRegionConst();
+
+    this.dataService.query(query).subscribe(data => {
+      this.info_events[1] = data[0];
+    });
+  }
+
 
   loadMapCard() {
     this.currentZoom = this.mapService.map.getZoom();
     this.maximumZoom = this.mapService.map.getMaxZoom();
-
-    this.dataService.query('/query/dataset=' + this.dataset.datasetName + '/aggr=count').subscribe(data => {
-      this.currentCount = data[0];
-      this.maximumCount = data[0];
-    });
   }
 
-  loadLegend() {
+  loadLegend(dim) {
     const svg = d3.select('#svg-color-quant');
     svg.selectAll('*').remove();
 
-    if (this.options.get('aggr').value !== 'count') {
-      svg.append('g')
-        .attr('class', 'legendQuant')
-        .attr('transform', 'translate(0, 0)');
+    svg.append('g')
+      .attr('class', 'legendQuant')
+      .attr('transform', 'translate(0, 0)');
 
-      const domain: [number, number] = [parseFloat(this.getPayloadInfo('min_value')), parseFloat(this.getPayloadInfo('max_value'))];
+    const colorLegend = legendColor()
+      .ascending(true)
+      .labelFormat(this.aggr_map[this.options.get('aggr').value].formatter)
+      .scale(d3.scaleQuantize<string>()
+        .domain(this.geojson_min_max.get(dim))
+        .range(this.color_range)
+      );
 
-      const colorLegend = legendColor()
-        .ascending(true)
-        .labelFormat(d3.format('.2'))
-        .scale(d3.scaleQuantize<string>().domain(domain).range(this.payload_range));
+    svg.select('.legendQuant')
+      .call(colorLegend);
+  }
 
-      svg.select('.legendQuant')
-        .call(colorLegend);
+  getCurrentMapDim() {
+    return (this.mapService.map.getZoom() >= 8) ? 'commune' : 'department';
+  }
+
+  loadRegionLayer() {
+    let self = this;
+
+    // reset values    
+    this.geojson_value.set('region', new Map());
+
+
+    let layerOnMouseOver = (feature, el, dim) => {
+      self.geojson_curr.set(self.getCurrentMapDim(), undefined);
+      self.loadWidgetsData();
+    };
+
+    let getLayer = (dim) => {
+      return L.geoJSON(this.geojson.get(dim), {
+        style: function (feature) {
+          return { fillColor: 'rgb(0, 0, 0)', color: 'black', weight: 100000.0, opacity: 0.0, fillOpacity: 0.0 };;
+        },
+        onEachFeature: (feature, layer) => {
+          layer.on({
+            mouseover: (el) => layerOnMouseOver(feature, el, dim)
+          });
+        }
+      });
     }
+
+    this.mapService.map.addLayer(getLayer('region'));
+  }
+
+  getPromiseGeojsonValid() {
+    let query = '/query' +
+      '/dataset=' + this.dataset.datasetName +
+      '/aggr=count' +
+      this.getCategoricalConst() +
+      this.getTemporalConst() +
+      this.getMarker() + 
+      '/const=' + this.getCurrentMapDim() + '.values.(all)' +
+      '/group=' + this.getCurrentMapDim();
+
+    return new Promise((resolve, reject) => {
+      this.dataService.query(query).subscribe(response => {
+        this.geojson_valid.set(this.getCurrentMapDim(), response[0]);
+        resolve(true);
+  
+      }, (err: HttpErrorResponse) => {
+        console.log(err.message);
+      });
+    })
   }
 
   loadLayer() {
-    this.CanvasLayer = new L.GridLayer({
-      updateWhenIdle: false,
-      updateWhenZooming: false,
-      keepBuffer: 2,
-      updateInterval: 1000
-    });
+    let self = this;
 
-    this.CanvasLayer.createTile = (coords, done) => {
-      const query = '/query' +
-        '/dataset=' + this.dataset.datasetName +
-        this.getAggr() +
-        this.getCategoricalConst() +
-        this.getTemporalConst() +
-        '/const=' + this.dataset.spatialDimension[0] +
-        '.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + this.options.get('resolution').value + ')' +
-        '/group=' + this.dataset.spatialDimension[0];
+    // reset values    
+    this.geojson_value.set('department', new Map());
+    this.geojson_value.set('commune', new Map());
 
-      const tile = document.createElement('canvas');
+    let getLayerColor = (feature, dim) => {
+      let value = self.geojson_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
+      let style;
 
-      const tileSize = this.CanvasLayer.getTileSize();
-      tile.setAttribute('width', tileSize.x.toString());
-      tile.setAttribute('height', tileSize.y.toString());
+      if (dim === 'department' && dim !== self.getCurrentMapDim()) {
+        style = { fillColor: 'rgb(0, 0, 0)', color: 'black', weight: 1.0, opacity: 1.0, fillOpacity: 0.0 };
+      } else {
+        style = { fillColor: self.color(value, dim), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
+      }
 
-      const ctx = tile.getContext('2d');
-      ctx.globalCompositeOperation = this.options.get('composition').value;
-      ctx.clearRect(0, 0, tileSize.x, tileSize.y);
+      // selected layer
+      if (self.geojson_selected.get(dim).get(feature)) {
+        style.weight = 4;
+        style.fillColor = 'darkgreen';
+      }
 
-      this.dataService.query(query).subscribe(data => {
-        if (data[0] === undefined) {
-          return tile;
-        }
-
-        for (const d of data[0]) {
-          if (d[2] < coords.z + this.options.get('resolution').value) {
-            d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-            d[1] = Mercator.lat2tiley(Mercator.tiley2lat(d[1] + 0.5, d[2]), coords.z + this.options.get('resolution').value);
-            d[2] = coords.z + this.options.get('resolution').value;
-          }
-
-          const lon0 = Mercator.tilex2lon(d[0], d[2]);
-          const lat0 = Mercator.tiley2lat(d[1], d[2]);
-          const lon1 = Mercator.tilex2lon(d[0] + 1, d[2]);
-          const lat1 = Mercator.tiley2lat(d[1] + 1, d[2]);
-
-          const x0 = (Mercator.lon2tilex(lon0, coords.z) - coords.x) * 256;
-          const y0 = (Mercator.lat2tiley(lat0, coords.z) - coords.y) * 256;
-          const x1 = (Mercator.lon2tilex(lon1, coords.z) - coords.x) * 256;
-          const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
-
-          const config = () => {
-            const drawfuncs = {
-              circle: (geom_size) => {
-                const radius = ((x1 - x0) / 2) + geom_size;
-                ctx.beginPath();
-                ctx.arc((x0 + x1) / 2, (y0 + y1) / 2, radius, 0, 2 * Math.PI);
-                ctx.fill();
-              },
-              rect: (geom_size) => {
-                ctx.fillRect(x0 - geom_size, y0 - geom_size, (x1 - x0) + geom_size, (y1 - y0) + geom_size);
-              }
-            };
-
-            return {
-              draw: drawfuncs[this.options.get('geometry').value],
-              color: this.color
-            };
-          };
-
-          ctx.fillStyle = config().color(d[3]);
-          config().draw(this.options.get('geom_size').value);
-        }
-
-        done(null, tile);
-      });
-
-      return tile;
+      return style;
     };
 
-    this.mapService.map.addLayer(this.CanvasLayer);
-    this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
+    let layerOnMouseOver = (feature, el, dim) => {
+      let code = Number.parseInt(feature.properties.code);
+      let value = self.geojson_value.get(dim).find((el) => el[0] === code)[1];
+
+      let style = getLayerColor(feature, dim);
+
+      style.weight = 4;
+
+      self.geojson_curr.set(dim, feature);
+
+      el.target.setStyle(style);
+      self.loadWidgetsData();
+
+      return style;
+    };
+
+    let layerOnMouseOut = (feature, el, dim) => {
+      let code = Number.parseInt(feature.properties.code);
+      let value = self.geojson_value.get(dim).find((el) => el[0] === code)[1];
+
+      let style = getLayerColor(feature, dim);
+
+      // self.geojson_curr.set(dim, undefined);
+
+      el.target.setStyle(style);
+      self.loadWidgetsData();
+
+      return style;
+    };
+
+    let layerOnMouseClick = (feature, el, dim) => {
+      let code = Number.parseInt(feature.properties.code);
+      let value = self.geojson_value.get(dim).find((el) => el[0] === code)[1];
+
+      // swith selected
+      if (self.geojson_selected.get(dim).get(feature)) {
+        self.geojson_selected.get(dim).set(feature, false);
+      } else {
+        self.geojson_selected.get(dim).set(feature, true);
+      }
+
+      let style = getLayerColor(feature, dim);
+
+      style.weight = 4;
+
+      el.target.setStyle(style);
+      self.loadWidgetsData();
+
+      return style;
+    }
+
+    // wait for all promises fineshes and then ...
+    const query = '/query' +
+      '/dataset=' + self.dataset.datasetName +
+      this.getAggr() +
+      self.getCategoricalConst() +
+      self.getTemporalConst() +
+      self.getMarker();
+
+    let promises = [];
+
+    let getPromise = (dim) => {
+      return new Promise((resolve) => {
+        let currQuery = query + '/const=' + dim + '.values.(all)/group=' + dim;
+
+        // reset min_max values
+        self.geojson_min_max.set(dim, [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
+
+        self.dataService.query(currQuery).subscribe(response => {
+          let value = response[0];
+
+          if (value.length) {
+            let curr_minmax = self.geojson_min_max.get(dim);
+
+            value.map((el) => {
+              if (!isNaN(el[1])) {
+                curr_minmax[0] = Math.min(curr_minmax[0], el[1]);
+                curr_minmax[1] = Math.max(curr_minmax[1], el[1]);
+              }
+            });
+
+            self.geojson_min_max.set(dim, curr_minmax);
+          }
+
+          self.geojson_value.set(dim, value);
+
+          resolve(true);
+        });
+      });
+    };
+
+    promises.push(getPromise('commune'));
+    promises.push(getPromise('department'));
+    promises.push(self.getPromiseGeojsonValid());
+
+    Promise.all(promises).then(() => {
+      self.updateAggr();
+
+      self.loadLegend(self.getCurrentMapDim());
+
+      let getLayer = (dim) => {
+        return L.geoJSON(this.geojson.get(dim), {
+          style: function (feature) {
+            return getLayerColor(feature, dim);
+          },
+
+          onEachFeature: (feature, layer) => {
+            layer.on({
+              mouseover: (el) => layerOnMouseOver(feature, el, dim),
+              mouseout: (el) => layerOnMouseOut(feature, el, dim),
+              click: (el) => layerOnMouseClick(feature, el, dim)
+            });
+          },
+
+          filter: function (feature, layer) {
+            let code = Number.parseInt(feature.properties.code);
+
+            let isValid = self.geojson_valid.get(dim).find((el) => el[0] === code);
+
+            if (isValid && isValid[1] >= self.options.get('display_threshold').value) {
+              if (dim === 'commune') {
+                if (self.getCurrentMapDim() === 'commune') {
+                  return true;
+                } else {
+                  return false;
+                }
+              } else {
+                return true;
+              }
+            } else {
+              return false;
+            }
+          }
+        });
+      }
+
+
+      if (this.DepartmentLayer) this.mapService.map.removeLayer(this.DepartmentLayer);
+      this.DepartmentLayer = getLayer('department');
+      this.mapService.map.addLayer(this.DepartmentLayer);
+
+
+      if (this.CommuneLayer) this.mapService.map.removeLayer(this.CommuneLayer);
+      this.CommuneLayer = getLayer('commune');
+      this.mapService.map.addLayer(this.CommuneLayer);
+
+      this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
+    });
+  }
+
+  createCohort() {
+    let dim = this.getCurrentMapDim();
+    localStorage.setItem('dim', JSON.stringify(dim));
+
+    let selected = this.geojson_selected.get(dim);
+
+    let features = [];
+    selected.forEach((value, key, map) => {
+      if (value) {
+        features.push({
+          'feature': key,
+          'constraints': '/query' +
+            '/dataset=' + this.dataset.datasetName +
+            this.getCategoricalConst(dim) +
+            this.getTemporalConst() +
+            '/const=' + dim + '.vales.(' + Number.parseInt(key.properties.code) + ')'
+        });
+      }
+    });
+    localStorage.setItem('features', JSON.stringify(features));
+
+    this.snackBar.open('Cohort Created.', 'Dismiss', {
+      duration: 2000,
+      viewContainerRef: this.footerCtnRef
+    });
   }
 
   onMapZoomEnd() {
     this.currentZoom = Math.round(this.mapService.map.getZoom());
+    if (this.prev_dim !== this.getCurrentMapDim()) {
+      this.prev_dim = this.getCurrentMapDim();
+      this.setMapData();
+    }
   }
 
   loadWidgetsData() {
+    // update info
+    this.updateInfo();
+
     for (const ref of this.widgets) {
       if (ref.type === 'categorical') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
@@ -322,28 +562,27 @@ export class Demo2Component implements OnInit, AfterViewInit {
           this.getCategoricalConst(ref.key) +
           this.getTemporalConst() +
           this.getRegionConst() +
+          this.getMarker() +
           '/group=' + ref.key
         );
       } else if (ref.type === 'temporal') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
+
+        //(<TemporalBandComponent>ref.widget).setNumCurves(this.getAggrTemporalBands());
+
         ref.widget.setNextTerm(
           '/query/dataset=' + this.dataset.datasetName +
+          // this.getAggrTemporalBand() +
           this.getAggr() +
           this.getCategoricalConst() +
           this.getTemporalConst() +
           this.getRegionConst() +
+          this.getMarker() +
           '/group=' + ref.key
         );
       }
     }
-
-    // update count
-    this.dataService.query('/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
-      this.getCategoricalConst() + this.getTemporalConst() + this.getRegionConst())
-      .subscribe(data => {
-        this.currentCount = data[0];
-      });
   }
 
   setDataset(evnt: any) {
@@ -353,10 +592,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   setMapData() {
-    this.CanvasLayer.redraw();
+    this.loadLayer();
   }
 
-  setAggr() {
+  updateAggr() {
     const type = this.options.get('aggr').value;
 
     if (type === 'count') {
@@ -374,10 +613,24 @@ export class Demo2Component implements OnInit, AfterViewInit {
     if (type === 'cdf' || type === 'quantile') {
       this.aggr += '.(' + this.getPayloadInfo('value') + ')';
     }
+  }
+
+  getMarker() {
+    return '/const=marker.values.(' + this.options.get('marker').value + ')';
+  }
+
+  setMarker() {
+    this.updateAggr();
 
     this.loadWidgetsData();
     this.setMapData();
-    this.loadLegend();
+  }
+
+  setAggr() {
+    this.updateAggr();
+
+    this.loadWidgetsData();
+    this.setMapData();
   }
 
   setCategoricalData = (dim: string, selected: Array<string>) => {
@@ -407,18 +660,38 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   setRegionData = (latlng: any, zoom: number): void => {
-    if (latlng.getNorthEast().lat === latlng.getSouthWest().lat && latlng.getSouthWest().lng === latlng.getNorthEast().lng) {
-      this.region[this.dataset.spatialDimension[0]] = '';
-      this.currentCount = this.maximumCount;
-    } else {
-      const z = zoom + 8;
-      const region = this.mapService.get_coords_bounds(latlng, z);
 
-      this.region[this.dataset.spatialDimension[0]] = '/const=' + this.dataset.spatialDimension[0] +
-        '.region.(' + region.x0 + ':' + region.y0 + ':' + region.x1 + ':' + region.y1 + ':' + z + ')';
+  }
+
+  getAggrTemporalBands() {
+    const type = this.options.get('aggr').value;
+
+    if (type !== 'cdf') {
+      return 1;
+    } else {
+      const values = this.bandQuantiles.split(':');
+      return values.length;
+    }
+  }
+
+  setAggrTemporalBand() {
+    this.loadWidgetsData();
+  }
+
+  getAggrTemporalBand(): string {
+    if (this.options.get('aggr').value !== 'cdf') {
+      return this.getAggr();
     }
 
-    this.loadWidgetsData();
+    const type = 'quantile';
+    const payload = this.options.get('payload').value;
+
+    let aggr = '/aggr=' + this.aggr_map[type].key;
+
+    aggr += '.' + payload + this.aggr_map[type].sufix;
+
+    aggr += '.(' + this.bandQuantiles + ')';
+    return aggr;
   }
 
   getAggr() {
@@ -438,6 +711,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     if (filter !== undefined) {
       constrainsts += '/const=' + filter + '.values.(all)';
     }
+
     return constrainsts;
   }
 
@@ -450,12 +724,31 @@ export class Demo2Component implements OnInit, AfterViewInit {
     return constrainsts;
   }
 
-  getRegionConst() {
-    let constrainsts = '';
-    for (const key of Object.keys(this.region)) {
-      constrainsts += this.region[key];
+  getRegionConst(feature?) {
+    if (feature) {
+      return '/const=' + this.getCurrentMapDim() + '.values.(' + feature.properties.code + ')';
+    } else {
+      let selected = this.geojson_selected.get(this.getCurrentMapDim());
+
+      if (!selected || selected.length === 0) {
+        return '';
+      } else {
+        let valid = false;
+        let values = '/const=' + this.getCurrentMapDim() + '.values.(';
+
+        selected.forEach((value, key, map) => {
+          if (value) {
+            valid = true;
+            values += + key.properties.code + ':';
+          }
+        });
+
+        values = values.substr(0, values.length - 1);
+        values += ')';
+
+        return valid ? values : '';
+      }
     }
-    return constrainsts;
   }
 
   ngOnInit() {
@@ -478,27 +771,19 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.marker.register(this.setRegionData);
 
     this.mapService.disableEvent(this.mapwidgets);
-
-    // load visualizations
-    this.loadLayer();
   }
 
   initialize() {
     this.options = this.formBuilder.group({
       // visualization setup
-      geometry: new FormControl(this.dataset.geometry),
-      geom_size: new FormControl(this.dataset.geometry_size),
-      resolution: new FormControl(this.dataset.resolution),
-      composition: new FormControl(this.dataset.composition),
-
-      aggr: new FormControl('count'),
+      display_threshold: new FormControl(0),
+      aggr: new FormControl('mean'),
+      marker: new FormControl(1),
       payload: new FormControl(this.dataset.payloads[0]),
-
       dataset: new FormControl(this.dataset.datasetName)
     });
 
-    this.color = this.color_map['count'];
-    this.aggr = '/aggr=count';
+    this.updateAggr();
 
     this.geocodingService.geocode(this.dataset.local)
       .subscribe(location => {
@@ -513,6 +798,21 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
 
     this.widgets = [];
+
+    for (const dim of this.dataset.categoricalDimension) {
+      const component = this.componentFactory.resolveComponentFactory(BarChartComponent);
+
+      const componentRef = viewContainerRef.createComponent(component);
+      const componentInstance = <BarChartComponent>componentRef.instance;
+
+      this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
+
+      componentInstance.setFormatter(d3.format('.2s'));
+      componentInstance.setXLabel(dim);
+      componentInstance.register(dim, this.setCategoricalData);
+      this.widgets.push({ key: dim, type: 'categorical', widget: componentInstance });
+    }
+
 
     for (const dim of Object.keys(this.dataset.temporalDimension)) {
       const component = this.componentFactory.resolveComponentFactory(LineChartComponent);
@@ -531,9 +831,66 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
     }
 
-    // refresh input data
-    this.loadWidgetsData();
-    this.loadMapCard();
+    // initialize maps
+    this.geojson_selected.set('commune', new Map());
+    this.geojson_selected.set('department', new Map());
+
+    this.geojson_min_max.set('commune', [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
+    this.geojson_min_max.set('department', [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
+
+    let getRegionPromise = (dim, file) => {
+      return new Promise((resolve, reject) => {
+        this.httpService.get(file)
+          .subscribe(response => {
+            this.geojson.set(dim, response);
+            resolve(true);
+          }, (err: HttpErrorResponse) => {
+            console.log(err.message);
+          });
+      })
+    };
+
+    let getCodePromise = (dim, file) => {
+      return new Promise((resolve, reject) => {
+        this.httpService.get(file)
+          .subscribe(response => {
+            this.geojson.set(dim, response);
+
+            const query = '/query' +
+              '/dataset=' + this.dataset.datasetName +
+              '/aggr=count' +
+              '/const=' + dim + '.values.(all)' +
+              '/group=' + dim;
+
+            this.dataService.query(query).subscribe(response => {
+              this.geojson_valid.set(dim, response[0]);
+              resolve(true);
+
+            }, (err: HttpErrorResponse) => {
+              console.log(err.message);
+            });
+
+          }, (err: HttpErrorResponse) => {
+            console.log(err.message);
+          });
+      })
+    };
+
+    let promises = [];
+
+    promises.push(getCodePromise('department', './assets/geojson/france-departements.geojson'));
+    promises.push(getCodePromise('commune', './assets/geojson/france-communes.geojson'));
+    promises.push(getRegionPromise('region', './assets/geojson/france-regions.geojson'));
+
+    Promise.all(promises).then(() => {
+      // load map
+      this.loadRegionLayer();
+      this.loadLayer();
+      this.loadMapCard();
+
+      // refresh input data
+      this.loadWidgetsData();
+    });
   }
 
   getPayloadInfo(key: string) {

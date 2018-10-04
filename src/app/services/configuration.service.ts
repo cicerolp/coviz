@@ -6,7 +6,7 @@ export class ConfigurationService {
   public ApiUrl = 'api';
   public ServerWithApiUrl = this.Server + this.ApiUrl;
 
-  public defaultDataset = 'on_time_performance_2014';
+  public defaultDataset = 'health';
   
   constructor() { }
 

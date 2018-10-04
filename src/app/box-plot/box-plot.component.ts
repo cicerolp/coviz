@@ -13,7 +13,7 @@ import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-box-plot',
-  // encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.None,
   templateUrl: './box-plot.component.html',
   styleUrls: ['./box-plot.component.scss']
 })
@@ -74,7 +74,7 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
     this.colors = colors;
 
     this.loadWidget();
-    this.loadLegend();
+    // this.loadLegend();
   }
 
   setData(data: any) {
@@ -97,7 +97,7 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
     }
 
     this.loadWidget();
-    this.loadLegend();
+    // this.loadLegend();
   }
 
   loadLegend() {
@@ -139,14 +139,19 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
     this.callbacks.push({ dim, callback });
   }
 
+  registerConstraints(dim: string, constraints: any, callback: any): void {
+    this.dim = dim;
+    this.callbacks.push({ dim, callback, constraints });
+  }
+
   unregister(callback: any): void {
     this.callbacks = this.callbacks.filter(el => el.callback !== callback);
   }
 
   broadcast(value?): void {
-    for (const pair of this.callbacks) {
+    for (const entry of this.callbacks) {
       if (value) {
-        pair.callback(pair.dim, value, this);
+        entry.callback(entry.dim, entry.constraints, value, this);
       }
     }
   }
@@ -161,7 +166,7 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
 
     container = container.parentNode.getBoundingClientRect();
 
-    const margin = { top: 20, right: 5, bottom: 40, left: 55 };
+    const margin = { top: 25, right: 5, bottom: 20, left: 55 };
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
@@ -223,8 +228,8 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
 
     //
     const yScale = d3.scaleLinear().range([height, -margin.top]);
-    //yScale.domain([d3.min(this.data.map(d => d[1])), d3.max(this.data.map(d => d[4] + (d[5] - d[4]) * 0.015))]);
-    yScale.domain([-30, 30]);
+    yScale.domain([d3.min(this.data.map(d => d[1])), d3.max(this.data.map(d => d[4] + (d[5] - d[4]) * 0.1 ))]);
+    // yScale.domain([-30, 30]);
 
     const yAxis = d3.axisLeft(yScale)
       .tickFormat(self.yFormat)
@@ -289,7 +294,7 @@ export class BoxPlotComponent implements Widget, OnInit, AfterViewInit, OnDestro
       .merge(spines)
       .attr('x1', (function (d) { return xScale(d[0]) + xScale.bandwidth() / 2; }).bind(this))
       .attr('y1', (function (d) {
-        let value = Math.max(-30, d[1]);
+        let value = d[1];
         return yScale(value);
       }).bind(this))
       .attr('x2', (function (d) { return xScale(d[0]) + xScale.bandwidth() / 2; }).bind(this))

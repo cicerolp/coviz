@@ -1,0 +1,56 @@
+.flex-container {
+  display: flex; /* or inline-flex */
+  flex-direction: row;
+  justify-content: center;
+
+  margin-bottom: 1rem;
+}
+
+.flex-container .flex-container {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.flex-item {
+  flex-grow: 1;
+
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  background-color: rgba(86, 61, 124, .15);
+  border: 1px solid rgba(86, 61, 124, .2);
+}
+
+.very-small {
+  height: 40px;
+}
+
+.small {
+  height: 100px;
+}
+
+.medium {
+  height: 150px;
+}
+
+.large {
+  height: 200px;
+}
+
+.extra-large {
+  height: 250px;
+}
+
+.mat-card-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mat-expansion-panel-header-title, 
+.mat-expansion-panel-header-description {
+  flex-basis: 0;
+}
+
+.mat-expansion-panel-header-description {
+  justify-content: space-between;
+  align-items: center;
+}

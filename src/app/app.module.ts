@@ -11,6 +11,8 @@ import { RoutingModule } from './routing/routing.module';
 
 import { GeocodingService } from './services/geocoding.service';
 
+import { DataSharingService } from './services/data-sharing.service';
+
 import { AppComponent } from './app.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { MapService } from './services/map.service';
@@ -37,6 +39,8 @@ import { TimezoneService } from './services/timezone.service';
 import { Demo6Component } from './demo6/demo6.component';
 import { Demo7Component } from './demo7/demo7.component';
 import { DensityChartComponent } from './density-chart/density-chart.component';
+import { Demo8Component } from './demo8/demo8.component';
+import { CompareComponent } from './compare/compare.component';
 
 export function configProviderFactory(provider: SchemaService) {
   return () => provider.load();
@@ -56,13 +60,16 @@ export function configProviderFactory(provider: SchemaService) {
     Demo5Component,
     Demo6Component,
     Demo7Component,
+    Demo8Component,
+    CompareComponent,
 
     BoxPlotComponent,
     LineChartComponent,
     CalendarComponent,
     BarChartComponent,
     TemporalBandComponent,
-    DensityChartComponent
+    DensityChartComponent,
+    CompareComponent    
   ],
   imports: [
     BrowserModule,
@@ -94,7 +101,8 @@ export function configProviderFactory(provider: SchemaService) {
     MapService,
     DataService,
     ConfigurationService,
-    TimezoneService
+    TimezoneService,
+    DataSharingService
   ],
   bootstrap: [AppComponent],
   entryComponents: [

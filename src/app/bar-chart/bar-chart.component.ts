@@ -101,6 +101,9 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
+    this.data = this.data.sort((lhs, rhs) => {
+      return lhs[0] - rhs[0];
+    });
     // set the ranges
     const x = d3.scaleBand()
       .range([0, width])
@@ -122,32 +125,66 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     y.domain([0, d3.max<number, number>(this.data, function (d) { return d[1]; })]);
     // y.domain(d3.extent<number, number>(this.data, (d) => d[1]));
 
+    let yMin = d3.min(this.data, (elt) => { return elt[1] });
+    let yMax = d3.max(this.data, (elt) => { return elt[1] });
+
+    // var color = "steelblue";
+    var colorScale = d3.scaleQuantize<string>()
+      .domain([0, this.dataset.aliases[this.dim].length])
+      //.range([d3.rgb(color).brighter().toString(), d3.rgb(color).darker().toString()]);
+      .range(['rgb(166,206,227)', 'rgb(31,120,180)', 'rgb(178,223,138)', 'rgb(51,160,44)', 'rgb(251,154,153)', 'rgb(227,26,28)', 'rgb(253,191,111)', 'rgb(255,127,0)', 'rgb(202,178,214)', 'rgb(106,61,154)', 'rgb(255,255,153)', 'rgb(177,89,40)']);
+
+    let getColor = (d) => {
+      if (self.selectedElts.find((elt) => elt === d[0]) !== undefined) {
+        return d3.rgb(colorScale(d[0]));
+      } else {
+        if (self.selectedElts.length !== 0) {
+          // return d3.rgb(colorScale(d[0])).brighter(0.5);
+          return d3.rgb('lightgray');
+        } else {
+          return d3.rgb(colorScale(d[0]));
+        }
+      }
+    }
+
     svg.selectAll('bar')
       .data(this.data)
       .enter().append('rect')
-      .attr('class', function (d, i): string {
-        if (self.selectedElts.find((elt) => elt === d[0]) !== undefined) {
-          return 'bar-selected';
-        } else {
-          return 'bar';
-        }
+      .attr('fill', (d) => {
+        let color = getColor(d);
+        return color.toString();
       })
       .attr('x', d => x(this.dataset.aliases[this.dim][d[0]]))
       .attr('width', x.bandwidth())
       .attr('y', (d) => y(d[1]))
       .attr('height', (d) => height - y(d[1]))
-      .on('click', function (d) {
-        if (d3.select(this).attr('class') === 'bar') {
-          d3.select(this).attr('class', 'bar-selected');
+      .on('mouseover', function (d) {
+        if (self.selectedElts.find((elt) => elt === d[0]) !== undefined) {
+          d3.select(this).attr('fill', d3.rgb(colorScale(d[0])).darker(2.0).toString());
         } else {
-          d3.select(this).attr('class', 'bar');
+          d3.select(this).attr('fill', d3.rgb(colorScale(d[0])).darker().toString());
         }
+      })
+      .on('mouseout', function (d) {
+        d3.select(this).attr('fill', getColor(d).toString());
+      })
+      .on('click', function (d) {
+        let found = self.selectedElts.find(el => el === d[0]) !== undefined;
 
-        self.selectedElts = new Array<string>();
-        svg.selectAll('rect').filter('.bar-selected').each(elt => {
-          self.selectedElts.push(elt[0]);
+        if (found) {
+          self.selectedElts = self.selectedElts.filter(el => el !== d[0]);
+        } else {
+          self.selectedElts.push(d[0]);
+        }
+        // reset color
+        d3.select(this).attr('fill', getColor(d).toString());
+
+        svg.selectAll("rect").attr("fill", function (d) {
+          let color = getColor(d);
+          return color.toString();
         });
 
+        // broadcast
         self.broadcast();
       });
 

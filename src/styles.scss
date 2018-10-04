@@ -28,7 +28,6 @@ html, body {
   height: 100%;
   width: 100%;
   margin: 0;
-  overflow: hidden
 }
 
 .leaflet-container {
@@ -48,7 +47,7 @@ html, body {
 }
 
 .over-map {
-  z-index: 9000;
+  z-index: 400;
 }
 
 .on-map {
