@@ -372,6 +372,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     let layerOnMouseOver = (feature, el, dim) => {
+      if (!self.geo.json_value || !self.geo.json_value.get(dim)) {
+        return;
+      }
+
       let code = Number.parseInt(feature.properties.code);
       let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
 
@@ -388,7 +392,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     let layerOnMouseOut = (feature, el, dim) => {
-      if (!self.geo.json_value.get(dim)) {
+      if (!self.geo.json_value || !self.geo.json_value.get(dim)) {
         return;
       }
 
@@ -406,6 +410,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     let layerOnMouseClick = (feature, el, dim) => {
+      if (!self.geo.json_value || !self.geo.json_value.get(dim)) {
+        return;
+      }
+
       let code = Number.parseInt(feature.properties.code);
       let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
 
@@ -554,8 +562,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
     let keys = [];
 
     let valid = false;
-
-    console.log(selected);
 
     if (selected !== 0) {
       values = '/const=' + dim + '.values.(';

@@ -436,10 +436,14 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
     if (storage_dim) {
       this.dim = JSON.parse(storage_dim)
+    } else {
+      this.dim = '';
     }
 
     if (storage_features) {
       this.features = JSON.parse(storage_features);
+    } else {
+      this.features = [];
     }
   }
 
