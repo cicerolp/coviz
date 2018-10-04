@@ -40,7 +40,6 @@ import { MatSidenav, MatSnackBar, MatSnackBarConfig } from '@angular/material';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { TemporalBandComponent } from '../temporal-band/temporal-band.component';
 import { DataSharingService } from '../services/data-sharing.service';
-import { resolve } from 'q';
 
 interface WidgetType {
   key: string;
@@ -95,9 +94,16 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   bandQuantiles = '0.25:0.5:0.75';
 
+  treatments_values = [
+    { value: true, viewValue: 'PPC', dimName: 'PPC' },
+    { value: true, viewValue: 'OXY', dimName: 'OXY' },
+    { value: true, viewValue: 'VEN', dimName: 'VEN' },
+    { value: true, viewValue: 'AERO', dimName: 'AERO' }
+  ]
+
   marker_values = [
-    { value: 0, viewValue: 'Iah' },
-    { value: 1, viewValue: 'Bmi' },
+    { value: 0, viewValue: 'IAH' },
+    { value: 1, viewValue: 'BMI' },
     { value: 2, viewValue: 'Epworth' }
   ]
 
@@ -222,6 +228,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.getTemporalConst() +
       this.getRegionConst(this.getCurrentFeature()) +
       this.getMarker() +
+      this.getTreatments() +
       '/const=user_id.values.(all)/group=user_id';
 
     this.dataService.query(query).subscribe(data => {
@@ -231,6 +238,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     query = '/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
       this.getRegionConst() +
       this.getMarker() +
+      this.getTreatments() +
       '/const=user_id.values.(all)/group=user_id';
 
     this.dataService.query(query).subscribe(data => {
@@ -243,6 +251,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.getCategoricalConst() +
       this.getTemporalConst() +
       this.getMarker() +
+      this.getTreatments() +
       this.getRegionConst(this.getCurrentFeature());
 
     this.dataService.query(query).subscribe(data => {
@@ -251,6 +260,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     query = '/query/dataset=' + this.dataset.datasetName + '/aggr=count' +
       this.getMarker() +
+      this.getTreatments() +
       this.getRegionConst();
 
     this.dataService.query(query).subscribe(data => {
@@ -322,7 +332,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
       '/aggr=count' +
       this.getCategoricalConst() +
       this.getTemporalConst() +
-      this.getMarker() + 
+      this.getMarker() +
+      this.getTreatments() +
       '/const=' + this.getCurrentMapDim() + '.values.(all)' +
       '/group=' + this.getCurrentMapDim();
 
@@ -330,7 +341,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.dataService.query(query).subscribe(response => {
         this.geojson_valid.set(this.getCurrentMapDim(), response[0]);
         resolve(true);
-  
+
       }, (err: HttpErrorResponse) => {
         console.log(err.message);
       });
@@ -420,7 +431,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.getAggr() +
       self.getCategoricalConst() +
       self.getTemporalConst() +
-      self.getMarker();
+      self.getMarker() +
+      this.getTreatments();
 
     let promises = [];
 
@@ -513,25 +525,76 @@ export class Demo2Component implements OnInit, AfterViewInit {
     });
   }
 
+  clearCohorts() {
+    localStorage.setItem('features', JSON.stringify([]));
+
+    this.snackBar.open('Cohorts Cleaned!', 'Dismiss', {
+      duration: 2000,
+      viewContainerRef: this.footerCtnRef
+    });
+  }
+
   createCohort() {
     let dim = this.getCurrentMapDim();
     localStorage.setItem('dim', JSON.stringify(dim));
 
     let selected = this.geojson_selected.get(dim);
 
-    let features = [];
-    selected.forEach((value, key, map) => {
-      if (value) {
-        features.push({
-          'feature': key,
-          'constraints': '/query' +
-            '/dataset=' + this.dataset.datasetName +
-            this.getCategoricalConst(dim) +
-            this.getTemporalConst() +
-            '/const=' + dim + '.vales.(' + Number.parseInt(key.properties.code) + ')'
-        });
-      }
+    let features;
+    let features_str = localStorage.getItem('features');
+
+    if (!features_str || features_str.valueOf() === '"[]"') {
+      features = new Array();
+    } else {
+      features = JSON.parse(features_str.valueOf());
+    }
+
+    let values = '';
+    let keys = [];
+
+    let valid = false;
+
+    console.log(selected);
+
+    if (selected !== 0) {
+      values = '/const=' + dim + '.values.(';
+
+      selected.forEach((value, key, map) => {
+        if (value) {
+          valid = true;
+          values += key.properties.code + ':'
+
+          keys.push(key);
+        }
+      });
+
+      if (valid) values = values.substr(0, values.length - 1);
+      values += ')';
+    }
+
+    if (!valid) {
+      keys.push({
+        'properties': {
+          'nom': 'France',
+          'code': 0
+        }
+      });
+
+      values = '';
+    }
+
+    features.push({
+      'feature': keys,
+      'constraints': '/query' +
+        '/dataset=' + this.dataset.datasetName +
+        this.getCategoricalConst(dim) +
+        this.getTemporalConst() +
+        this.getTreatments() +
+        values
     });
+
+    console.log(features);
+
     localStorage.setItem('features', JSON.stringify(features));
 
     this.snackBar.open('Cohort Created.', 'Dismiss', {
@@ -563,6 +626,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
           this.getTemporalConst() +
           this.getRegionConst() +
           this.getMarker() +
+          this.getTreatments() +
           '/group=' + ref.key
         );
       } else if (ref.type === 'temporal') {
@@ -579,6 +643,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
           this.getTemporalConst() +
           this.getRegionConst() +
           this.getMarker() +
+          this.getTreatments() +
           '/group=' + ref.key
         );
       }
@@ -721,6 +786,22 @@ export class Demo2Component implements OnInit, AfterViewInit {
       constrainsts += this.temporal[key];
     }
 
+    return constrainsts;
+  }
+
+  setTreatment(event, opt) {
+    opt.value = event.checked;
+
+    this.loadWidgetsData();
+    this.setMapData();
+  }
+
+  getTreatments() {
+    let constrainsts = '';
+    this.treatments_values.forEach((elt) => {
+      let value = elt.value === true ? '1' : '0';
+      constrainsts += '/const=' + elt.dimName + '.values.(' + value + ')'
+    });
     return constrainsts;
   }
 
@@ -875,6 +956,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
           });
       })
     };
+
+    // clear cohors
+    // this.clearCohorts();
 
     let promises = [];
 

@@ -1,6 +1,6 @@
 <mat-card>
     <!-- panel 2 -->
-    <mat-expansion-panel expanded=false>
+    <mat-expansion-panel expanded=true>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-danger">General Information</span>
@@ -12,8 +12,20 @@
                 Name
             </mat-card-title>
             <mat-card-content>
-                <div class="flex-container very-small">
+                <div class="flex-container">
                     <div class="flex-item" *ngFor="let entry of ctn.get('ctnInfo')">
+                        {{ entry }}
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-title>
+                Cohorts
+            </mat-card-title>
+            <mat-card-content>
+                <div class="flex-container">
+                    <div class="flex-item" *ngFor="let entry of ctn.get('ctnConstraints')">
                         {{ entry }}
                     </div>
                 </div>
@@ -48,7 +60,7 @@
 
     <!-- panel 3 -->
     <mat-divider></mat-divider>
-    <mat-expansion-panel expanded=true>
+    <mat-expansion-panel expanded=false>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-warning">BMI Analysis</span>

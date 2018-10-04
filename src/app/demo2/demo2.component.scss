@@ -106,3 +106,9 @@
 body {
   overflow:hidden !important;
 }
+
+.mat-checkbox-group {
+  display: flex;
+  align-content: center;
+  align-items: center;
+}

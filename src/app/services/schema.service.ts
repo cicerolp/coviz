@@ -16,7 +16,7 @@ export class SchemaService {
       'composition': 'lighter',
       'color': 'ryw',
 
-      'datasetName': 'health-markers',
+      'datasetName': 'health-treatments',
       'timeStep': 86400,
 
       'identifier': 'event_id',
