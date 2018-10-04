@@ -115,11 +115,11 @@ export class CompareComponent implements OnInit, AfterViewInit {
   updateInfo() {
     // reset widgets
     this.setCtn('ctnInfo', []);
-    this.setCtn('ctnConstraints', []);    
+    this.setCtn('ctnConstraints', []);
 
     this.features.forEach((entry, index) => {
       let info = '';
-      entry.feature.forEach(element => {        
+      entry.feature.forEach(element => {
         info += '(' + element.properties.code + ') ' + element.properties.nom + ' ';
       });
 
@@ -253,7 +253,21 @@ export class CompareComponent implements OnInit, AfterViewInit {
     }
   }
 
+  getData() {
+    let storage_dim = localStorage.getItem('dim');
+    let storage_features = localStorage.getItem('features');
+
+    if (storage_dim) {
+      this.dim = JSON.parse(storage_dim)
+    }
+
+    if (storage_features) {
+      this.features = JSON.parse(storage_features);
+    }
+  }
+
   ngOnInit() {
+    this.getData();
     this.updateDashboard();
   }
 }

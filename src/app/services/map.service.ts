@@ -42,11 +42,11 @@ export class MapService {
     this.map = L.map('map', {
       worldCopyJump: true
     }).setView(this.lastPosition.center, this.lastPosition.zoom);
-    
+
     // L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjmrqq48d06jo2ss24jxpa5ge/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
 
     // L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjmq57scw05m72ro7wldn6nam/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
-      
+
     L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: '',
       maxZoom: 18,
@@ -76,12 +76,12 @@ export class MapService {
     this.map.addLayer(new DebugLayer());
   }
 
-  flyTo(location: Location): void {    
+  flyTo(location: Location): void {
     this.map.flyToBounds(location.viewBounds, { duration: 3.0 });
   }
 
   fitBounds(bounds): void {
-    this.map.fitBounds(bounds, {});
+    this.map.fitBounds(bounds, { duration: 0.0 });
   }
 
   get_coords_bounds(bound?: any, zoom?: number) {

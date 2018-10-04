@@ -40,6 +40,7 @@ import { MatSidenav, MatSnackBar, MatSnackBarConfig } from '@angular/material';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { TemporalBandComponent } from '../temporal-band/temporal-band.component';
 import { DataSharingService } from '../services/data-sharing.service';
+import { GeoDataService } from '../services/geo-data.service';
 
 interface WidgetType {
   key: string;
@@ -94,17 +95,18 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   bandQuantiles = '0.25:0.5:0.75';
 
-  treatments_values = [
-    { value: true, viewValue: 'PPC', dimName: 'PPC' },
-    { value: true, viewValue: 'OXY', dimName: 'OXY' },
-    { value: true, viewValue: 'VEN', dimName: 'VEN' },
-    { value: true, viewValue: 'AERO', dimName: 'AERO' }
+  treatments_received = [
+    { valueNotReceived: true, valueReceived: true, viewValue: 'PPC', dimName: 'PPC' },
+    { valueNotReceived: true, valueReceived: true, viewValue: 'OXY', dimName: 'OXY' },
+    { valueNotReceived: true, valueReceived: true, viewValue: 'VEN', dimName: 'VEN' },
+    { valueNotReceived: true, valueReceived: true, viewValue: 'AERO', dimName: 'AERO' }
   ]
 
   marker_values = [
     { value: 0, viewValue: 'IAH' },
     { value: 1, viewValue: 'BMI' },
-    { value: 2, viewValue: 'Epworth' }
+    { value: 2, viewValue: 'Epworth' },
+    { value: 3, viewValue: 'All' },
   ]
 
   aggr_values = [
@@ -157,20 +159,14 @@ export class Demo2Component implements OnInit, AfterViewInit {
   color_range = ['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee090', '#ffffbf', '#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695'].reverse();
 
   prev_dim = '';
-  geojson = new Map();
-  geojson_curr = new Map();
-  geojson_valid = new Map();
-  geojson_value = new Map();
-  geojson_min_max = new Map();
-  geojson_selected = new Map();
 
   color_map = {
     'count': (value, dim) => d3.scaleQuantize<string>()
-      .domain(this.geojson_min_max.get(dim))
+      .domain(this.geo.json_min_max.get(dim))
       .range(this.color_range)(value),
 
     'payload': (value, dim) => d3.scaleQuantize<string>()
-      .domain(this.geojson_min_max.get(dim))
+      .domain(this.geo.json_min_max.get(dim))
       .range(this.color_range)(value)
   };
 
@@ -179,7 +175,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
   info_events = [0, 0]
 
   constructor(
-    private sharing: DataSharingService,
+    private geo: GeoDataService,
+    private sharing: DataSharingService,   
 
     private httpService: HttpClient,
 
@@ -210,7 +207,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   getCurrentFeature() {
-    return this.geojson_curr.get(this.getCurrentMapDim());
+    return this.geo.json_curr.get(this.getCurrentMapDim());
   }
 
   updateInfoName() {
@@ -286,7 +283,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       .ascending(true)
       .labelFormat(this.aggr_map[this.options.get('aggr').value].formatter)
       .scale(d3.scaleQuantize<string>()
-        .domain(this.geojson_min_max.get(dim))
+        .domain(this.geo.json_min_max.get(dim))
         .range(this.color_range)
       );
 
@@ -302,16 +299,16 @@ export class Demo2Component implements OnInit, AfterViewInit {
     let self = this;
 
     // reset values    
-    this.geojson_value.set('region', new Map());
+    this.geo.json_value.set('region', new Map());
 
 
     let layerOnMouseOver = (feature, el, dim) => {
-      self.geojson_curr.set(self.getCurrentMapDim(), undefined);
+      self.geo.json_curr.set(self.getCurrentMapDim(), undefined);
       self.loadWidgetsData();
     };
 
     let getLayer = (dim) => {
-      return L.geoJSON(this.geojson.get(dim), {
+      return L.geoJSON(this.geo.json.get(dim), {
         style: function (feature) {
           return { fillColor: 'rgb(0, 0, 0)', color: 'black', weight: 100000.0, opacity: 0.0, fillOpacity: 0.0 };;
         },
@@ -339,7 +336,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     return new Promise((resolve, reject) => {
       this.dataService.query(query).subscribe(response => {
-        this.geojson_valid.set(this.getCurrentMapDim(), response[0]);
+        this.geo.json_valid.set(this.getCurrentMapDim(), response[0]);
         resolve(true);
 
       }, (err: HttpErrorResponse) => {
@@ -352,11 +349,11 @@ export class Demo2Component implements OnInit, AfterViewInit {
     let self = this;
 
     // reset values    
-    this.geojson_value.set('department', new Map());
-    this.geojson_value.set('commune', new Map());
+    this.geo.json_value.set('department', new Map());
+    this.geo.json_value.set('commune', new Map());
 
     let getLayerColor = (feature, dim) => {
-      let value = self.geojson_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
+      let value = self.geo.json_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
       let style;
 
       if (dim === 'department' && dim !== self.getCurrentMapDim()) {
@@ -366,7 +363,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       }
 
       // selected layer
-      if (self.geojson_selected.get(dim).get(feature)) {
+      if (self.geo.json_selected.get(dim).get(feature)) {
         style.weight = 4;
         style.fillColor = 'darkgreen';
       }
@@ -376,13 +373,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     let layerOnMouseOver = (feature, el, dim) => {
       let code = Number.parseInt(feature.properties.code);
-      let value = self.geojson_value.get(dim).find((el) => el[0] === code)[1];
+      let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
 
       let style = getLayerColor(feature, dim);
 
       style.weight = 4;
 
-      self.geojson_curr.set(dim, feature);
+      self.geo.json_curr.set(dim, feature);
 
       el.target.setStyle(style);
       self.loadWidgetsData();
@@ -392,11 +389,11 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     let layerOnMouseOut = (feature, el, dim) => {
       let code = Number.parseInt(feature.properties.code);
-      let value = self.geojson_value.get(dim).find((el) => el[0] === code)[1];
+      let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
 
       let style = getLayerColor(feature, dim);
 
-      // self.geojson_curr.set(dim, undefined);
+      // self.geo.json_curr.set(dim, undefined);
 
       el.target.setStyle(style);
       self.loadWidgetsData();
@@ -406,13 +403,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     let layerOnMouseClick = (feature, el, dim) => {
       let code = Number.parseInt(feature.properties.code);
-      let value = self.geojson_value.get(dim).find((el) => el[0] === code)[1];
+      let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
 
       // swith selected
-      if (self.geojson_selected.get(dim).get(feature)) {
-        self.geojson_selected.get(dim).set(feature, false);
+      if (self.geo.json_selected.get(dim).get(feature)) {
+        self.geo.json_selected.get(dim).set(feature, false);
       } else {
-        self.geojson_selected.get(dim).set(feature, true);
+        self.geo.json_selected.get(dim).set(feature, true);
       }
 
       let style = getLayerColor(feature, dim);
@@ -441,13 +438,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
         let currQuery = query + '/const=' + dim + '.values.(all)/group=' + dim;
 
         // reset min_max values
-        self.geojson_min_max.set(dim, [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
+        self.geo.json_min_max.set(dim, [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
 
         self.dataService.query(currQuery).subscribe(response => {
           let value = response[0];
 
           if (value.length) {
-            let curr_minmax = self.geojson_min_max.get(dim);
+            let curr_minmax = self.geo.json_min_max.get(dim);
 
             value.map((el) => {
               if (!isNaN(el[1])) {
@@ -456,10 +453,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
               }
             });
 
-            self.geojson_min_max.set(dim, curr_minmax);
+            self.geo.json_min_max.set(dim, curr_minmax);
           }
 
-          self.geojson_value.set(dim, value);
+          self.geo.json_value.set(dim, value);
 
           resolve(true);
         });
@@ -476,7 +473,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       self.loadLegend(self.getCurrentMapDim());
 
       let getLayer = (dim) => {
-        return L.geoJSON(this.geojson.get(dim), {
+        return L.geoJSON(this.geo.json.get(dim), {
           style: function (feature) {
             return getLayerColor(feature, dim);
           },
@@ -492,7 +489,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
           filter: function (feature, layer) {
             let code = Number.parseInt(feature.properties.code);
 
-            let isValid = self.geojson_valid.get(dim).find((el) => el[0] === code);
+            let isValid = self.geo.json_valid.get(dim).find((el) => el[0] === code);
 
             if (isValid && isValid[1] >= self.options.get('display_threshold').value) {
               if (dim === 'commune') {
@@ -538,7 +535,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     let dim = this.getCurrentMapDim();
     localStorage.setItem('dim', JSON.stringify(dim));
 
-    let selected = this.geojson_selected.get(dim);
+    let selected = this.geo.json_selected.get(dim);
 
     let features;
     let features_str = localStorage.getItem('features');
@@ -681,7 +678,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   getMarker() {
-    return '/const=marker.values.(' + this.options.get('marker').value + ')';
+    // all markers
+    if (this.options.get('marker').value === 3) {
+      return '';
+    } else {
+      return '/const=marker.values.(' + this.options.get('marker').value + ')';
+    }    
   }
 
   setMarker() {
@@ -789,8 +791,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
     return constrainsts;
   }
 
-  setTreatment(event, opt) {
-    opt.value = event.checked;
+  setTreatment(event, opt, received) {
+    if (received) {
+      opt.valueReceived = event.checked;
+    } else {
+      opt.valueNotReceived = event.checked;
+    }
+    
 
     this.loadWidgetsData();
     this.setMapData();
@@ -798,9 +805,20 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   getTreatments() {
     let constrainsts = '';
-    this.treatments_values.forEach((elt) => {
-      let value = elt.value === true ? '1' : '0';
-      constrainsts += '/const=' + elt.dimName + '.values.(' + value + ')'
+    this.treatments_received.forEach((elt) => {
+      let values = '';
+      if (elt.valueNotReceived) {
+        values += '0';
+      }
+      if (elt.valueReceived) {
+        if (values.length) {
+          values += ':1';
+        } else {
+          values = '1';
+        }        
+      }
+
+      constrainsts += '/const=' + elt.dimName + '.values.(' + values + ')'
     });
     return constrainsts;
   }
@@ -809,7 +827,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     if (feature) {
       return '/const=' + this.getCurrentMapDim() + '.values.(' + feature.properties.code + ')';
     } else {
-      let selected = this.geojson_selected.get(this.getCurrentMapDim());
+      let selected = this.geo.json_selected.get(this.getCurrentMapDim());
 
       if (!selected || selected.length === 0) {
         return '';
@@ -858,8 +876,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.options = this.formBuilder.group({
       // visualization setup
       display_threshold: new FormControl(0),
-      aggr: new FormControl('mean'),
-      marker: new FormControl(1),
+      aggr: new FormControl('count'),
+      marker: new FormControl(3),
       payload: new FormControl(this.dataset.payloads[0]),
       dataset: new FormControl(this.dataset.datasetName)
     });
@@ -868,7 +886,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     this.geocodingService.geocode(this.dataset.local)
       .subscribe(location => {
-        this.mapService.flyTo(location);
+        this.mapService.fitBounds(location.viewBounds);
       }, error => console.error(error));
 
     const viewContainerRef = this.container;
@@ -912,61 +930,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
     }
 
-    // initialize maps
-    this.geojson_selected.set('commune', new Map());
-    this.geojson_selected.set('department', new Map());
-
-    this.geojson_min_max.set('commune', [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
-    this.geojson_min_max.set('department', [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
-
-    let getRegionPromise = (dim, file) => {
-      return new Promise((resolve, reject) => {
-        this.httpService.get(file)
-          .subscribe(response => {
-            this.geojson.set(dim, response);
-            resolve(true);
-          }, (err: HttpErrorResponse) => {
-            console.log(err.message);
-          });
-      })
-    };
-
-    let getCodePromise = (dim, file) => {
-      return new Promise((resolve, reject) => {
-        this.httpService.get(file)
-          .subscribe(response => {
-            this.geojson.set(dim, response);
-
-            const query = '/query' +
-              '/dataset=' + this.dataset.datasetName +
-              '/aggr=count' +
-              '/const=' + dim + '.values.(all)' +
-              '/group=' + dim;
-
-            this.dataService.query(query).subscribe(response => {
-              this.geojson_valid.set(dim, response[0]);
-              resolve(true);
-
-            }, (err: HttpErrorResponse) => {
-              console.log(err.message);
-            });
-
-          }, (err: HttpErrorResponse) => {
-            console.log(err.message);
-          });
-      })
-    };
-
-    // clear cohors
-    // this.clearCohorts();
-
-    let promises = [];
-
-    promises.push(getCodePromise('department', './assets/geojson/france-departements.geojson'));
-    promises.push(getCodePromise('commune', './assets/geojson/france-communes.geojson'));
-    promises.push(getRegionPromise('region', './assets/geojson/france-regions.geojson'));
-
-    Promise.all(promises).then(() => {
       // load map
       this.loadRegionLayer();
       this.loadLayer();
@@ -974,7 +937,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       // refresh input data
       this.loadWidgetsData();
-    });
   }
 
   getPayloadInfo(key: string) {

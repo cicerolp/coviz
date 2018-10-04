@@ -10,6 +10,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RoutingModule } from './routing/routing.module';
 
 import { GeocodingService } from './services/geocoding.service';
+import { GeoDataService } from './services/geo-data.service';
 
 import { DataSharingService } from './services/data-sharing.service';
 
@@ -42,9 +43,10 @@ import { DensityChartComponent } from './density-chart/density-chart.component';
 import { Demo8Component } from './demo8/demo8.component';
 import { CompareComponent } from './compare/compare.component';
 
-export function configProviderFactory(provider: SchemaService) {
+export function configProviderFactory(provider) {
   return () => provider.load();
 }
+
 
 @NgModule({
   declarations: [
@@ -97,7 +99,14 @@ export function configProviderFactory(provider: SchemaService) {
       deps: [SchemaService],
       multi: true
     },
-    GeocodingService,
+    GeoDataService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: configProviderFactory,
+      deps: [GeoDataService],
+      multi: true
+    },
+    GeocodingService,    
     MapService,
     DataService,
     ConfigurationService,

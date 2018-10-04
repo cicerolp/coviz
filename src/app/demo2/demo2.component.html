@@ -7,14 +7,28 @@
     <!-- color scale -->
     <svg id="svg-color-quant" class="on-map"></svg>
 
+    <!-- treatments -->
+    <mat-card class="map-card on-map" [formGroup]="options">
+      <div>
+        <section>
+          <span class="badge badge-success">Received Treatments:</span>
+          <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,true)>
+            {{ opt.viewValue }}</mat-checkbox>
+        </section>
+        <section>
+          <span class="badge badge-warning">Not Received Treatments:</span>
+          <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,false)>
+            {{ opt.viewValue }}</mat-checkbox>
+        </section>
+      </div>
+    </mat-card>
+    <!-- end treatments -->
+
     <!-- aggregation -->
     <mat-card class="map-card on-map" [formGroup]="options">
       <div>
         <section>
-          <span class="badge badge-info">Zoom:</span> {{currentZoom}} of {{maximumZoom}}
-        </section>
-        <section>
-          <span class="badge badge-danger">Aggregation:</span>
+          <span class="badge badge-info">Aggregation:</span>
           <mat-form-field>
             <mat-select formControlName="aggr" (change)="setAggr()">
               <mat-option *ngFor="let opt of aggr_values" [value]="opt.value">
@@ -24,7 +38,7 @@
           </mat-form-field>
         </section>
         <section>
-          <span class="badge badge-danger">Marker:</span>
+          <span class="badge badge-info">Marker:</span>
           <mat-form-field>
             <mat-select formControlName="marker" (change)="setMarker()">
               <mat-option *ngFor="let opt of marker_values" [value]="opt.value">
@@ -34,11 +48,7 @@
           </mat-form-field>
         </section>
         <section>
-          <span class="badge badge-danger">Treatments:</span>
-          <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_values" checked=true (change)=setTreatment($event,opt)> {{ opt.viewValue }}</mat-checkbox>
-        </section>
-        <section>
-          <span class="badge badge-danger"># of Events:</span> {{ this.options.get('display_threshold').value }}
+          <span class="badge badge-info"># of Events:</span> {{ this.options.get('display_threshold').value }}
           <mat-slider min="0" max="1000" step="1" thumbLabel="true" tickInterval="auto" formControlName="display_threshold"
             (change)="setMapData()"></mat-slider>
         </section>
@@ -50,19 +60,19 @@
     <mat-card class="map-card on-map" [formGroup]="options">
       <div>
         <section>
-          <span class="badge badge-warning">Name:</span> {{ info_name }}
+          <span class="badge badge-info">Name:</span> {{ info_name }}
         </section>
         <section>
           <span class="badge badge-info">Number of Patients:</span> {{ info_users[0] }} of {{ info_users[1] }}
         </section>
         <section>
-          <span class="badge badge-info">Number of Markers:</span> {{ info_events[0] }} of {{ info_events[1] }}
+          <span class="badge badge-info">Number of Actions:</span> {{ info_events[0] }} of {{ info_events[1] }}
         </section>
         <section>
-          <button mat-raised-button class="btn-cohort" color="sucess" (click)="clearCohorts()">Clear Cohorts <i class="material-icons md-32">assignment_turned_in</i></button>
+          <button mat-raised-button class="btn-cohort" color="warn" (click)="clearCohorts()">Clear Cohorts <i class="material-icons md-32">cancel</i></button>
         </section>
         <section>
-          <button mat-raised-button class="btn-cohort" color="warn" (click)="createCohort()">Create Cohort! <i class="material-icons md-32">assignment_turned_in</i></button>
+          <button mat-raised-button class="btn-cohort" color="primary" (click)="createCohort()">Create Cohort! <i class="material-icons md-32">assignment_turned_in</i></button>
         </section>
       </div>
     </mat-card>
