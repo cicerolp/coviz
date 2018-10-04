@@ -388,6 +388,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     let layerOnMouseOut = (feature, el, dim) => {
+      if (!self.geo.json_value.get(dim)) {
+        return;
+      }
+
       let code = Number.parseInt(feature.properties.code);
       let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
 
@@ -589,8 +593,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
         this.getTreatments() +
         values
     });
-
-    console.log(features);
 
     localStorage.setItem('features', JSON.stringify(features));
 

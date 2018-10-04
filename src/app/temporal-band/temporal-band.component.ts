@@ -303,7 +303,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     svg.select('#labelXAxis')
       .attr('x', (width / 2.0))
       .attr('y', height + margin.bottom - 5)
-      .style('text-anchor', 'middle')
+      .style('text-anchor', 'start')
       .text(this.xLabel);
 
     // text label for the y axis
@@ -342,7 +342,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('d', d => valueline(d.curve))
       .attr('fill', 'none')
       .attr('stroke', d => d.color)
-      .attr('stroke-width', 1);
+      .attr('stroke-width', 0.75);
   }
 
   setNumCurves(num: number) {

@@ -54,17 +54,17 @@ export class Demo5Component implements OnInit, AfterViewInit {
   private widgets: Array<WidgetType> = [];
 
   dataset_values = [
-    { value: 'on_time_performance_demo5', viewValue: 'Flights 2017' },
+    // { value: 'on_time_performance_demo5', viewValue: 'Flights 2017' },
     { value: 'health', viewValue: 'Health' }
   ];
 
   group_values = [
-    { value: 'minute', viewValue: 'Minute' },
-    { value: 'hour', viewValue: 'Hour' },
+    // { value: 'minute', viewValue: 'Minute' },
+    // { value: 'hour', viewValue: 'Hour' },
     { value: 'day', viewValue: 'Day' },
-    { value: 'week', viewValue: 'Week' },
-    { value: 'month', viewValue: 'Month' },
-    { value: 'year', viewValue: 'Year' }
+    // { value: 'week', viewValue: 'Week' },
+    // { value: 'month', viewValue: 'Month' },
+    // { value: 'year', viewValue: 'Year' }
   ];
 
   group_map = {
@@ -119,7 +119,7 @@ export class Demo5Component implements OnInit, AfterViewInit {
     this.formGroup = this.formBuilder.group({
       formArray: this.formBuilder.array([
         this.formBuilder.group({
-          dataset: ['on_time_performance_demo5', Validators.required],
+          dataset: ['health', Validators.required],
           payload: ['', Validators.required],
           spatial: ['', Validators.required],
           temporal: ['', Validators.required],

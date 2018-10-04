@@ -1,7 +1,7 @@
 .flex-container {
   display: flex; /* or inline-flex */
   flex-direction: row;
-  justify-content: center;
+  justify-content: space-between;
 
   margin-bottom: 1rem;
 }
@@ -11,13 +11,15 @@
   margin-bottom: 0;
 }
 
+.info-item {
+  background-color: rgba(86, 61, 124, .25);
+  border: 1px solid rgba(86, 61, 124, .2);
+  border-radius: 10px;
+}
+
 .flex-item {
   flex-grow: 1;
-
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  background-color: rgba(86, 61, 124, .15);
-  border: 1px solid rgba(86, 61, 124, .2);
+  padding: 1rem;
 }
 
 .very-small {
@@ -53,4 +55,37 @@
 .mat-expansion-panel-header-description {
   justify-content: space-between;
   align-items: center;
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(1) {
+  background-color: rgba(166,206,227, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(2) {
+  background-color: rgba(31,120,180, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(3) {
+  background-color: rgba(178,223,138, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(4) {
+  background-color: rgba(51,160,44, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(5) {
+  background-color: rgba(251,154,153, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(7) {
+  background-color: rgba(227,26,28, .25);
+}
+mat-card > mat-card-content > div > .flex-item:nth-child(8) {
+  background-color: rgba(253,191,111, .25);
+}
+mat-card > mat-card-content > div > .flex-item:nth-child(9) {
+  background-color: rgba(255,127,0, .25);
+}
+mat-card > mat-card-content > div > .flex-item:nth-child(10) {
+  background-color: rgba(202,178,214, .25);
 }

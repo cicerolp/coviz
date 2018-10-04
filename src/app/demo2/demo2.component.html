@@ -1,98 +1,101 @@
-<!-- map -->
-<div id="map">
-  <div #mapwidgets>
-    <!-- navigator -->
-    <app-navigator></app-navigator>
+<div class="app-container ">
+  <!-- map -->
+  <div id="map">
+    <div #mapwidgets>
+      <!-- navigator -->
+      <app-navigator></app-navigator>
 
-    <!-- color scale -->
-    <svg id="svg-color-quant" class="on-map"></svg>
+      <!-- color scale -->
+      <svg id="svg-color-quant" class="on-map"></svg>
 
-    <!-- treatments -->
-    <mat-card class="map-card on-map" [formGroup]="options">
-      <div>
-        <section>
-          <span class="badge badge-success">Received Treatments:</span>
-          <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,true)>
-            {{ opt.viewValue }}</mat-checkbox>
-        </section>
-        <section>
-          <span class="badge badge-warning">Not Received Treatments:</span>
-          <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,false)>
-            {{ opt.viewValue }}</mat-checkbox>
-        </section>
-      </div>
-    </mat-card>
-    <!-- end treatments -->
+      <!-- treatments -->
+      <mat-card class="map-card on-map" [formGroup]="options">
+        <div>
+          <section>
+            <span class="badge badge-success">Received Treatments:</span>
+            <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,true)>
+              {{ opt.viewValue }}</mat-checkbox>
+          </section>
+          <section>
+            <span class="badge badge-warning">Not Received Treatments:</span>
+            <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,false)>
+              {{ opt.viewValue }}</mat-checkbox>
+          </section>
+        </div>
+      </mat-card>
+      <!-- end treatments -->
 
-    <!-- aggregation -->
-    <mat-card class="map-card on-map" [formGroup]="options">
-      <div>
-        <section>
-          <span class="badge badge-info">Aggregation:</span>
-          <mat-form-field>
-            <mat-select formControlName="aggr" (change)="setAggr()">
-              <mat-option *ngFor="let opt of aggr_values" [value]="opt.value">
-                {{ opt.viewValue }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </section>
-        <section>
-          <span class="badge badge-info">Marker:</span>
-          <mat-form-field>
-            <mat-select formControlName="marker" (change)="setMarker()">
-              <mat-option *ngFor="let opt of marker_values" [value]="opt.value">
-                {{ opt.viewValue }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </section>
-        <section>
-          <span class="badge badge-info"># of Events:</span> {{ this.options.get('display_threshold').value }}
-          <mat-slider min="0" max="1000" step="1" thumbLabel="true" tickInterval="auto" formControlName="display_threshold"
-            (change)="setMapData()"></mat-slider>
-        </section>
-      </div>
-    </mat-card>
-    <!-- end aggregation -->
+      <!-- aggregation -->
+      <mat-card class="map-card on-map" [formGroup]="options">
+        <div>
+          <section>
+            <span class="badge badge-info">Aggregation:</span>
+            <mat-form-field>
+              <mat-select formControlName="aggr" (change)="setAggr()">
+                <mat-option *ngFor="let opt of aggr_values" [value]="opt.value">
+                  {{ opt.viewValue }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+          <section>
+            <span class="badge badge-info">Marker:</span>
+            <mat-form-field>
+              <mat-select formControlName="marker" (change)="setMarker()">
+                <mat-option *ngFor="let opt of marker_values" [value]="opt.value">
+                  {{ opt.viewValue }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+          <section>
+            <span class="badge badge-info"># of Events:</span> {{ this.options.get('display_threshold').value }}
+            <mat-slider min="0" max="1000" step="1" thumbLabel="true" tickInterval="auto" formControlName="display_threshold"
+              (change)="setMapData()"></mat-slider>
+          </section>
+        </div>
+      </mat-card>
+      <!-- end aggregation -->
 
-    <!-- info -->
-    <mat-card class="map-card on-map" [formGroup]="options">
-      <div>
-        <section>
-          <span class="badge badge-info">Name:</span> {{ info_name }}
-        </section>
-        <section>
-          <span class="badge badge-info">Number of Patients:</span> {{ info_users[0] }} of {{ info_users[1] }}
-        </section>
-        <section>
-          <span class="badge badge-info">Number of Actions:</span> {{ info_events[0] }} of {{ info_events[1] }}
-        </section>
-        <section>
-          <button mat-raised-button class="btn-cohort" color="warn" (click)="clearCohorts()">Clear Cohorts <i class="material-icons md-32">cancel</i></button>
-        </section>
-        <section>
-          <button mat-raised-button class="btn-cohort" color="primary" (click)="createCohort()">Create Cohort! <i class="material-icons md-32">assignment_turned_in</i></button>
-        </section>
-      </div>
-    </mat-card>
-    <!-- end info -->
+      <!-- info -->
+      <mat-card class="map-card on-map" [formGroup]="options">
+        <div>
+          <section>
+            <span class="badge badge-info">Name:</span> {{ info_name }}
+          </section>
+          <section>
+            <span class="badge badge-info">Number of Patients:</span> {{ info_users[0] }} of {{ info_users[1] }}
+          </section>
+          <section>
+            <span class="badge badge-info">Number of Actions:</span> {{ info_events[0] }} of {{ info_events[1] }}
+          </section>
+          <section>
+            <button mat-raised-button class="btn-cohort" color="warn" (click)="clearCohorts()">Clear Cohorts <i class="material-icons md-32">cancel</i></button>
+          </section>
+          <section>
+            <button mat-raised-button class="btn-cohort" color="primary" (click)="createCohort()">Create Cohort! <i
+                class="material-icons md-32">assignment_turned_in</i></button>
+          </section>
+        </div>
+      </mat-card>
+      <!-- end info -->
+    </div>
+    <!-- end mapwidgets -->
   </div>
-  <!-- end mapwidgets -->
-</div>
-<!-- end map -->
+  <!-- end map -->
 
-<!-- footer toolbar -->
-<div *ngIf="options.get('aggr').value === 'quantile' || options.get('aggr').value === 'cdf'" class="app-footer-toolbar app-footer-container over-map">
-  <section class="app-footer-item">
-    <span class="badge badge-warning">Payload Parameter: {{ getPayloadInfo('value') }}</span>
-    <mat-slider [min]="getPayloadInfo('min')" [max]="getPayloadInfo('max')" [step]="getPayloadInfo('step')" thumbLabel="true"
-      tickInterval="auto" [ngModel]="getPayloadInfo('value')" (ngModelChange)="setPayloadInfo('value', $event)"
-      (change)="setMapData()"></mat-slider>
-  </section>
-</div>
+  <!-- footer toolbar -->
+  <div *ngIf="options.get('aggr').value === 'quantile' || options.get('aggr').value === 'cdf'" class="app-footer-toolbar app-footer-container over-map">
+    <section class="app-footer-item">
+      <span class="badge badge-warning">Payload Parameter: {{ getPayloadInfo('value') }}</span>
+      <mat-slider [min]="getPayloadInfo('min')" [max]="getPayloadInfo('max')" [step]="getPayloadInfo('step')"
+        thumbLabel="true" tickInterval="auto" [ngModel]="getPayloadInfo('value')" (ngModelChange)="setPayloadInfo('value', $event)"
+        (change)="setMapData()"></mat-slider>
+    </section>
+  </div>
 
-<div class="app-footer app-footer-container over-map" #footerCtnRef>
-  <div class="flex-item" #container></div>
+  <div class="app-footer app-footer-container over-map" #footerCtnRef>
+    <div class="flex-item" #container></div>
+  </div>
+  <!-- end footer toolbar -->
 </div>
-<!-- end footer toolbar -->
