@@ -826,7 +826,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
         }        
       }
 
-      constrainsts += '/const=' + elt.dimName + '.values.(' + values + ')'
+      if (values !== '') {
+        constrainsts += '/const=' + elt.dimName + '.values.(' + values + ')'
+      }
+      
     });
     return constrainsts;
   }
