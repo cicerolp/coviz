@@ -110,6 +110,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   ]
 
   aggr_values = [
+    { value: 'outlier', viewValue: 'Outlierness' },
     { value: 'count', viewValue: 'Count' },
     { value: 'mean', viewValue: 'Mean' },
     { value: 'variance', viewValue: 'Variance' },
@@ -148,6 +149,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
       label: 'cdf',
       formatter: d3.format('.2f')
     },
+    'outlier': {
+      key: 'pipeline',
+      sufix: '',
+      label: 'outlierness',
+      formatter: d3.format('.2f')
+    }
   };
 
   dataset_values = [
@@ -176,7 +183,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   constructor(
     private geo: GeoDataService,
-    private sharing: DataSharingService,   
+    private sharing: DataSharingService,
 
     private httpService: HttpClient,
 
@@ -434,11 +441,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       return style;
     }
 
-    // wait for all promises fineshes and then ...
-    const query = '/query' +
-      '/dataset=' + self.dataset.datasetName +
-      this.getAggr() +
-      self.getCategoricalConst() +
+    const constrainsts = self.getCategoricalConst() +
       self.getTemporalConst() +
       self.getMarker() +
       this.getTreatments();
@@ -447,12 +450,32 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     let getPromise = (dim) => {
       return new Promise((resolve) => {
-        let currQuery = query + '/const=' + dim + '.values.(all)/group=' + dim;
+        let query = '';
+        if (this.options.get('aggr').value === 'outlier') {
+          query = '/pipeline' +
+            '/join=right_join' +
+            '/threshold=' + self.options.get('display_threshold').value +
+            '/datset=' + self.dataset.datasetName +
+            //left
+            self.getLeftPipeline() +
+            constrainsts +
+            '/const=' + dim + '.values.(all)/group=' + dim +
+            // right
+            self.getRightPipeline() +
+            constrainsts +
+            '/const=' + dim + '.values.(all)/group=' + dim;
+        } else {
+          query = '/query' +
+            '/dataset=' + self.dataset.datasetName +
+            this.getAggr() +
+            constrainsts +
+            '/const=' + dim + '.values.(all)/group=' + dim;
+        }
 
         // reset min_max values
         self.geo.json_min_max.set(dim, [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
 
-        self.dataService.query(currQuery).subscribe(response => {
+        self.dataService.query(query).subscribe(response => {
           let value = response[0];
 
           if (value.length) {
@@ -475,6 +498,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       });
     };
 
+    // wait for all promises fineshes and then ...
     promises.push(getPromise('commune'));
     promises.push(getPromise('department'));
     promises.push(self.getPromiseGeojsonValid());
@@ -620,37 +644,106 @@ export class Demo2Component implements OnInit, AfterViewInit {
     // update info
     this.updateInfo();
 
+    /*  if (this.options.get('aggr').value === 'outlier') {
+       query = '/pipeline' +
+         '/join=right_join' +
+         '/threshold=' + self.options.get('display_threshold').value +
+         '/datset=' + self.dataset.datasetName +
+         //left
+         self.getLeftPipeline() +
+         constrainsts +
+         '/const=' + dim + '.values.(all)/group=' + dim +
+         // right
+         self.getRightPipeline() +
+         constrainsts +
+         '/const=' + dim + '.values.(all)/group=' + dim;
+     } else {
+       query = '/query' +
+         '/dataset=' + self.dataset.datasetName +
+         this.getAggr() +
+         constrainsts + 
+         '/const=' + dim + '.values.(all)/group=' + dim;
+     } */
+
     for (const ref of this.widgets) {
       if (ref.type === 'categorical') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
-        ref.widget.setNextTerm(
-          '/query/dataset=' + this.dataset.datasetName +
-          this.getAggr() +
-          this.getCategoricalConst(ref.key) +
+
+        const constrainsts = this.getCategoricalConst(ref.key) +
           this.getTemporalConst() +
           this.getRegionConst() +
           this.getMarker() +
-          this.getTreatments() +
-          '/group=' + ref.key
-        );
+          this.getTreatments();
+
+        if (this.options.get('aggr').value === 'outlier') {
+          ref.widget.setNextTerm(
+            '/pipeline' +
+            '/join=right_join' +
+            '/threshold=' + this.options.get('display_threshold').value +
+            '/datset=' + this.dataset.datasetName +
+            //left
+            this.getLeftPipeline() +
+            constrainsts +
+            '/group=' + ref.key +
+            // right
+            this.getRightPipeline() +
+            constrainsts +
+            '/group=' + ref.key
+          );
+        } else {
+          ref.widget.setNextTerm(
+            '/query/dataset=' + this.dataset.datasetName +
+            this.getAggr() +
+            this.getCategoricalConst(ref.key) +
+            this.getTemporalConst() +
+            this.getRegionConst() +
+            this.getMarker() +
+            this.getTreatments() +
+            '/group=' + ref.key
+          );
+        }
+
+
       } else if (ref.type === 'temporal') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
 
         //(<TemporalBandComponent>ref.widget).setNumCurves(this.getAggrTemporalBands());
 
-        ref.widget.setNextTerm(
-          '/query/dataset=' + this.dataset.datasetName +
-          // this.getAggrTemporalBand() +
-          this.getAggr() +
-          this.getCategoricalConst() +
+        const constrainsts = this.getCategoricalConst(ref.key) +
           this.getTemporalConst() +
           this.getRegionConst() +
           this.getMarker() +
-          this.getTreatments() +
-          '/group=' + ref.key
-        );
+          this.getTreatments();
+
+        if (this.options.get('aggr').value === 'outlier') {
+          ref.widget.setNextTerm(
+            '/pipeline' +
+            '/join=right_join' +
+            '/threshold=' + this.options.get('display_threshold').value +
+            '/datset=' + this.dataset.datasetName +
+            //left
+            this.getLeftPipeline() +
+            constrainsts +
+            '/group=' + ref.key +
+            // right
+            this.getRightPipeline() +
+            constrainsts +
+            '/group=' + ref.key
+          );
+        } else {
+          ref.widget.setNextTerm(
+            '/query/dataset=' + this.dataset.datasetName +
+            this.getAggr() +
+            this.getCategoricalConst(ref.key) +
+            this.getTemporalConst() +
+            this.getRegionConst() +
+            this.getMarker() +
+            this.getTreatments() +
+            '/group=' + ref.key
+          );
+        }
       }
     }
   }
@@ -685,13 +778,25 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
   }
 
+  getLeftPipeline() {
+    return '/source' +
+      '/aggr=average.value_g' +
+      '/dataset=' + this.dataset.datasetName;
+  }
+
+  getRightPipeline() {
+    return '/destination' +
+      '/aggr=inverse.value_t' +
+      '/dataset=' + this.dataset.datasetName;
+  }
+
   getMarker() {
     // all markers
     if (this.options.get('marker').value === 3) {
       return '';
     } else {
       return '/const=marker.values.(' + this.options.get('marker').value + ')';
-    }    
+    }
   }
 
   setMarker() {
@@ -805,7 +910,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     } else {
       opt.valueNotReceived = event.checked;
     }
-    
+
 
     this.loadWidgetsData();
     this.setMapData();
@@ -823,13 +928,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
           values += ':1';
         } else {
           values = '1';
-        }        
+        }
       }
 
       if (values !== '') {
         constrainsts += '/const=' + elt.dimName + '.values.(' + values + ')'
       }
-      
+
     });
     return constrainsts;
   }
@@ -887,7 +992,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.options = this.formBuilder.group({
       // visualization setup
       display_threshold: new FormControl(0),
-      aggr: new FormControl('count'),
+      aggr: new FormControl('outlier'),
       marker: new FormControl(3),
       payload: new FormControl(this.dataset.payloads[0]),
       dataset: new FormControl(this.dataset.datasetName)
@@ -941,13 +1046,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.widgets.push({ key: dim, type: 'temporal', widget: componentInstance });
     }
 
-      // load map
-      this.loadRegionLayer();
-      this.loadLayer();
-      this.loadMapCard();
+    // load map
+    this.loadRegionLayer();
+    this.loadLayer();
+    this.loadMapCard();
 
-      // refresh input data
-      this.loadWidgetsData();
+    // refresh input data
+    this.loadWidgetsData();
   }
 
   getPayloadInfo(key: string) {

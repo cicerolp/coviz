@@ -42,6 +42,8 @@ import { Demo7Component } from './demo7/demo7.component';
 import { DensityChartComponent } from './density-chart/density-chart.component';
 import { Demo8Component } from './demo8/demo8.component';
 import { CompareComponent } from './compare/compare.component';
+import { GroupedBarChartComponent } from './grouped-bar-chart/grouped-bar-chart.component';
+import { GroupedBoxPlotComponent } from './grouped-box-plot/grouped-box-plot.component';
 
 export function configProviderFactory(provider) {
   return () => provider.load();
@@ -71,7 +73,9 @@ export function configProviderFactory(provider) {
     BarChartComponent,
     TemporalBandComponent,
     DensityChartComponent,
-    CompareComponent    
+    CompareComponent,
+    GroupedBarChartComponent,
+    GroupedBoxPlotComponent    
   ],
   imports: [
     BrowserModule,
@@ -116,11 +120,13 @@ export function configProviderFactory(provider) {
   bootstrap: [AppComponent],
   entryComponents: [
     BarChartComponent,
+    GroupedBarChartComponent,
     LineChartComponent,
     CalendarComponent,
     TemporalBandComponent,
     BoxPlotComponent,
-    DensityChartComponent
+    DensityChartComponent,
+    GroupedBoxPlotComponent
   ],
 })
 export class AppModule { }

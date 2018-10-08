@@ -35,6 +35,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   xLabel = '';
   yLabel = '';
+  Label = '';
   yFormat = d3.format('.2s');
 
   options: FormGroup;
@@ -172,6 +173,10 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() { }
 
+  setLabel(value: string) {
+    this.Label = value;
+  }
+
   setXLabel(value: string) {
     this.xLabel = value;
   }
@@ -220,27 +225,52 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
     container = container.parentNode.getBoundingClientRect();
 
-    const margin = { top: 8, right: 5, bottom: 35, left: 55 };
+    const margin = { top: 12, right: 5, bottom: 25, left: 55 };
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
+
+    let zoomend = (event) => {
+      // console.log(d3.event.transform.rescaleX(xScale));
+      const transform = d3.event.transform;
+
+      const newXScale = transform.rescaleX(xScale);
+      xAxis.scale(newXScale);
+      gX.call(xAxis);
+
+      // gX.call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
+
+      // gY.call(yAxis.scale(d3.event.transform.rescaleY(yScale)));
+
+      // bands.attr("cx", function(d) { return transform.applyX(xScale(d)); });
+      /* svg.select('#bands').selectAll('.band').attr("cx", function(d) { 
+        return transform.applyX(xScale(d)); 
+      }); */
+    }
+
+    var zoom = d3.zoom()
+      .scaleExtent([1, 40])
+      // .translateExtent([[-100, -100], [width + 90, height + 100]])
+      .on("zoom", zoomend);
 
     d3.select('#' + this.uniqueId).selectAll('*').remove();
 
     const svg = d3.select('#' + this.uniqueId)
       .append('svg')
-      .attr('viewBox', '0 0 ' + container.width + ' ' + container.height);
+      .attr('viewBox', '0 0 ' + container.width + ' ' + container.height)
+      .call(zoom);
 
 
     svg.append('g')
       .attr('id', 'line')
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
+
     const xScale = d3.scaleTime<number, number>()
       .range([0, width]);
 
     // add the X axis
     const xAxis = d3.axisBottom(xScale);
-    svg.append('g')
+    var gX = svg.append('g')
       .attr('class', 'xAxis')
       .attr('transform', 'translate(' + margin.left + ',' + height + ')')
       .call(xAxis);
@@ -257,7 +287,8 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     const yAxis = d3.axisLeft(yScale)
       .tickFormat(self.yFormat)
       .ticks(5);
-    svg.append('g')
+
+    var gY = svg.append('g')
       .attr('class', 'yAxis')
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
       .call(yAxis);
@@ -269,6 +300,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
     svg.append('text').attr('id', 'labelXAxis');
     svg.append('text').attr('id', 'labelYAxis');
+    svg.append('text').attr('id', 'label');
 
     // updatePlot
     const xExtents = [];
@@ -302,9 +334,18 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     xAxis(svg.select('.xAxis'));
     svg.select('#labelXAxis')
       .attr('x', (width / 2.0))
-      .attr('y', height + margin.bottom - 5)
-      .style('text-anchor', 'start')
+      .attr('y', height + margin.bottom + margin.top)
+      .style('text-anchor', 'middle')
       .text(this.xLabel);
+
+    // title label
+    xAxis(svg.select('.xAxis'));
+    svg.select('#label')
+      .attr('x', (width / 2.0))
+      .attr('y', margin.top)
+      .style('text-anchor', 'middle')
+      .text(this.Label);
+
 
     // text label for the y axis
     yAxis(svg.select('.yAxis'));
@@ -342,7 +383,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('d', d => valueline(d.curve))
       .attr('fill', 'none')
       .attr('stroke', d => d.color)
-      .attr('stroke-width', 0.75);
+      .attr('stroke-width', 1.0);
   }
 
   setNumCurves(num: number) {

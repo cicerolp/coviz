@@ -91,7 +91,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     const self = this;
     let container = (d3.select('#' + this.uniqueId).node() as any);
 
-    if (container === undefined || container.parentNode === undefined) {
+    if (container === null || container.parentNode === undefined) {
       return;
     }
 
