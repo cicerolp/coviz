@@ -216,13 +216,13 @@ export class GroupedBoxPlotComponent implements OnInit {
     y.domain(
       [
         d3.min(this.data.map((d) => {
-          let value = d3.min(d, (elt) => elt[1]);
-          return Number.parseInt(value);
+          let value = d3.min(d, (elt) => { return elt[2] - (elt[2] * 0.1); });
+          return value;
         })),
 
         d3.max(this.data.map((d) => {
-          let value = d3.max(d, (elt) => elt[5]);
-          return Number.parseInt(value);
+          let value = d3.max(d, (elt) => { return Number.parseInt(elt[4]) + (elt[4] * 0.1); });
+          return value;
         }))
       ]
     );
@@ -238,7 +238,7 @@ export class GroupedBoxPlotComponent implements OnInit {
 
     this.data.forEach((element, index) => {
       // spines
-      svg.selectAll('.spine')
+      /* svg.selectAll('.spine')
         .data(this.data[index])
         .enter()
         .append('line')
@@ -258,7 +258,7 @@ export class GroupedBoxPlotComponent implements OnInit {
         .attr('y2', (d) => {
           return y(d[5]);
         })
-        .attr('stroke', 'black');
+        .attr('stroke', 'black'); */
 
 
       // bodies
@@ -370,14 +370,14 @@ export class GroupedBoxPlotComponent implements OnInit {
           .attr('x2', width)
           .attr('y1', d => d)
           .attr('y2', d => d)
-          .attr('stroke', 'red')
+          .attr('stroke', 'black')
           .attr('stroke-width', 2);
       };
 
       draw_line();
 
       self.lineLabel = y.invert(this.mouseLine);
-      self.broadcast(y.invert(this.mouseLine));
+      // self.broadcast(y.invert(this.mouseLine));
     });
   }
 

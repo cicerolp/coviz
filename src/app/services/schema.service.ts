@@ -16,7 +16,7 @@ export class SchemaService {
       'composition': 'lighter',
       'color': 'ryw',
 
-      'datasetName': 'health-treatments',
+      'datasetName': 'health-durations',
       'timeStep': 86400,
 
       'identifier': 'event_id',
@@ -42,7 +42,7 @@ export class SchemaService {
 
         'dead': ['No', 'Yes'],
 
-        'gender': ['M', 'F'],
+        'gender': ['F', 'M'],
 
         'marker': ['iah', 'bmi', 'epworth'],
 

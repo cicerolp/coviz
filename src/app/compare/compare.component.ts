@@ -23,6 +23,9 @@ import { TemporalBandComponent } from '../temporal-band/temporal-band.component'
 import { MatSnackBar } from '@angular/material';
 import { GroupedBarChartComponent } from '../grouped-bar-chart/grouped-bar-chart.component';
 import { GroupedBoxPlotComponent } from '../grouped-box-plot/grouped-box-plot.component';
+import { CalendarComponent } from '../calendar/calendar.component';
+
+import { Options } from 'ng5-slider';
 
 // widgets
 //////////////////////////////////
@@ -41,6 +44,12 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
   dim = 'department';
   features = new Array();
+
+  default_duration = {
+    minValue: 1989, maxValue: 2017, currYear: 2017
+  }
+
+  durations = new Map<string, any[]>();
 
   ctn = new Map<string, any[]>();
   // minimum
@@ -63,6 +72,9 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
   // progression
   @ViewChild('ctnBmiPro', { read: ViewContainerRef }) ctnBmiPro: ViewContainerRef;
+
+  // calendar
+  @ViewChild('ctnBmiCalendar', { read: ViewContainerRef }) ctnBmiCalendar: ViewContainerRef;
 
 
   ////////////////////////////////
@@ -90,6 +102,9 @@ export class CompareComponent implements OnInit, AfterViewInit {
   @ViewChild('ctnIahPro', { read: ViewContainerRef }) ctnIahPro: ViewContainerRef;
 
 
+  // calendar
+  @ViewChild('ctnIahCalendar', { read: ViewContainerRef }) ctnIahCalendar: ViewContainerRef;
+
   /////////////////////////////////
 
 
@@ -113,6 +128,11 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
   // progression
   @ViewChild('ctnEpworthPro', { read: ViewContainerRef }) ctnEpworthPro: ViewContainerRef;
+
+  // calendar
+  @ViewChild('ctnEpworthCalendar', { read: ViewContainerRef }) ctnEpworthCalendar: ViewContainerRef;
+
+  /////////////////////////////////
 
   constructor(
     private dataService: DataService,
@@ -138,11 +158,22 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.ctn.set(ctn, []);
   }
 
+  updateCalendars() {
+    // calendar
+    this.updateCtnCalendar('ctnBmiCalendar', this.ctnBmiCalendar, '/const=marker.values.(0)/group=marker', 'iah');
+    this.updateCtnCalendar('ctnIahCalendar', this.ctnIahCalendar, '/const=marker.values.(1)/group=marker', 'bmi');
+    this.updateCtnCalendar('ctnEpworthCalendar', this.ctnEpworthCalendar, '/const=marker.values.(2)/group=marker', 'epworth');
+  }
+
   updateDashboard() {
     this.updateInfo();
 
     this.updateCtnValue('ctn2', '/aggr=count', d3.format(''));
     this.updateCtnValueFun('ctn3', '/aggr=count' + '/const=user_id.values.(all)/group=user_id', this.getUniqueUsers, d3.format(''));
+
+    /////////////////////////////////////
+    // BMI
+    /////////////////////////////////////
 
     // minimum
     this.updateCtnGroupedHistograms('ctnBmiMinLeft', this.ctnBmiMinLeft, 'has_left', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=dead.values.(all)/group=has_left');
@@ -165,8 +196,10 @@ export class CompareComponent implements OnInit, AfterViewInit {
       '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=age.values.(all)/group=age');
 
     // progression
-    this.updateCtnTemporalBands('event_date', this.ctnBmiPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(1)/const=has_left.values.(all)/group=event_date');
+    this.updateCtnTemporalBands('ctnBmiPro', this.ctnBmiPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(1)/const=has_left.values.(all)/group=event_date');
 
+    /////////////////////////////////////
+    // IAH
     /////////////////////////////////////
 
     // minimum
@@ -190,8 +223,10 @@ export class CompareComponent implements OnInit, AfterViewInit {
       '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=age.values.(all)/group=age');
 
     // progression
-    this.updateCtnTemporalBands('event_date', this.ctnIahPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(0)/const=has_left.values.(all)/group=event_date');
+    this.updateCtnTemporalBands('ctnIahPro', this.ctnIahPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(0)/const=has_left.values.(all)/group=event_date');
 
+    /////////////////////////////////////
+    // Epworth
     /////////////////////////////////////
 
     // minimum
@@ -215,7 +250,9 @@ export class CompareComponent implements OnInit, AfterViewInit {
       '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=age.values.(all)/group=age');
 
     // progression
-    this.updateCtnTemporalBands('event_date', this.ctnEpworthPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(2)/const=has_left.values.(all)/group=event_date');
+    this.updateCtnTemporalBands('ctnEpworthPro', this.ctnEpworthPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(2)/const=has_left.values.(all)/group=event_date');
+
+    this.updateCalendars();
   }
 
   callback = () => { }
@@ -540,7 +577,50 @@ export class CompareComponent implements OnInit, AfterViewInit {
     });
   }
 
-  updateCtnCalendar(ctn, ref, dim, query) {
+
+  // this.updateCtnCalendar('ctnBmiCalendar', this.ctnBmiCalendar, '/const=marker.values.(1)/group=marker');
+
+  callbackCalendars = (ctn, index, duration) => {
+    this.durations.get(ctn)[index] = duration;
+    this.refresCalendar(ctn, index);
+  }
+
+  getAugmentedSeries(ctn, index) {
+    if (!this.durations.has(ctn)) {
+      // initialize duration ctn
+      this.durations.set(ctn, []);
+    }
+
+    if (this.durations.get(ctn)[index] === undefined) {
+      this.durations.get(ctn)[index] = this.default_duration;
+    }
+
+    let query = this.getCtn(ctn)[index].query;
+
+    let currDuration = this.durations.get(ctn)[index];
+
+    let initial = new Date('1/1/' + currDuration.currYear).valueOf() / 1000
+
+    let compareFrom = new Date('1/1/' + currDuration.minValue).valueOf() / 1000;
+
+    let compareTo = new Date('1/1/' + (currDuration.maxValue + 1)).valueOf() / 1000;
+
+    let term = '/augmented_series' +
+      '/series=event_date.(' + initial + ':86400:365:86400)' +
+      '/pipeline/join=right_join/threshold=0' +
+      '/source/aggr=average.value_g/dataset=health-durations' + this.getConstraints(index) + query +
+      '/destination/aggr=inverse.value_t.($)/dataset=health-durations' + this.getConstraints(index) + query +
+      '/const=event_date.interval.(' + compareFrom + ':' + compareTo + ')';
+
+    return term;
+  }
+
+  refresCalendar(ctn, index) {
+    let instance = <CalendarComponent>this.getCtn(ctn)[index].widget;
+    instance.setNextTerm(this.getAugmentedSeries(ctn, index));
+  }
+
+  updateCtnCalendar(ctn, ref, query, marker) {
     for (let i = 0; i < this.getCtn(ctn).length; ++i) {
       ref.remove(i);
     }
@@ -549,27 +629,26 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.setCtn(ctn, []);
 
     this.features.forEach((entry, index) => {
-      const component = this.componentFactory.resolveComponentFactory(TemporalBandComponent);
+      const component = this.componentFactory.resolveComponentFactory(CalendarComponent);
 
       const componentRef = ref.createComponent(component);
-      const componentInstance = <TemporalBandComponent>componentRef.instance;
+      const componentInstance = <CalendarComponent>componentRef.instance;
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
       // componentInstance.register(dim, this.callback);
-      componentInstance.setDataset('health');
+      // componentInstance.setDataset('health');
 
       // componentInstance.setFormatter(d3.format('.2s'));
 
-      componentInstance.setYLabel('quantile');
-      componentInstance.setXLabel(dim);
-      componentInstance.setNumCurves(3);
+      // componentInstance.setYLabel('quantile');
+      // componentInstance.setXLabel(dim);
+      componentInstance.setLabel('Cohort #' + index);
 
-      componentInstance.setNextTerm(this.getConstraints(index) + query);
+      this.getCtn(ctn).push({ key: 'none', type: 'calendar', widget: componentInstance, 'query': query });
 
-      // componentInstance.registerConstraints(dim, this.getConstraints(index), this.setBoxplotLine);
-
-      this.getCtn(ctn).push({ key: 'none', type: 'boxplot', widget: componentInstance });
+      componentInstance.registerCtn(ctn, index, this.callbackCalendars);
+      componentInstance.setNextTerm(this.getAugmentedSeries(ctn, index));
     });
   }
 

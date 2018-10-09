@@ -9,6 +9,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RoutingModule } from './routing/routing.module';
 
+import { Ng5SliderModule } from 'ng5-slider';
+
 import { GeocodingService } from './services/geocoding.service';
 import { GeoDataService } from './services/geo-data.service';
 
@@ -93,6 +95,7 @@ export function configProviderFactory(provider) {
     RoutingModule,
 
     Md2Module,
+    Ng5SliderModule,
     NoConflictStyleCompatibilityMode,
   ],
   providers: [

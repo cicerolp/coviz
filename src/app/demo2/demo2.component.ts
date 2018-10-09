@@ -29,6 +29,8 @@ import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
 import { SchemaService } from '../services/schema.service';
 
+import { Options } from 'ng5-slider';
+
 // widgets
 import { Widget } from '../widget';
 import { BarChartComponent } from '../bar-chart/bar-chart.component';
@@ -95,11 +97,29 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   bandQuantiles = '0.25:0.5:0.75';
 
-  treatments_received = [
-    { valueNotReceived: true, valueReceived: true, viewValue: 'PPC', dimName: 'PPC' },
-    { valueNotReceived: true, valueReceived: true, viewValue: 'OXY', dimName: 'OXY' },
-    { valueNotReceived: true, valueReceived: true, viewValue: 'VEN', dimName: 'VEN' },
-    { valueNotReceived: true, valueReceived: true, viewValue: 'AERO', dimName: 'AERO' }
+  optionsSlider: Options = {
+    floor: 0,
+    ceil: 6,
+    showTicks: true,
+    showSelectionBar: true,
+    selectionBarGradient: {
+      from: 'white',
+      to: '#FC0'
+    },
+    translate: (value: number): string => {
+      if (value === 0) {
+        return '0';
+      } else {
+        return Math.pow(2, value - 1).toString();
+      }
+    }
+  };
+
+  treatments_duration = [
+    { minValue: 0, maxValue: 6, viewValue: 'PPC', dimName: 'dur_ppc' },
+    { minValue: 0, maxValue: 6, viewValue: 'OXY', dimName: 'dur_oxy' },
+    { minValue: 0, maxValue: 6, viewValue: 'VEN', dimName: 'dur_ven' },
+    { minValue: 0, maxValue: 6, viewValue: 'AERO', dimName: 'dur_aero' },
   ]
 
   marker_values = [
@@ -904,37 +924,23 @@ export class Demo2Component implements OnInit, AfterViewInit {
     return constrainsts;
   }
 
-  setTreatment(event, opt, received) {
-    if (received) {
-      opt.valueReceived = event.checked;
-    } else {
-      opt.valueNotReceived = event.checked;
-    }
-
-
+  setTreatment(event, entry) {
     this.loadWidgetsData();
     this.setMapData();
   }
 
   getTreatments() {
     let constrainsts = '';
-    this.treatments_received.forEach((elt) => {
+    this.treatments_duration.forEach((entry) => {
       let values = '';
-      if (elt.valueNotReceived) {
-        values += '0';
+      for (let i = entry.minValue; i <= entry.maxValue; ++i) {
+        values += i + ':';
       }
-      if (elt.valueReceived) {
-        if (values.length) {
-          values += ':1';
-        } else {
-          values = '1';
-        }
-      }
-
       if (values !== '') {
-        constrainsts += '/const=' + elt.dimName + '.values.(' + values + ')'
+        // remove last ':'
+        values = values.substr(0, values.length - 1);
+        constrainsts += '/const=' + entry.dimName + '.values.(' + values + ')'
       }
-
     });
     return constrainsts;
   }

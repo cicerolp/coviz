@@ -31,6 +31,9 @@ export class GroupedBarChartComponent implements Widget, OnInit, AfterViewInit, 
   yLabel = '';
   yFormat = d3.format('.2s');
 
+  mouseLine = -1;
+  lineLabel = -1;
+
   constructor(private dataService: DataService,
     private configService: ConfigurationService,
     private schemaService: SchemaService,
@@ -255,7 +258,42 @@ export class GroupedBarChartComponent implements Widget, OnInit, AfterViewInit, 
       .style('text-anchor', 'middle')
       .text(this.yLabel);
 
-    return;
+    // mouse
+    svg.on('mousemove', () => {
+      const precisionRound = (number, precision) => {
+        const factor = Math.pow(10, precision);
+        return Math.round(number * factor) / factor;
+      };
+
+      this.mouseLine = precisionRound(d3.mouse(<HTMLElement>svg.node())[1], 1);
+
+      const draw_line = () => {
+        if (this.mouseLine === -1) {
+          return;
+        }
+
+        let mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
+        mLine.remove();
+
+        mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
+
+        mLine.enter()
+          .append('line')
+          .merge(mLine)
+          .attr('class', 'mouseLine')
+          .attr('x1', 0)
+          .attr('x2', width)
+          .attr('y1', d => d)
+          .attr('y2', d => d)
+          .attr('stroke', 'black')
+          .attr('stroke-width', 2);
+      };
+
+      draw_line();
+
+      self.lineLabel = y.invert(this.mouseLine);
+      // self.broadcast(y.invert(this.mouseLine));
+    });
 
     /* .on('mouseover', function (d) {
       if (self.selectedElts.find((elt) => elt === d[0]) !== undefined) {

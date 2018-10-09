@@ -12,6 +12,8 @@ import { DataService } from '../services/data.service';
 import { SchemaService } from '../services/schema.service';
 import { TimezoneService } from '../services/timezone.service';
 
+import { Options } from 'ng5-slider';
+
 @Component({
   selector: 'app-calendar',
   encapsulation: ViewEncapsulation.None,
@@ -25,10 +27,14 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
   data: any;
   dim = '';
   subject = new Subject<any>();
+
+  ctnCallbacks: any[] = [];
   callbacks: any[] = [];
 
   xLabel = '';
   yLabel = '';
+  Label = '';
+
   yFormat = d3.format('.2f');
 
   options: FormGroup;
@@ -42,6 +48,28 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
   private year = 0;
   private min = Number.MAX_SAFE_INTEGER;
   private max = Number.MIN_SAFE_INTEGER;
+
+  duration = {
+    minValue: 1989, maxValue: 2017, currYear: 2017
+  }
+
+  optionsSlider: Options = {
+    floor: 1989,
+    ceil: 2010,
+    showTicks: true,
+    showSelectionBar: true,
+    selectionBarGradient: {
+      from: 'white',
+      to: '#FC0'
+    },
+    /* translate: (value: number): string => {
+      if (value === 0) {
+        return '0';
+      } else {
+        return Math.pow(2, value - 1).toString();
+      }
+    } */
+  };
 
   constructor(
     fb: FormBuilder,
@@ -62,6 +90,10 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
   ngOnInit() { }
 
+  setLabel(value: string) {
+    this.Label = value;
+  }
+
   setXLabel(value: string) {
     this.xLabel = value;
   }
@@ -79,7 +111,7 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
     let finalDate: Date;
 
     if (data[0].length) {
-      initialDate =  this.timezoneService.getDateFromSeconds(data[0][0][0]);
+      initialDate = this.timezoneService.getDateFromSeconds(data[0][0][0]);
       finalDate = this.timezoneService.getDateFromSeconds(data[0][data[0].length - 1][0]);
     } else {
       initialDate = new Date();
@@ -118,13 +150,13 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
     const svg = d3.select('#svg-color-quant-' + this.uniqueId);
     svg.selectAll('*').remove();
 
-    svg.attr('class', 'svg-color-quant-calendar');
+    svg.attr('class', 'svg-color-scale-calendar');
 
     svg.append('g')
       .attr('class', 'legendQuant')
       .attr('transform', 'translate(0, 0)');
 
-    const domain: [number, number] = [this.min, this.max];
+    const domain: [number, number] = [0, 1];
 
     const colorLegend = legendColor()
       .labelFormat(d3.format('.2f'))
@@ -132,9 +164,10 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .shapeWidth(100)
       .shapePadding(0)
       .shapeHeight(5)
-      .scale(d3.scaleQuantize<string>().domain(domain).range(
-        ['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)', 'rgb(171,217,233)', 'rgb(44,123,182)'].reverse()
-      ));
+      .scale(d3.scaleThreshold<number, string>()
+        .domain([0.4, 0.6, 1])
+        .range(['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse())
+      );
 
     svg.select('.legendQuant')
       .call(colorLegend);
@@ -148,6 +181,18 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
     this.subject.next(query);
   }
 
+  registerCtn(ctn, index, callback: any) {
+    this.ctnCallbacks.push({
+      ctn, index, callback
+    });
+  }
+
+  broadcastCtn() {
+    for (let entry of this.ctnCallbacks) {
+      entry.callback(entry.ctn, entry.index, this.duration);
+    }
+  }
+
   register(dim: string, callback: any): void {
     this.callbacks.push({ dim, callback });
   }
@@ -157,13 +202,13 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
   }
 
   broadcast(): void {
-    const interval = [
+    /* const interval = [
       this.options.get('fromDateTime').value.valueOf() / 1000 - 7200,
       this.options.get('toDateTime').value.valueOf() / 1000 - 7200
-    ];
+    ]; */
 
     for (const pair of this.callbacks) {
-      pair.callback(pair.dim, interval);
+      pair.callback(pair.dim, this.duration);
     }
   }
 
@@ -204,23 +249,23 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
       container = container.parentNode.getBoundingClientRect();
 
-      const margin = { top: 5, right: 5, bottom: 75, left: 5 };
+      const margin = { top: 20, right: 15, bottom: 55, left: 15 };
       const width = container.width - margin.left - margin.right;
-      const height = container.height - margin.top - margin.bottom;
+      const height = container.height - margin.top - margin.bottom - 150;
 
       const cellWidth = width / (weeksInYear(this.year) + 1); // cell size
       const cellHeight = height / 6; // cell size
 
-      const color = d3.scaleQuantize<string>()
-        .domain([this.min, this.max])
-        .range(['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)', 'rgb(171,217,233)', 'rgb(44,123,182)'].reverse());
+      const color = d3.scaleThreshold<number, string>()
+        .domain([0.4, 0.6, 1])
+        .range(['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse());
 
       d3.select('#' + this.uniqueId).selectAll('*').remove();
 
       const svg = d3.select('#' + this.uniqueId)
         .data(d3.range(this.year, this.year + 1))
         .append('svg')
-        .attr('viewBox', '0 0 ' + container.width + ' ' + container.height)
+        .attr('viewBox', '0 0 ' + container.width + ' ' + (container.height - 150))
         .attr('class', 'Spectral')
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -294,6 +339,16 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
       rect.filter(d => this.data.has(d))
         .style('fill', d => color(this.data.get(d)));
+
+      svg.append('text').attr('id', 'label');
+
+      // title label
+      svg.select('#label')
+        .attr('x', (width / 2.0))
+        .attr('y', -8)
+        .style('text-anchor', 'middle')
+        .text(this.Label);
+
     }
   }
 

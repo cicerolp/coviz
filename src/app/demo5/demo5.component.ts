@@ -160,8 +160,9 @@ export class Demo5Component implements OnInit, AfterViewInit {
     return '/source' +
       '/aggr=average.' + this.getFormValue(0, 'payload') + this.aggr_map['mean'].sufix +
       '/dataset=' + this.dataset.datasetName +
-      '/const=' + this.getFormValue(0, 'spatial') + '.tile.(0:0:0:' + this.getFormValue(0, 'resolution') + ')' +
-      '/group=' + this.getFormValue(0, 'spatial');
+      // '/const=' + this.getFormValue(0, 'spatial') + '.tile.(0:0:0:' + this.getFormValue(0, 'resolution') + ')' +
+      // '/group=' + this.getFormValue(0, 'spatial');
+      '/const=user_id.values.(all)/group=user_id';
   }
 
   getDestinationPipeline() {
@@ -170,8 +171,9 @@ export class Demo5Component implements OnInit, AfterViewInit {
       '/dataset=' + this.dataset.datasetName +
       '/const=' + this.getFormValue(0, 'temporal') +
       '.interval.(' + this.getFormateDate(2, 'rightFrom') + ':' + this.getFormateDate(2, 'rightTo') + ')' +
-      '/const=' + this.getFormValue(0, 'spatial') + '.tile.(0:0:0:' + this.getFormValue(0, 'resolution') + ')' +
-      '/group=' + this.getFormValue(0, 'spatial') +
+      // '/const=' + this.getFormValue(0, 'spatial') + '.tile.(0:0:0:' + this.getFormValue(0, 'resolution') + ')' +
+      // '/group=' + this.getFormValue(0, 'spatial') +
+      '/const=user_id.values.(all)/group=user_id' +
       this.getCategoricalConst();
   }
 
