@@ -201,6 +201,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
   info_users = [0, 0];
   info_events = [0, 0]
 
+  ableToGetData = true;
+
   constructor(
     private geo: GeoDataService,
     private sharing: DataSharingService,
@@ -399,7 +401,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     let layerOnMouseOver = (feature, el, dim) => {
-      if (!self.geo.json_value || !self.geo.json_value.get(dim)) {
+      if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
         return;
       }
 
@@ -419,7 +421,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     let layerOnMouseOut = (feature, el, dim) => {
-      if (!self.geo.json_value || !self.geo.json_value.get(dim)) {
+      if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
         return;
       }
 
@@ -575,7 +577,17 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.mapService.map.addLayer(this.CommuneLayer);
 
       this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
+      this.mapService.map.on('move', this.onMapMoveStart, this);
+      this.mapService.map.on('moveend', this.onMapMoveEnd, this);
     });
+  }
+
+  onMapMoveStart() {
+    this.ableToGetData = false;
+  }
+
+  onMapMoveEnd() {
+    this.ableToGetData = true;
   }
 
   clearCohorts() {
