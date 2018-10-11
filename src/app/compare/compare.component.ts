@@ -46,13 +46,13 @@ export class CompareComponent implements OnInit, AfterViewInit {
   features = new Array();
 
   default_duration = {
-    minValue: 1989, maxValue: 2017, currYear: 2017
+    minValue: 2000, maxValue: 2017, currYear: 2017
   }
 
   durations = new Map<string, any[]>();
 
   ctn = new Map<string, any[]>();
-  // minimum
+  /* // minimum
   @ViewChild('ctnBmiMinLeft', { read: ViewContainerRef }) ctnBmiMinLeft: ViewContainerRef;
   @ViewChild('ctnBmiMinDead', { read: ViewContainerRef }) ctnBmiMinDead: ViewContainerRef;
   @ViewChild('ctnBmiMinGender', { read: ViewContainerRef }) ctnBmiMinGender: ViewContainerRef;
@@ -62,7 +62,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
   @ViewChild('ctnBmiMaxLeft', { read: ViewContainerRef }) ctnBmiMaxLeft: ViewContainerRef;
   @ViewChild('ctnBmiMaxDead', { read: ViewContainerRef }) ctnBmiMaxDead: ViewContainerRef;
   @ViewChild('ctnBmiMaxGender', { read: ViewContainerRef }) ctnBmiMaxGender: ViewContainerRef;
-  @ViewChild('ctnBmiMaxAge', { read: ViewContainerRef }) ctnBmiMaxAge: ViewContainerRef;
+  @ViewChild('ctnBmiMaxAge', { read: ViewContainerRef }) ctnBmiMaxAge: ViewContainerRef; */
 
   // distribution
   @ViewChild('ctnBmiDistLeft', { read: ViewContainerRef }) ctnBmiDistLeft: ViewContainerRef;
@@ -80,7 +80,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
   ////////////////////////////////
 
 
-  // minimum
+  /* // minimum
   @ViewChild('ctnIahMinLeft', { read: ViewContainerRef }) ctnIahMinLeft: ViewContainerRef;
   @ViewChild('ctnIahMinDead', { read: ViewContainerRef }) ctnIahMinDead: ViewContainerRef;
   @ViewChild('ctnIahMinGender', { read: ViewContainerRef }) ctnIahMinGender: ViewContainerRef;
@@ -90,7 +90,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
   @ViewChild('ctnIahMaxLeft', { read: ViewContainerRef }) ctnIahMaxLeft: ViewContainerRef;
   @ViewChild('ctnIahMaxDead', { read: ViewContainerRef }) ctnIahMaxDead: ViewContainerRef;
   @ViewChild('ctnIahMaxGender', { read: ViewContainerRef }) ctnIahMaxGender: ViewContainerRef;
-  @ViewChild('ctnIahMaxAge', { read: ViewContainerRef }) ctnIahMaxAge: ViewContainerRef;
+  @ViewChild('ctnIahMaxAge', { read: ViewContainerRef }) ctnIahMaxAge: ViewContainerRef; */
 
   // distribution
   @ViewChild('ctnIahDistLeft', { read: ViewContainerRef }) ctnIahDistLeft: ViewContainerRef;
@@ -108,7 +108,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
   /////////////////////////////////
 
 
-  // minimum
+  /* // minimum
   @ViewChild('ctnEpworthMinLeft', { read: ViewContainerRef }) ctnEpworthMinLeft: ViewContainerRef;
   @ViewChild('ctnEpworthMinDead', { read: ViewContainerRef }) ctnEpworthMinDead: ViewContainerRef;
   @ViewChild('ctnEpworthMinGender', { read: ViewContainerRef }) ctnEpworthMinGender: ViewContainerRef;
@@ -118,7 +118,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
   @ViewChild('ctnEpworthMaxLeft', { read: ViewContainerRef }) ctnEpworthMaxLeft: ViewContainerRef;
   @ViewChild('ctnEpworthMaxDead', { read: ViewContainerRef }) ctnEpworthMaxDead: ViewContainerRef;
   @ViewChild('ctnEpworthMaxGender', { read: ViewContainerRef }) ctnEpworthMaxGender: ViewContainerRef;
-  @ViewChild('ctnEpworthMaxAge', { read: ViewContainerRef }) ctnEpworthMaxAge: ViewContainerRef;
+  @ViewChild('ctnEpworthMaxAge', { read: ViewContainerRef }) ctnEpworthMaxAge: ViewContainerRef; */
 
   // distribution
   @ViewChild('ctnEpworthDistLeft', { read: ViewContainerRef }) ctnEpworthDistLeft: ViewContainerRef;
@@ -175,7 +175,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     // BMI
     /////////////////////////////////////
 
-    // minimum
+    /* // minimum
     this.updateCtnGroupedHistograms('ctnBmiMinLeft', this.ctnBmiMinLeft, 'has_left', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=dead.values.(all)/group=has_left');
     this.updateCtnGroupedHistograms('ctnBmiMinDead', this.ctnBmiMinDead, 'dead', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
     this.updateCtnGroupedHistograms('ctnBmiMinGender', this.ctnBmiMinGender, 'gender', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
@@ -186,7 +186,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.updateCtnGroupedHistograms('ctnBmiMaxDead', this.ctnBmiMaxDead, 'dead', '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
     this.updateCtnGroupedHistograms('ctnBmiMaxGender', this.ctnBmiMaxGender, 'gender', '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedHistograms('ctnBmiMaxAge', this.ctnBmiMaxAge, 'age',
-      '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=age.values.(all)/group=age');
+      '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=age.values.(all)/group=age'); */
 
     // distributions
     this.updateCtnGroupedBoxplots('ctnBmiDistLeft', this.ctnBmiDistLeft, 'has_left', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=has_left.values.(all)/group=has_left');
@@ -202,7 +202,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     // IAH
     /////////////////////////////////////
 
-    // minimum
+    /* // minimum
     this.updateCtnGroupedHistograms('ctnIahMinLeft', this.ctnIahMinLeft, 'has_left', '/aggr=quantile.value_t.(0)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
     this.updateCtnGroupedHistograms('ctnIahMinDead', this.ctnIahMinDead, 'dead', '/aggr=quantile.value_t.(0)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
     this.updateCtnGroupedHistograms('ctnIahMinGender', this.ctnIahMinGender, 'gender', '/aggr=quantile.value_t.(0)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
@@ -213,7 +213,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.updateCtnGroupedHistograms('ctnIahMaxDead', this.ctnIahMaxDead, 'dead', '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
     this.updateCtnGroupedHistograms('ctnIahMaxGender', this.ctnIahMaxGender, 'gender', '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedHistograms('ctnIahMaxAge', this.ctnIahMaxAge, 'age',
-      '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=age.values.(all)/group=age');
+      '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=age.values.(all)/group=age'); */
 
     // distributions
     this.updateCtnGroupedBoxplots('ctnIahDistLeft', this.ctnIahDistLeft, 'has_left', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
@@ -229,7 +229,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     // Epworth
     /////////////////////////////////////
 
-    // minimum
+    /* // minimum
     this.updateCtnGroupedHistograms('ctnEpworthMinLeft', this.ctnEpworthMinLeft, 'has_left', '/aggr=quantile.value_t.(0)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');
     this.updateCtnGroupedHistograms('ctnEpworthMinDead', this.ctnEpworthMinDead, 'dead', '/aggr=quantile.value_t.(0)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
     this.updateCtnGroupedHistograms('ctnEpworthMinGender', this.ctnEpworthMinGender, 'gender', '/aggr=quantile.value_t.(0)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
@@ -240,7 +240,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.updateCtnGroupedHistograms('ctnEpworthMaxDead', this.ctnEpworthMaxDead, 'dead', '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
     this.updateCtnGroupedHistograms('ctnEpworthMaxGender', this.ctnEpworthMaxGender, 'gender', '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedHistograms('ctnEpworthMaxAge', this.ctnEpworthMaxAge, 'age',
-      '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=age.values.(all)/group=age');
+      '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=age.values.(all)/group=age'); */
 
     // distributions
     this.updateCtnGroupedBoxplots('ctnEpworthDistLeft', this.ctnEpworthDistLeft, 'has_left', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');

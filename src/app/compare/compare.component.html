@@ -1,6 +1,6 @@
 <mat-card>
     <!-- panel 2 -->
-    <mat-expansion-panel expanded=false>
+    <mat-expansion-panel expanded=true>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-danger">General Information</span>
@@ -67,106 +67,6 @@
             </mat-panel-title>
         </mat-expansion-panel-header>
 
-        <!-- minimum -->
-        <mat-expansion-panel expanded=false>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <span class="badge badge-success">Minimum</span>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <!-- content -->
-            <mat-card>
-                <mat-card-title>
-                    System Exit
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMinLeft></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Is Dead
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMinDead></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Gender
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMinGender></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Age
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMinAge></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-        </mat-expansion-panel>
-
-        <!-- maximum -->
-        <mat-expansion-panel expanded=false>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <span class="badge badge-success">Maximum</span>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <!-- content -->
-            <mat-card>
-                <mat-card-title>
-                    System Exit
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMaxLeft></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Is Dead
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMaxDead></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Gender
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMaxGender></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Age
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnIahMaxAge></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-        </mat-expansion-panel>
-
         <!-- distribution -->
         <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
@@ -218,7 +118,7 @@
         </mat-expansion-panel>
 
         <!-- progression -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-success">Progression</span>
@@ -235,7 +135,7 @@
         </mat-expansion-panel>
 
         <!-- calendar -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-success">Outlierness</span>
@@ -255,115 +155,15 @@
 
     <!-- panel 3 -->
     <mat-divider></mat-divider>
-    <mat-expansion-panel expanded=false>
+    <mat-expansion-panel expanded=true>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-primary">BMI Analysis</span>
             </mat-panel-title>
         </mat-expansion-panel-header>
 
-        <!-- minimum -->
-        <mat-expansion-panel expanded=false>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <span class="badge badge-primary">Minimum</span>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <!-- content -->
-            <mat-card>
-                <mat-card-title>
-                    System Exit
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMinLeft></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Is Dead
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMinDead></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Gender
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMinGender></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Age
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMinAge></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-        </mat-expansion-panel>
-
-        <!-- maximum -->
-        <mat-expansion-panel expanded=false>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <span class="badge badge-primary">Maximum</span>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <!-- content -->
-            <mat-card>
-                <mat-card-title>
-                    System Exit
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMaxLeft></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Is Dead
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMaxDead></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Gender
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMaxGender></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Age
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnBmiMaxAge></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-        </mat-expansion-panel>
-
         <!-- distribution -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-primary">Distribution</span>
@@ -413,7 +213,7 @@
         </mat-expansion-panel>
 
         <!-- progression -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-primary">Progression</span>
@@ -430,7 +230,7 @@
         </mat-expansion-panel>
 
         <!-- calendar -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-primary">Outlierness</span>
@@ -450,115 +250,15 @@
 
     <!-- panel 3 -->
     <mat-divider></mat-divider>
-    <mat-expansion-panel expanded=false>
+    <mat-expansion-panel expanded=true>
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-warning">Epworth Analysis</span>
             </mat-panel-title>
         </mat-expansion-panel-header>
 
-        <!-- minimum -->
-        <mat-expansion-panel expanded=false>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <span class="badge badge-warning">Minimum</span>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <!-- content -->
-            <mat-card>
-                <mat-card-title>
-                    System Exit
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMinLeft></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Is Dead
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMinDead></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Gender
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMinGender></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Age
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMinAge></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-        </mat-expansion-panel>
-
-        <!-- maximum -->
-        <mat-expansion-panel expanded=false>
-            <mat-expansion-panel-header>
-                <mat-panel-title>
-                    <span class="badge badge-warning">Maximum</span>
-                </mat-panel-title>
-            </mat-expansion-panel-header>
-            <!-- content -->
-            <mat-card>
-                <mat-card-title>
-                    System Exit
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMaxLeft></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Is Dead
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMaxDead></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Gender
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMaxGender></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-            <mat-card>
-                <mat-card-title>
-                    Age
-                </mat-card-title>
-                <mat-card-content>
-                    <div class="flex-container medium">
-                        <div #ctnEpworthMaxAge></div>
-                    </div>
-                </mat-card-content>
-            </mat-card>
-        </mat-expansion-panel>
-
         <!-- distribution -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-warning">Distribution</span>
@@ -608,7 +308,7 @@
         </mat-expansion-panel>
 
         <!-- progression -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-warning">Progression</span>
@@ -625,7 +325,7 @@
         </mat-expansion-panel>
 
         <!-- calendar -->
-        <mat-expansion-panel expanded=false>
+        <mat-expansion-panel expanded=true>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-warning">Outlierness</span>
