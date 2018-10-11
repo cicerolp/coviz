@@ -394,7 +394,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       // selected layer
       if (self.geo.json_selected.get(dim).get(feature)) {
         style.weight = 4;
-        style.fillColor = 'darkgreen';
+        style.fillColor = 'darkblue';
       }
 
       return style;
