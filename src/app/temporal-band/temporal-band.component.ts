@@ -258,7 +258,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     const svg = d3.select('#' + this.uniqueId)
       .append('svg')
       .attr('viewBox', '0 0 ' + container.width + ' ' + container.height);
-      // .call(zoom);
+    // .call(zoom);
 
 
     svg.append('g')
@@ -302,6 +302,8 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     svg.append('text').attr('id', 'labelXAxis');
     svg.append('text').attr('id', 'labelYAxis');
     svg.append('text').attr('id', 'label');
+    svg.append('text').attr('id', 'labelLine');
+
 
     // updatePlot
     const xExtents = [];
@@ -335,7 +337,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     xAxis(svg.select('.xAxis'));
     svg.select('#labelXAxis')
       .attr('x', (width / 2.0))
-      .attr('y', height + margin.bottom + margin.top)
+      .attr('y', height + margin.bottom + margin.top - 2)
       .style('text-anchor', 'middle')
       .text(this.xLabel);
 
@@ -386,7 +388,36 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
       .attr('stroke', d => d.color)
       .attr('stroke-width', 1.0);
 
-    /* // mouse
+    svg.select('#labelLine')
+      .attr('x', width + margin.left)
+      .attr('y', height + margin.bottom + margin.top - 2)
+      .style('text-anchor', 'end')
+      .style('color', 'red')
+      .text('parameter: ' + this.yFormat(this.lineLabel));
+
+    const draw_line = () => {
+      if (this.mouseLine === -1) {
+        return;
+      }
+
+      let mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
+      mLine.remove();
+
+      mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
+
+      mLine.enter()
+        .append('line')
+        .merge(mLine)
+        .attr('class', 'mouseLine')
+        .attr('x1', margin.left)
+        .attr('x2', width + margin.left)
+        .attr('y1', d => d)
+        .attr('y2', d => d)
+        .attr('stroke', 'black')
+        .attr('stroke-width', 2);
+    };
+
+    // mouse
     svg.on('mousemove', () => {
       const precisionRound = (number, precision) => {
         const factor = Math.pow(10, precision);
@@ -395,33 +426,14 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.mouseLine = precisionRound(d3.mouse(<HTMLElement>svg.node())[1], 1);
 
-      const draw_line = () => {
-        if (this.mouseLine === -1) {
-          return;
-        }
+      this.loadWidget();
 
-        let mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
-        mLine.remove();
-
-        mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
-
-        mLine.enter()
-          .append('line')
-          .merge(mLine)
-          .attr('class', 'mouseLine')
-          .attr('x1', 0)
-          .attr('x2', width)
-          .attr('y1', d => d)
-          .attr('y2', d => d)
-          .attr('stroke', 'black')
-          .attr('stroke-width', 2);
-      };
-
-      draw_line();
-
-      self.lineLabel = y.invert(this.mouseLine);
+      self.lineLabel = yScale.invert(this.mouseLine);
       // self.broadcast(y.invert(this.mouseLine));
-    }); */
+    });
+
+    draw_line();
+
   }
 
   setNumCurves(num: number) {

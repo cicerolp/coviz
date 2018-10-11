@@ -326,6 +326,7 @@ export class GroupedBoxPlotComponent implements OnInit {
     // labels
     svg.append('text').attr('id', 'labelXAxis');
     svg.append('text').attr('id', 'labelYAxis');
+    svg.append('text').attr('id', 'labelLine');
 
     // text label for the x axis
     xAxis(svg.select('.xAxis'));
@@ -345,6 +346,36 @@ export class GroupedBoxPlotComponent implements OnInit {
       .style('text-anchor', 'middle')
       .text(this.yLabel);
 
+    svg.select('#labelLine')
+      .attr('x', (width))
+      .attr('y', height + margin.bottom - 5)
+      .style('text-anchor', 'end')
+      .style('color', 'red')
+      .text('parameter: ' + this.yFormat(this.lineLabel));
+
+    const draw_line = () => {
+      if (this.mouseLine === -1) {
+        return;
+      }
+
+      let mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
+      mLine.remove();
+
+      mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
+
+      mLine.enter()
+        .append('line')
+        .merge(mLine)
+        .attr('class', 'mouseLine')
+        .attr('x1', 0)
+        .attr('x2', width)
+        .attr('y1', d => d)
+        .attr('y2', d => d)
+        .attr('stroke', 'black')
+        .attr('stroke-width', 2);
+    };
+
+
     // mouse
     svg.on('mousemove', () => {
       const precisionRound = (number, precision) => {
@@ -354,33 +385,14 @@ export class GroupedBoxPlotComponent implements OnInit {
 
       this.mouseLine = precisionRound(d3.mouse(<HTMLElement>svg.node())[1], 1);
 
-      const draw_line = () => {
-        if (this.mouseLine === -1) {
-          return;
-        }
-
-        let mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
-        mLine.remove();
-
-        mLine = svg.selectAll('.mouseLine').data([this.mouseLine]);
-
-        mLine.enter()
-          .append('line')
-          .merge(mLine)
-          .attr('class', 'mouseLine')
-          .attr('x1', 0)
-          .attr('x2', width)
-          .attr('y1', d => d)
-          .attr('y2', d => d)
-          .attr('stroke', 'black')
-          .attr('stroke-width', 2);
-      };
-
-      draw_line();
+      this.loadWidget();
 
       self.lineLabel = y.invert(this.mouseLine);
       // self.broadcast(y.invert(this.mouseLine));
     });
+
+    draw_line();
+    
   }
 
   ngAfterViewInit() {
