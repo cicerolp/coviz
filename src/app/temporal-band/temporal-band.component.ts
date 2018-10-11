@@ -82,7 +82,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
           toDateTime: finalDate,
         });
 
-        // format the data
+        // convert seconds to Date object
         data[0].forEach((d) => {
           d[0] = this.timezoneService.getDateFromSeconds(d[0]);
         });
@@ -117,11 +117,11 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
           medianCurve = this.data[Math.floor(numCurves / 2)];
         }
 
-        // average
-        // const auxCurve = data[1];
-        // const averageCurve = this.completeCurve(auxCurve, initialDate, finalDate, this.dataset.timeStep, 1000); */
+        /* // average
+        const auxCurve = data[1];
+        const averageCurve = this.completeCurve(auxCurve, initialDate, finalDate, this.dataset.timeStep, 1000);
 
-        /* bandPlotWidget.setYAxisLabel(datasetInfo.payloadsScreenNames[activePayloadDimension]);
+        bandPlotWidget.setYAxisLabel(datasetInfo.payloadsScreenNames[activePayloadDimension]);
         bandPlotWidget.setData(bands, [
           { "curve": medianCurve, "color": "black" },
           { "curve": averageCurve, "color": "blue" }
@@ -233,7 +233,6 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     const height = container.height - margin.top - margin.bottom;
 
     let zoomend = (event) => {
-      // console.log(d3.event.transform.rescaleX(xScale));
       const transform = d3.event.transform;
 
       const newXScale = transform.rescaleX(xScale);
@@ -251,16 +250,15 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     var zoom = d3.zoom()
-      .scaleExtent([1, 40])
-      // .translateExtent([[-100, -100], [width + 90, height + 100]])
+      .scaleExtent([1, 100])
       .on("zoom", zoomend);
 
     d3.select('#' + this.uniqueId).selectAll('*').remove();
 
     const svg = d3.select('#' + this.uniqueId)
       .append('svg')
-      .attr('viewBox', '0 0 ' + container.width + ' ' + container.height)
-      .call(zoom);
+      .attr('viewBox', '0 0 ' + container.width + ' ' + container.height);
+      // .call(zoom);
 
 
     svg.append('g')
