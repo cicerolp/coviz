@@ -216,12 +216,14 @@ export class GroupedBoxPlotComponent implements OnInit {
     y.domain(
       [
         d3.min(this.data.map((d) => {
-          let value = d3.min(d, (elt) => { return elt[2] - (elt[2] * 0.1); });
+          // let value = d3.min(d, (elt) => { return elt[2] - (elt[] * 0.1); });
+          let value = d3.min(d, (elt) => { return Number.parseInt(elt[1]); });
           return value;
         })),
 
         d3.max(this.data.map((d) => {
-          let value = d3.max(d, (elt) => { return Number.parseInt(elt[4]) + (elt[4] * 0.1); });
+          // let value = d3.max(d, (elt) => { return Number.parseInt(elt[4]) + (elt[4] * 0.1); });
+          let value = d3.max(d, (elt) => { return Number.parseInt(elt[5]); });
           return value;
         }))
       ]
@@ -238,7 +240,7 @@ export class GroupedBoxPlotComponent implements OnInit {
 
     this.data.forEach((element, index) => {
       // spines
-      /* svg.selectAll('.spine')
+      svg.selectAll('.spine')
         .data(this.data[index])
         .enter()
         .append('line')
@@ -258,7 +260,7 @@ export class GroupedBoxPlotComponent implements OnInit {
         .attr('y2', (d) => {
           return y(d[5]);
         })
-        .attr('stroke', 'black'); */
+        .attr('stroke', 'black');
 
 
       // bodies
