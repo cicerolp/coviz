@@ -148,7 +148,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     'mean': {
       key: 'average',
       sufix: '_g',
-      label: 'average',
+      label: 'mean',
       formatter: d3.format('.2s')
     },
     'variance': {
