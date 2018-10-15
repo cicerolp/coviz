@@ -66,8 +66,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
   private title = 'app';
   private marker: Marker;
 
-  private ArrondissementLayer: L.GridLayer;
-  private DepartmentLayer: L.GridLayer;
+  private BottomRegionLayer: L.GridLayer;
+  private TopRegionLayer: L.GridLayer;
 
   // schema
   ///////////////////////////////////
@@ -97,7 +97,36 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   bandQuantiles = '0.25:0.5:0.75';
 
-  optionsSlider: Options = {
+  currRegion = 0;
+  region_map = ['region', 'department', 'arrondissement', 'commune'];
+
+  // région, département, arrondissement até cantons
+  optionsRegions: Options = {
+    floor: 0,
+    ceil: 3,
+    showTicks: true,
+    showSelectionBar: true,
+    translate: (value: number): string => {
+      switch (value) {
+        case 0:
+          return 'Région';
+        case 1:
+          return 'Département';
+        case 2:
+          return 'Arrondissement';
+        case 3:
+        default:
+          return 'Commune';
+      }
+    },
+    // ['#eff3ff','#bdd7e7','#6baed6','#3182bd','#08519c']
+    getPointerColor: (value: number): string => {
+      let scale = ['#bdd7e7', '#6baed6', '#3182bd', '#08519c'];
+      return scale[value];
+    }
+  }
+
+  optionsTreatments: Options = {
     floor: 0,
     ceil: 6,
     showTicks: true,
@@ -239,7 +268,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   getCurrentFeature() {
-    return this.geo.json_curr.get(this.getCurrentMapDim());
+    return this.geo.json_curr.get(this.getCurrRegion());
   }
 
   updateInfoName() {
@@ -324,11 +353,19 @@ export class Demo2Component implements OnInit, AfterViewInit {
       .call(colorLegend);
   }
 
-  getCurrentMapDim() {
-    return (this.mapService.map.getZoom() >= 8) ? 'arrondissement' : 'department';
+  getPrevRegion() {
+    if (this.currRegion == 0) {
+      return 'country';
+    } else {
+      return this.region_map[this.currRegion - 1];
+    }
   }
 
-  loadRegionLayer() {
+  getCurrRegion() {
+    return this.region_map[this.currRegion];
+  }
+
+  /* loadRegionLayer() {
     let self = this;
 
     // reset values    
@@ -336,7 +373,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
 
     let layerOnMouseOver = (feature, el, dim) => {
-      self.geo.json_curr.set(self.getCurrentMapDim(), undefined);
+      self.geo.json_curr.set(self.getCurrRegion(), undefined);
       self.loadWidgetsData();
     };
 
@@ -354,7 +391,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
 
     this.mapService.map.addLayer(getLayer('region'));
-  }
+  } */
 
   getPromiseGeojsonValid() {
     let query = '/query' +
@@ -364,12 +401,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.getTemporalConst() +
       this.getMarker() +
       this.getTreatments() +
-      '/const=' + this.getCurrentMapDim() + '.values.(all)' +
-      '/group=' + this.getCurrentMapDim();
+      '/const=' + this.getCurrRegion() + '.values.(all)' +
+      '/group=' + this.getCurrRegion();
 
     return new Promise((resolve, reject) => {
       this.dataService.query(query).subscribe(response => {
-        this.geo.json_valid.set(this.getCurrentMapDim(), response[0]);
+        this.geo.json_valid.set(this.getCurrRegion(), response[0]);
         resolve(true);
 
       }, (err: HttpErrorResponse) => {
@@ -382,18 +419,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
     let self = this;
 
     // reset values    
-    this.geo.json_value.set('department', new Map());
-    this.geo.json_value.set('arrondissement', new Map());
+    this.geo.json_value.set(self.getPrevRegion(), new Map());
+    this.geo.json_value.set(self.getCurrRegion(), new Map());
 
     let getLayerColor = (feature, dim) => {
       let value = self.geo.json_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
-      let style;
-
-      if (dim === 'department' && dim !== self.getCurrentMapDim()) {
-        style = { fillColor: 'rgb(0, 0, 0)', color: 'black', weight: 1.0, opacity: 1.0, fillOpacity: 0.0 };
-      } else {
-        style = { fillColor: self.color(dim)(value), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
-      }
+      let style = { fillColor: self.color(dim)(value), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
 
       // selected layer
       if (self.geo.json_selected.get(dim).get(feature)) {
@@ -409,6 +440,11 @@ export class Demo2Component implements OnInit, AfterViewInit {
         return;
       }
 
+      // already selected feature
+      if (self.geo.json_curr.get(dim) === feature) {
+        return;
+      }
+
       let code = Number.parseInt(feature.properties.code);
       let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
 
@@ -419,7 +455,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
       self.geo.json_curr.set(dim, feature);
 
       el.target.setStyle(style);
-      self.loadWidgetsData();
+
+      // update info on mousemove
+      self.updateInfo();
 
       return style;
     };
@@ -437,7 +475,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
       // self.geo.json_curr.set(dim, undefined);
 
       el.target.setStyle(style);
-      self.loadWidgetsData();
+
+      // update info on mouseout
+      self.updateInfo();
 
       return style;
     };
@@ -525,62 +565,58 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     // wait for all promises fineshes and then ...
-    promises.push(getPromise('arrondissement'));
-    promises.push(getPromise('department'));
+    promises.push(getPromise(self.getCurrRegion()));
     promises.push(self.getPromiseGeojsonValid());
 
     Promise.all(promises).then(() => {
       self.updateAggr();
 
-      self.loadLegend(self.getCurrentMapDim());
+      self.loadLegend(self.getCurrRegion());
 
       let getLayer = (dim) => {
         return L.geoJSON(this.geo.json.get(dim), {
-          style: function (feature) {
-            return getLayerColor(feature, dim);
-          },
-
-          onEachFeature: (feature, layer) => {
-            layer.on({
-              mouseover: (el) => layerOnMouseOver(feature, el, dim),
-              mouseout: (el) => layerOnMouseOut(feature, el, dim),
-              click: (el) => layerOnMouseClick(feature, el, dim)
-            });
-          },
-
-          filter: function (feature, layer) {
-            let code = Number.parseInt(feature.properties.code);
-
-            let isValid = self.geo.json_valid.get(dim).find((el) => el[0] === code);
-
-            if (isValid && isValid[1] >= self.options.get('display_threshold').value) {
-              if (dim === 'arrondissement') {
-                if (self.getCurrentMapDim() === 'arrondissement') {
-                  return true;
-                } else {
-                  return false;
-                }
-              } else {
-                return true;
-              }
+          style: (feature) => {
+            if (dim !== self.getCurrRegion()) {
+              return { fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
             } else {
-              return false;
+              return getLayerColor(feature, dim);
+            }
+          },
+          onEachFeature: (feature, layer) => {
+            if (dim == self.getCurrRegion()) {
+              layer.on({
+                mouseover: (el) => layerOnMouseOver(feature, el, dim),
+                mouseout: (el) => layerOnMouseOut(feature, el, dim),
+                click: (el) => layerOnMouseClick(feature, el, dim)
+              });
+            }
+          },
+          filter: function (feature, layer) {
+            if (dim !== self.getCurrRegion()) {
+              return true;
+            } else {
+              let code = Number.parseInt(feature.properties.code);
+              let isValid = self.geo.json_valid.get(dim).find((el) => el[0] === code);
+
+              if (isValid && isValid[1] >= self.options.get('display_threshold').value) {
+                return true;
+              } else {
+                return false;
+              }
             }
           }
         });
       }
 
+      if (this.BottomRegionLayer) this.mapService.map.removeLayer(this.BottomRegionLayer);
+      this.BottomRegionLayer = getLayer(self.getPrevRegion());
+      this.mapService.map.addLayer(this.BottomRegionLayer);
 
-      if (this.DepartmentLayer) this.mapService.map.removeLayer(this.DepartmentLayer);
-      this.DepartmentLayer = getLayer('department');
-      this.mapService.map.addLayer(this.DepartmentLayer);
 
+      if (this.TopRegionLayer) this.mapService.map.removeLayer(this.TopRegionLayer);
+      this.TopRegionLayer = getLayer(self.getCurrRegion());
+      this.mapService.map.addLayer(this.TopRegionLayer);
 
-      if (this.ArrondissementLayer) this.mapService.map.removeLayer(this.ArrondissementLayer);
-      this.ArrondissementLayer = getLayer('arrondissement');
-      this.mapService.map.addLayer(this.ArrondissementLayer);
-
-      this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
       this.mapService.map.on('move', this.onMapMoveStart, this);
       this.mapService.map.on('moveend', this.onMapMoveEnd, this);
     });
@@ -604,7 +640,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   createCohort() {
-    let dim = this.getCurrentMapDim();
+    let dim = this.getCurrRegion();
     localStorage.setItem('dim', JSON.stringify(dim));
 
     let selected = this.geo.json_selected.get(dim);
@@ -666,14 +702,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
       duration: 2000,
       viewContainerRef: this.footerCtnRef
     });
-  }
-
-  onMapZoomEnd() {
-    this.currentZoom = Math.round(this.mapService.map.getZoom());
-    if (this.prev_dim !== this.getCurrentMapDim()) {
-      this.prev_dim = this.getCurrentMapDim();
-      this.setMapData();
-    }
   }
 
   loadWidgetsData() {
@@ -850,6 +878,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.setMapData();
   }
 
+  setMapRegion(event) {
+    this.updateAggr();
+
+    this.loadWidgetsData();
+    this.setMapData();
+  }
+
   setAggr() {
     this.updateAggr();
 
@@ -971,15 +1006,15 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   getRegionConst(feature?) {
     if (feature) {
-      return '/const=' + this.getCurrentMapDim() + '.values.(' + feature.properties.code + ')';
+      return '/const=' + this.getCurrRegion() + '.values.(' + feature.properties.code + ')';
     } else {
-      let selected = this.geo.json_selected.get(this.getCurrentMapDim());
+      let selected = this.geo.json_selected.get(this.getCurrRegion());
 
       if (!selected || selected.length === 0) {
         return '';
       } else {
         let valid = false;
-        let values = '/const=' + this.getCurrentMapDim() + '.values.(';
+        let values = '/const=' + this.getCurrRegion() + '.values.(';
 
         selected.forEach((value, key, map) => {
           if (value) {
@@ -1077,7 +1112,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
 
     // load map
-    this.loadRegionLayer();
+    // this.loadRegionLayer();
     this.loadLayer();
     this.loadMapCard();
 

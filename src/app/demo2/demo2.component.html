@@ -14,18 +14,9 @@
           <span class="badge badge-warning">Treatment Duration (years):</span>
           <section *ngFor="let entry of treatments_duration">
             <span class="badge badge-info">{{ entry.viewValue }}</span>
-            <ng5-slider [(value)]="entry.minValue" [(highValue)]="entry.maxValue" [options]="optionsSlider" (userChangeEnd)="setTreatment($event,entry)"></ng5-slider>
+            <ng5-slider [(value)]="entry.minValue" [(highValue)]="entry.maxValue" [options]="optionsTreatments"
+              (userChangeEnd)="setTreatment($event,entry)"></ng5-slider>
           </section>
-          <!-- <section>
-            <span class="badge badge-success">Received Treatments:</span>
-            <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,true)>
-              {{ opt.viewValue }}</mat-checkbox>
-          </section>
-          <section>
-            <span class="badge badge-warning">Not Received Treatments:</span>
-            <mat-checkbox class="mat-checkbox-group" *ngFor="let opt of treatments_received" checked=true (change)=setTreatment($event,opt,false)>
-              {{ opt.viewValue }}</mat-checkbox>
-          </section> -->
         </div>
       </mat-card>
       <!-- end treatments -->
@@ -33,6 +24,10 @@
       <!-- aggregation -->
       <mat-card class="map-card on-map" [formGroup]="options">
         <div>
+          <section>
+            <span class="badge badge-info">Map Region:</span>
+            <ng5-slider [(value)]="currRegion" [options]="optionsRegions" (userChangeEnd)="setMapRegion($event)"></ng5-slider>
+          </section>
           <section>
             <span class="badge badge-info">Aggregation:</span>
             <mat-form-field>
