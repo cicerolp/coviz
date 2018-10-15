@@ -41,6 +41,14 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
   mouseLine = -1;
   lineLabel = -1;
 
+  range = 'normal';
+
+  range_map = {
+    'normal': ['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837'].reverse(),
+
+    'outlier': ['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse()
+  }
+
   options: FormGroup;
 
   constructor(fb: FormBuilder,
@@ -175,6 +183,10 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
   ngOnInit() { }
+
+  setColorRange(range) {
+    this.range = range;
+  }
 
   setLabel(value: string) {
     this.Label = value;

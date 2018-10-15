@@ -44,3 +44,9 @@ app-line-chart > mat-card > section > form > span:nth-child(1) {
   margin-top: 6px;
   margin-left: 7px;
 }
+
+.line {							
+  fill: none;					
+  stroke: url(#line-gradient);	
+  stroke-width: 2px;			
+}

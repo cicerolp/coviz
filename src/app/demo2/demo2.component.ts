@@ -66,7 +66,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   private title = 'app';
   private marker: Marker;
 
-  private CommuneLayer: L.GridLayer;
+  private ArrondissementLayer: L.GridLayer;
   private DepartmentLayer: L.GridLayer;
 
   // schema
@@ -182,19 +182,22 @@ export class Demo2Component implements OnInit, AfterViewInit {
   ];
 
   color: any;
-
-  color_range = ['#a50026','#d73027','#f46d43','#fdae61','#fee08b','#ffffbf','#d9ef8b','#a6d96a','#66bd63','#1a9850','#006837'].reverse();
-
   prev_dim = '';
 
-  color_map = {
-    'count': (value, dim) => d3.scaleQuantize<string>()
-      .domain(this.geo.json_min_max.get(dim))
-      .range(this.color_range)(value),
+  range_map = {
+    'normal': ['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837'].reverse(),
 
-    'payload': (value, dim) => d3.scaleQuantize<string>()
+    'outlier': ['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse()
+  }
+
+  color_map = {
+    'normal': (dim) => d3.scaleQuantize<string>()
       .domain(this.geo.json_min_max.get(dim))
-      .range(this.color_range)(value)
+      .range(this.range_map.normal),
+
+    'outlier': (dim) => d3.scaleThreshold<number, string>()
+      .domain([0.4, 0.6, 1])
+      .range(this.range_map.outlier)
   };
 
   info_name = '';
@@ -308,20 +311,21 @@ export class Demo2Component implements OnInit, AfterViewInit {
       .attr('class', 'legendQuant')
       .attr('transform', 'translate(0, 0)');
 
+    /* let getScale = () => {
+      this.
+    } */
+
     const colorLegend = legendColor()
       .ascending(true)
       .labelFormat(this.aggr_map[this.options.get('aggr').value].formatter)
-      .scale(d3.scaleQuantize<string>()
-        .domain(this.geo.json_min_max.get(dim))
-        .range(this.color_range)
-      );
+      .scale(this.color(dim));
 
     svg.select('.legendQuant')
       .call(colorLegend);
   }
 
   getCurrentMapDim() {
-    return (this.mapService.map.getZoom() >= 8) ? 'commune' : 'department';
+    return (this.mapService.map.getZoom() >= 8) ? 'arrondissement' : 'department';
   }
 
   loadRegionLayer() {
@@ -379,7 +383,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     // reset values    
     this.geo.json_value.set('department', new Map());
-    this.geo.json_value.set('commune', new Map());
+    this.geo.json_value.set('arrondissement', new Map());
 
     let getLayerColor = (feature, dim) => {
       let value = self.geo.json_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
@@ -388,7 +392,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       if (dim === 'department' && dim !== self.getCurrentMapDim()) {
         style = { fillColor: 'rgb(0, 0, 0)', color: 'black', weight: 1.0, opacity: 1.0, fillOpacity: 0.0 };
       } else {
-        style = { fillColor: self.color(value, dim), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
+        style = { fillColor: self.color(dim)(value), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
       }
 
       // selected layer
@@ -521,7 +525,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     };
 
     // wait for all promises fineshes and then ...
-    promises.push(getPromise('commune'));
+    promises.push(getPromise('arrondissement'));
     promises.push(getPromise('department'));
     promises.push(self.getPromiseGeojsonValid());
 
@@ -550,8 +554,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
             let isValid = self.geo.json_valid.get(dim).find((el) => el[0] === code);
 
             if (isValid && isValid[1] >= self.options.get('display_threshold').value) {
-              if (dim === 'commune') {
-                if (self.getCurrentMapDim() === 'commune') {
+              if (dim === 'arrondissement') {
+                if (self.getCurrentMapDim() === 'arrondissement') {
                   return true;
                 } else {
                   return false;
@@ -572,9 +576,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.mapService.map.addLayer(this.DepartmentLayer);
 
 
-      if (this.CommuneLayer) this.mapService.map.removeLayer(this.CommuneLayer);
-      this.CommuneLayer = getLayer('commune');
-      this.mapService.map.addLayer(this.CommuneLayer);
+      if (this.ArrondissementLayer) this.mapService.map.removeLayer(this.ArrondissementLayer);
+      this.ArrondissementLayer = getLayer('arrondissement');
+      this.mapService.map.addLayer(this.ArrondissementLayer);
 
       this.mapService.map.on('zoomend', this.onMapZoomEnd, this);
       this.mapService.map.on('move', this.onMapMoveStart, this);
@@ -697,10 +701,17 @@ export class Demo2Component implements OnInit, AfterViewInit {
          '/const=' + dim + '.values.(all)/group=' + dim;
      } */
 
+    let color = 'normal';
+    if (this.options.get('aggr').value == 'outlier') {
+      color = 'outlier';
+    }
+
     for (const ref of this.widgets) {
       if (ref.type === 'categorical') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
+
+        (<BarChartComponent>ref.widget).setColorRange(color);
 
         const constrainsts = this.getCategoricalConst(ref.key) +
           this.getTemporalConst() +
@@ -742,6 +753,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
         ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
 
         //(<TemporalBandComponent>ref.widget).setNumCurves(this.getAggrTemporalBands());
+        (<LineChartComponent>ref.widget).setColorRange(color);
 
         const constrainsts = this.getCategoricalConst(ref.key) +
           this.getTemporalConst() +
@@ -793,10 +805,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
   updateAggr() {
     const type = this.options.get('aggr').value;
 
-    if (type === 'count') {
-      this.color = this.color_map['count'];
+    if (type !== 'outlier') {
+      this.color = this.color_map['normal'];
     } else {
-      this.color = this.color_map['payload'];
+      this.color = this.color_map['outlier'];
     }
 
     this.aggr = '/aggr=' + this.aggr_map[type].key;

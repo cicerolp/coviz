@@ -24,10 +24,10 @@ export class GeoDataService {
     this.dataset = this.schemaService.get('health');
 
     // initialize maps
-    this.json_selected.set('commune', new Map());
+    this.json_selected.set('arrondissement', new Map());
     this.json_selected.set('department', new Map());
 
-    this.json_min_max.set('commune', [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
+    this.json_min_max.set('arrondissement', [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
     this.json_min_max.set('department', [Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER]);
 
     let getRegionPromise = (dim, file) => {
@@ -71,7 +71,7 @@ export class GeoDataService {
     let promises = [];
 
     promises.push(getCodePromise('department', './assets/geojson/france-departements.geojson'));
-    promises.push(getCodePromise('commune', './assets/geojson/france-communes.geojson'));
+    promises.push(getCodePromise('arrondissement', './assets/geojson/france-arrondissements.geojson'));
     promises.push(getRegionPromise('region', './assets/geojson/france-regions.geojson'));
 
     return new Promise((resolve, reject) => {

@@ -32,6 +32,14 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
   yLabel = '';
   yFormat = d3.format('.2s');
 
+  range = 'normal';
+
+  range_map = {
+    'normal': ['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837'].reverse(),
+
+    'outlier': ['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse()
+  }
+
   options: FormGroup;
 
   constructor(
@@ -90,6 +98,10 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
   }
 
   ngOnInit() { }
+
+  setColorRange(range) {
+    this.range = range;
+  }
 
   setXLabel(value: string) {
     this.xLabel = value;
@@ -205,24 +217,68 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
 
     // scale the range of the data
     // x.domain([curr_lower_bound, curr_upper_bound]);
+
+    let yDomain = d3.extent<number, number>(this.data, (d) => d[1]);
+
     x.domain(d3.extent<number, number>(this.data, (d) => d[0]));
-    y.domain(d3.extent<number, number>(this.data, (d) => d[1]));
+    y.domain(yDomain);
 
-    // add the area
-    svg.append('path')
-      .data([this.data])
-      .attr('class', 'area')
-      .attr('d', area)
-      .attr('fill', 'lightsteelblue');
+    let colorScale;
+    if (self.range == 'outlier') {
+      colorScale = d3.scaleThreshold<number, string>()
+        .domain([0.4, 0.6, 1])
+        .range(this.range_map.outlier);
+    } else {
+      colorScale = d3.scaleQuantize<string>()
+        .domain(d3.extent<number, number>(this.data, (d) => d[1]))
+        .range(this.range_map.normal);
+    }
 
-    // add the valueline path
+    let colorData = [];
+    if (self.range == 'outlier') {
+      colorData.push({ offset: "0%", color: d3.rgb(colorScale(0)).toString() });
+      colorData.push({ offset: "40%", color: d3.rgb(colorScale(0.4)).toString() });
+      colorData.push({ offset: "60%", color: d3.rgb(colorScale(0.6)).toString() });
+      colorData.push({ offset: "100%", color: d3.rgb(colorScale(1.0)).toString() });
+    } else {
+      let stride_offset = 100 / this.range_map.normal.length;
+      let stride_color = (yDomain[1] - yDomain[0]) / this.range_map.normal.length;
+
+      let curr_offset = 0;
+      let curr_color = yDomain[0];
+
+      for (let i = 0; i < this.range_map.normal.length; ++i) {
+        colorData.push({ offset: curr_offset + '%', color: d3.rgb(colorScale(curr_color)).toString() });
+        curr_offset += stride_offset;
+        curr_color += stride_color;
+      }
+
+      // 100%
+      colorData.push({ offset: '100%', color: d3.rgb(colorScale(yDomain[1])).toString() });
+    }
+
+    // set the gradient
+    svg.append("linearGradient")
+      .attr("id", "line-gradient")
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("x1", 0).attr("y1", y(yDomain[0]))
+      .attr("x2", 0).attr("y2", y(yDomain[1]))
+      .selectAll("stop")
+      .data(colorData)
+      .enter().append("stop")
+      .attr("offset", (d) => {
+        return d.offset;
+      })
+      .attr("stop-color", (d) => {
+        return d.color;
+      });
+
+      // add the valueline path
     svg.append('path')
       .data([this.data])
       .attr('class', 'line')
       .attr('d', line)
-      .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
-      .attr('stroke-width', '1.5px');
+      .attr('stroke-width', '1.0px');
 
     // add the X axis
     const xAxis = d3.axisBottom(x);

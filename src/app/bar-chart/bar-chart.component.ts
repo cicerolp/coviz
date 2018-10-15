@@ -29,6 +29,14 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
   yLabel = '';
   yFormat = d3.format('.2s');
 
+  range = 'normal';
+
+  range_map = {
+    'normal': ['#a50026', '#d73027', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#d9ef8b', '#a6d96a', '#66bd63', '#1a9850', '#006837'].reverse(),
+
+    'outlier': ['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse()
+  }
+
   constructor(private dataService: DataService,
     private configService: ConfigurationService,
     private schemaService: SchemaService,
@@ -51,6 +59,10 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
   }
 
   ngOnInit() { }
+
+  setColorRange(range) {
+    this.range = range;
+  }
 
   setXLabel(value: string) {
     this.xLabel = value;
@@ -101,7 +113,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     const width = container.width - margin.left - margin.right;
     const height = container.height - margin.top - margin.bottom;
 
-    this.data = this.data.sort((lhs, rhs) => {
+    this.data = <[[number, number]]>this.data.sort((lhs, rhs) => {
       return lhs[0] - rhs[0];
     });
     // set the ranges
@@ -123,27 +135,31 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     // scale the range of the data
     x.domain(this.data.map(d => this.dataset.aliases[this.dim][d[0]]));
     y.domain([0, d3.max<number, number>(this.data, function (d) { return d[1]; })]);
-    // y.domain(d3.extent<number, number>(this.data, (d) => d[1]));
+    // y.domain();
 
-    let yMin = d3.min(this.data, (elt) => { return elt[1] });
-    let yMax = d3.max(this.data, (elt) => { return elt[1] });
 
-    // var color = "steelblue";
-    var colorScale = d3.scaleQuantize<string>()
-      .domain([0, this.dataset.aliases[this.dim].length])
-      //.range([d3.rgb(color).brighter().toString(), d3.rgb(color).darker().toString()]);
-      .range(/* ['rgb(166,206,227)', 'rgb(31,120,180)', 'rgb(178,223,138)', 'rgb(51,160,44)', 'rgb(251,154,153)', 'rgb(227,26,28)', 'rgb(253,191,111)', 'rgb(255,127,0)', 'rgb(202,178,214)', 'rgb(106,61,154)', 'rgb(255,255,153)', 'rgb(177,89,40)'] */
-      d3.schemeCategory10);
+    let colorScale;
+
+    if (self.range == 'outlier') {
+      colorScale = d3.scaleThreshold<number, string>()
+        .domain([0.4, 0.6, 1])
+        .range(this.range_map.outlier);
+    } else {
+      colorScale = d3.scaleQuantize<string>()
+        .domain(d3.extent<number, number>(this.data, (d) => d[1]))
+        .range(this.range_map.normal);
+    }
+
 
     let getColor = (d) => {
       if (self.selectedElts.find((elt) => elt === d[0]) !== undefined) {
-        return d3.rgb(colorScale(d[0]));
+        return d3.rgb(colorScale(d[1]));
       } else {
         if (self.selectedElts.length !== 0) {
-          // return d3.rgb(colorScale(d[0])).brighter(0.5);
+          // return d3.rgb(colorScale(d[1])).brighter(0.5);
           return d3.rgb('lightgray');
         } else {
-          return d3.rgb(colorScale(d[0]));
+          return d3.rgb(colorScale(d[1]));
         }
       }
     }
@@ -161,9 +177,9 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .attr('height', (d) => height - y(d[1]))
       .on('mouseover', function (d) {
         if (self.selectedElts.find((elt) => elt === d[0]) !== undefined) {
-          d3.select(this).attr('fill', d3.rgb(colorScale(d[0])).darker(2.0).toString());
+          d3.select(this).attr('fill', d3.rgb(colorScale(d[1])).darker(2.0).toString());
         } else {
-          d3.select(this).attr('fill', d3.rgb(colorScale(d[0])).darker().toString());
+          d3.select(this).attr('fill', d3.rgb(colorScale(d[1])).darker().toString());
         }
       })
       .on('mouseout', function (d) {

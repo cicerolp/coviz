@@ -15,8 +15,8 @@
       "runtimeArgs": [
         "--disable-session-crashed-bubble",
         "--disable-infobars"
-      ],
-      "userDataDir": "${workspaceRoot}/.vscode/chrome"
+      ]
+      // "userDataDir": "${workspaceRoot}/.vscode/chrome"
     },
     {
       "name": "ng serve (Firefox)",
