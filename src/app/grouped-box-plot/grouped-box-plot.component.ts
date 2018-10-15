@@ -213,21 +213,23 @@ export class GroupedBoxPlotComponent implements OnInit {
     const y = d3.scaleLinear()
       .range([height, 0]);
 
-    y.domain(
-      [
-        d3.min(this.data.map((d) => {
-          // let value = d3.min(d, (elt) => { return elt[2] - (elt[] * 0.1); });
-          let value = d3.min(d, (elt) => { return Number.parseInt(elt[1]); });
-          return value;
-        })),
+    let yDomain = [
+      d3.min(this.data.map((d) => {
+        // let value = d3.min(d, (elt) => { return elt[2] - (elt[] * 0.1); });
+        let value = d3.min(d, (elt) => { return Number.parseInt(elt[1]); });
+        return value;
+      })),
 
-        d3.max(this.data.map((d) => {
-          // let value = d3.max(d, (elt) => { return Number.parseInt(elt[4]) + (elt[4] * 0.1); });
-          let value = d3.max(d, (elt) => { return Number.parseInt(elt[5]); });
-          return value;
-        }))
-      ]
-    );
+      d3.max(this.data.map((d) => {
+        // let value = d3.max(d, (elt) => { return Number.parseInt(elt[4]) + (elt[4] * 0.1); });
+        let value = d3.max(d, (elt) => { return Number.parseInt(elt[5]); });
+        return value;
+      }))
+    ];
+    yDomain[1] += (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
+    yDomain[0] -= (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
+
+    y.domain(yDomain);
 
     var colorScale = d3.scaleOrdinal<number, string>()
       .domain(this.data.map((d, index) => index))

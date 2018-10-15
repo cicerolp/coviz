@@ -159,13 +159,18 @@ export class Demo2Component implements OnInit, AfterViewInit {
     { value: 3, viewValue: 'All' },
   ]
 
+  payload_values = [
+    { value: 'value', viewValue: 'Value' },
+    { value: 'value_delta', viewValue: 'Delta' },
+  ]
+
   aggr_values = [
-    { value: 'outlier', viewValue: 'Outlierness' },
     { value: 'count', viewValue: 'Count' },
     { value: 'mean', viewValue: 'Mean' },
     { value: 'variance', viewValue: 'Variance' },
     { value: 'quantile', viewValue: 'Quantile' },
-    { value: 'cdf', viewValue: 'CDF' }
+    { value: 'cdf', viewValue: 'Inverse Quantile' },
+    { value: 'outlier', viewValue: 'Outlierness' }
   ];
 
   aggr_map = {
@@ -173,37 +178,55 @@ export class Demo2Component implements OnInit, AfterViewInit {
       key: 'count',
       sufix: undefined,
       label: 'count',
-      formatter: d3.format('.2s')
+      formatter: {
+        'value': d3.format('.2s'),
+        'value_delta': d3.format('.2s')
+      }
     },
     'mean': {
       key: 'average',
       sufix: '_g',
       label: 'mean',
-      formatter: d3.format('.2s')
+      formatter: {
+        'value': d3.format('.2s'),
+        'value_delta': d3.format('.3f')
+      }
     },
     'variance': {
       key: 'variance',
       sufix: '_g',
       label: 'variance',
-      formatter: d3.format('.2s')
+      formatter: {
+        'value': d3.format('.2s'),
+        'value_delta': d3.format('.3f')
+      }
     },
     'quantile': {
       key: 'quantile',
       sufix: '_t',
       label: 'quantile',
-      formatter: d3.format('.2s')
+      formatter: {
+        'value': d3.format('.2s'),
+        'value_delta': d3.format('.3f')
+      }
     },
     'cdf': {
       key: 'inverse',
       sufix: '_t',
       label: 'cdf',
-      formatter: d3.format('.2f')
+      formatter: {
+        'value': d3.format('.2f'),
+        'value_delta': d3.format('.2f')
+      }
     },
     'outlier': {
       key: 'pipeline',
       sufix: '',
       label: 'outlierness',
-      formatter: d3.format('.2f')
+      formatter: {
+        'value': d3.format('.2f'),
+        'value_delta': d3.format('.2f')
+      }
     }
   };
 
@@ -262,6 +285,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   // getters
   /////////////////////////////////////////////////////////////////////////
+  getFormatter() {
+    return this.aggr_map[this.options.get('aggr').value].formatter[this.options.get('payload').value];
+  }
+
   updateInfo() {
     this.updateInfoName();
     this.updateInfoUsers();
@@ -347,7 +374,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     const colorLegend = legendColor()
       .ascending(true)
-      .labelFormat(this.aggr_map[this.options.get('aggr').value].formatter)
+      .labelFormat(this.getFormatter())
       .scale(this.color(dim));
 
     svg.select('.legendQuant')
@@ -739,7 +766,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     for (const ref of this.widgets) {
       if (ref.type === 'categorical') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
-        ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
+        ref.widget.setFormatter(this.getFormatter());
 
         (<BarChartComponent>ref.widget).setColorRange(color);
 
@@ -780,7 +807,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       } else if (ref.type === 'temporal') {
         ref.widget.setYLabel(this.aggr_map[this.options.get('aggr').value].label);
-        ref.widget.setFormatter(this.aggr_map[this.options.get('aggr').value].formatter);
+        ref.widget.setFormatter(this.getFormatter());
 
         //(<TemporalBandComponent>ref.widget).setNumCurves(this.getAggrTemporalBands());
         (<LineChartComponent>ref.widget).setColorRange(color);
@@ -854,13 +881,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   getLeftPipeline() {
     return '/source' +
-      '/aggr=average.value_g' +
+      '/aggr=average.' + this.options.get('payload').value + '_g' +
       '/dataset=' + this.dataset.datasetName;
   }
 
   getRightPipeline() {
     return '/destination' +
-      '/aggr=inverse.value_t' +
+      '/aggr=inverse.' + this.options.get('payload').value + '_t' +
       '/dataset=' + this.dataset.datasetName;
   }
 
@@ -1059,7 +1086,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.options = this.formBuilder.group({
       // visualization setup
       display_threshold: new FormControl(0),
-      aggr: new FormControl('outlier'),
+      aggr: new FormControl('mean'),
       marker: new FormControl(3),
       payload: new FormControl(this.dataset.payloads[0]),
       dataset: new FormControl(this.dataset.datasetName)
@@ -1089,7 +1116,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
 
-      componentInstance.setFormatter(d3.format('.2s'));
       componentInstance.setXLabel(dim);
       componentInstance.register(dim, this.setCategoricalData);
       this.widgets.push({ key: dim, type: 'categorical', widget: componentInstance });

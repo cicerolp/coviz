@@ -219,6 +219,8 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
     // x.domain([curr_lower_bound, curr_upper_bound]);
 
     let yDomain = d3.extent<number, number>(this.data, (d) => d[1]);
+    yDomain[1] += (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
+    yDomain[0] -= (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
 
     x.domain(d3.extent<number, number>(this.data, (d) => d[0]));
     y.domain(yDomain);

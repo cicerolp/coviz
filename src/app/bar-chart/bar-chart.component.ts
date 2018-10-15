@@ -132,21 +132,22 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .append('g')
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
+    let yDomain = d3.extent<number, number>(this.data, (d) => d[1]);
+    yDomain[1] += (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
+    yDomain[0] -= (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
+    
     // scale the range of the data
     x.domain(this.data.map(d => this.dataset.aliases[this.dim][d[0]]));
-    y.domain([0, d3.max<number, number>(this.data, function (d) { return d[1]; })]);
-    // y.domain();
-
+    y.domain(yDomain);
 
     let colorScale;
-
     if (self.range == 'outlier') {
       colorScale = d3.scaleThreshold<number, string>()
         .domain([0.4, 0.6, 1])
         .range(this.range_map.outlier);
     } else {
       colorScale = d3.scaleQuantize<string>()
-        .domain(d3.extent<number, number>(this.data, (d) => d[1]))
+        .domain(yDomain)
         .range(this.range_map.normal);
     }
 

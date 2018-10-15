@@ -1,3 +1,7 @@
+html, body {
+  overflow:hidden !important;
+}
+
 #map {
   height:100%;
   width:100%;
@@ -102,10 +106,6 @@
   margin-top: 10px;
   padding: 10px;
   width: 100%;
-}
-
-body {
-  overflow:hidden !important;
 }
 
 .mat-checkbox-group {

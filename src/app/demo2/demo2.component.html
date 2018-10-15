@@ -38,6 +38,18 @@
               </mat-select>
             </mat-form-field>
           </section>
+
+          <section *ngIf="options.get('aggr').value !== 'count'">
+            <span class="badge badge-info">Parameter:</span>
+            <mat-form-field>
+              <mat-select formControlName="payload" (change)="setAggr()">
+                <mat-option *ngFor="let opt of payload_values" [value]="opt.value">
+                  {{ opt.viewValue }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+
           <section>
             <span class="badge badge-info">Marker:</span>
             <mat-form-field>

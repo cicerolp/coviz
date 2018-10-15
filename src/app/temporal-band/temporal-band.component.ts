@@ -340,6 +340,9 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
       yExtent[0] -= (0.1 * yExtent[0]);
       yExtent[1] += (0.1 * yExtent[1]);
     }
+    yExtent[1] += (Math.abs(yExtent[1] - Math.abs(yExtent[0])) * 0.10);
+    yExtent[0] -= (Math.abs(yExtent[1] - Math.abs(yExtent[0])) * 0.10);
+
     yScale.domain(yExtent);
     yAxis.scale(yScale);
 
