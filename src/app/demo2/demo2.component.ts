@@ -67,6 +67,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   private marker: Marker;
 
   private BottomRegionLayer: L.GridLayer;
+  private MiddleRegionLayer: L.GridLayer;
   private TopRegionLayer: L.GridLayer;
 
   // schema
@@ -276,7 +277,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     if (feature) {
       this.info_name = '(' + feature.properties.code + ') ' + feature.properties.nom;
     } else {
-      this.info_name = 'none';
+      this.info_name = 'France';
     }
   }
 
@@ -365,22 +366,20 @@ export class Demo2Component implements OnInit, AfterViewInit {
     return this.region_map[this.currRegion];
   }
 
-  /* loadRegionLayer() {
+  loadWorldLayer() {
     let self = this;
 
-    // reset values    
-    this.geo.json_value.set('region', new Map());
-
-
     let layerOnMouseOver = (feature, el, dim) => {
-      self.geo.json_curr.set(self.getCurrRegion(), undefined);
-      self.loadWidgetsData();
+      if (self.geo.json_curr.get(self.getCurrRegion()) !== undefined) {
+        self.geo.json_curr.set(self.getCurrRegion(), undefined);
+        self.updateInfo();
+      }
     };
 
     let getLayer = (dim) => {
       return L.geoJSON(this.geo.json.get(dim), {
         style: function (feature) {
-          return { fillColor: 'rgb(0, 0, 0)', color: 'black', weight: 100000.0, opacity: 0.0, fillOpacity: 0.0 };;
+          return { fillColor: 'black', color: 'black', weight: 0.0, opacity: 0.0, fillOpacity: 0.0 };;
         },
         onEachFeature: (feature, layer) => {
           layer.on({
@@ -390,8 +389,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
       });
     }
 
-    this.mapService.map.addLayer(getLayer('region'));
-  } */
+    this.MiddleRegionLayer = getLayer('world');
+  }
 
   getPromiseGeojsonValid() {
     let query = '/query' +
@@ -477,7 +476,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       el.target.setStyle(style);
 
       // update info on mouseout
-      self.updateInfo();
+      // self.updateInfo();
 
       return style;
     };
@@ -612,6 +611,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.BottomRegionLayer = getLayer(self.getPrevRegion());
       this.mapService.map.addLayer(this.BottomRegionLayer);
 
+      // add transparent layer
+      if (this.MiddleRegionLayer) this.mapService.map.removeLayer(this.MiddleRegionLayer);
+      this.mapService.map.addLayer(this.MiddleRegionLayer);
 
       if (this.TopRegionLayer) this.mapService.map.removeLayer(this.TopRegionLayer);
       this.TopRegionLayer = getLayer(self.getCurrRegion());
@@ -1112,7 +1114,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
 
     // load map
-    // this.loadRegionLayer();
+    this.loadWorldLayer();
     this.loadLayer();
     this.loadMapCard();
 

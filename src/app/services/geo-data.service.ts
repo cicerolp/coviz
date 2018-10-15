@@ -74,6 +74,7 @@ export class GeoDataService {
 
     let promises = [];
 
+    promises.push(getRegionPromise('world', './assets/geojson/world.geojson'));
     promises.push(getRegionPromise('country', './assets/geojson/countries.geojson'));
     promises.push(getRegionPromise('region', './assets/geojson/france-regions.geojson'));
     promises.push(getCodePromise('department', './assets/geojson/france-departements.geojson'));
