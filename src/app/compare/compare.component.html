@@ -135,7 +135,7 @@
         </mat-expansion-panel>
 
         <!-- calendar -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-success">Outlierness</span>
@@ -174,7 +174,7 @@
         </mat-expansion-panel-header>
 
         <!-- distribution -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-primary">Distribution</span>
@@ -224,7 +224,7 @@
         </mat-expansion-panel>
 
         <!-- progression -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-primary">Progression</span>
@@ -241,7 +241,7 @@
         </mat-expansion-panel>
 
         <!-- calendar -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-primary">Outlierness</span>
@@ -250,8 +250,7 @@
 
             <mat-card [formGroup]="options" class="mat-card-parameters">
                 <span class="badge badge-danger">Parameter:</span>
-                <mat-radio-group formControlName="ctnBmiCalendar" (change)="refreshCalendarCtn('ctnBmiCalendar')"
-                    class="radio-group">
+                <mat-radio-group formControlName="ctnBmiCalendar" (change)="refreshCalendarCtn('ctnBmiCalendar')" class="radio-group">
                     <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
                         {{ opt.viewValue }}
                     </mat-radio-button>
@@ -272,7 +271,7 @@
     <!-- panel 5 -->
     <mat-divider></mat-divider>
 
-    <mat-expansion-panel class="mat-card-epworth" [expanded]="features.length !== 0" [disabled]="features.length === 0"> 
+    <mat-expansion-panel class="mat-card-epworth" [expanded]="features.length !== 0" [disabled]="features.length === 0">
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-warning">Epworth Analysis</span>
@@ -280,7 +279,7 @@
         </mat-expansion-panel-header>
 
         <!-- distribution -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-warning">Distribution</span>
@@ -330,7 +329,7 @@
         </mat-expansion-panel>
 
         <!-- progression -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-warning">Progression</span>
@@ -347,7 +346,7 @@
         </mat-expansion-panel>
 
         <!-- calendar -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded="false">
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-warning">Outlierness</span>
@@ -373,5 +372,23 @@
                 </mat-card-content>
             </mat-card>
         </mat-expansion-panel>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel class="mat-card-epworth" [expanded]="features.length !== 0" [disabled]="features.length === 0">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <span class="badge badge-warning">Cohort Analysis</span>
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+
+        <mat-card *ngFor="let entry of cohorts">
+            <mat-card-content>
+                <div class="flex-container extra-extra-large">
+                    {{ entry }}
+                </div>
+            </mat-card-content>
+        </mat-card>
+
     </mat-expansion-panel>
 </mat-card>

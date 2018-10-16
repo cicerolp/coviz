@@ -10,6 +10,8 @@ import {
   HostListener
 } from '@angular/core';
 
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+
 import { FormBuilder, FormGroup, FormControl, FormsModule } from '@angular/forms';
 
 import * as d3 from 'd3';
@@ -28,6 +30,7 @@ import { GroupedBoxPlotComponent } from '../grouped-box-plot/grouped-box-plot.co
 import { CalendarComponent } from '../calendar/calendar.component';
 
 import { Options } from 'ng5-slider';
+
 
 // widgets
 //////////////////////////////////
@@ -68,6 +71,8 @@ export class CompareComponent implements OnInit, AfterViewInit {
   ]
 
   options: FormGroup;
+
+  cohorts = new Array();
 
   durations = new Map<string, any[]>();
   default_pipeline_aggr = 'value';
@@ -156,6 +161,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
   /////////////////////////////////
 
   constructor(
+    private httpService: HttpClient,
     private dataService: DataService,
     private sharing: DataSharingService,
 
@@ -207,8 +213,81 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.updateCtnCalendar('ctnEpworthCalendar', this.ctnEpworthCalendar, '/const=marker.values.(2)', 'epworth');
   }
 
+  sql_map = {
+    gender: {
+      '0': 'F',
+      '1': 'M'
+    }
+  }
+
+  updateCohorts() {
+    /* let addToSql = (str, cons) => {
+      if (str.length !== 0) {
+        return str + ' and ' + cons;
+      } else {
+        return cons;
+      }
+    }
+
+
+    // reset widgets
+    let sql = [];
+    this.cohorts = [];
+
+    let promises = [];
+
+    this.features.forEach((entry, index) => {
+      sql[index] = '';
+
+      
+      let cons: [string] = entry.constraints.split('/');
+      console.log(cons);
+      
+      cons.forEach(element => {
+        if (element.search('const=') !== -1) {
+          if (element.search('=gender.') !== -1) {
+            let clausule: string = element.match(/[(]\S*[)]/m)[0];
+            clausule = clausule.replace('(', '');
+            clausule = clausule.replace(')', '');
+
+            let values = clausule.split(':');
+
+            values.forEach(value => {
+              console.log(value);
+              sql[index] = addToSql(sql[index], 'gender = \'' + this.sql_map.gender[value] + '\'');
+            });
+
+          }
+        }
+      });
+
+      console.log(sql[index]);
+
+
+      promises.push(
+        new Promise((resolve, reject) => {
+          this.httpService.get(
+            'http://localhost:8888/?threshold=0.1&cohort=' + sql[index],
+            { responseType: 'text' }
+          )
+            .subscribe(response => {
+              this.cohorts[index] = response;
+              resolve(true);
+            }, (err) => {
+              reject(err.message);
+            });
+        })
+      );
+    });
+
+    Promise.all(promises).then(() => {
+      // stop loading animation
+    }); */
+  }
+
   updateDashboard() {
     this.updateInfo();
+    this.updateCohorts();
 
     this.updateCtnValue('ctn2', '/aggr=count', d3.format(''));
     this.updateCtnValueFun('ctn3', '/aggr=count' + '/const=user_id.values.(all)/group=user_id', this.getUniqueUsers, d3.format(''));
@@ -429,7 +508,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     });
   }
 
-   updateCtnGroupedBoxplots(ctn, ref, dim, query) {
+  updateCtnGroupedBoxplots(ctn, ref, dim, query) {
     for (let i = 0; i < this.getCtn(ctn).length; ++i) {
       ref.remove(i);
     }
@@ -495,8 +574,8 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
       componentInstance.setFormatter(this.getFormatter('value'));
       componentInstance.setYLabel(this.getViewValue('value'));
-      
-      componentInstance.setXLabel(dim);      
+
+      componentInstance.setXLabel(dim);
       componentInstance.setNumCurves(3);
       componentInstance.setLabel('Cohort #' + index);
 
