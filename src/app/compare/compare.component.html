@@ -1,6 +1,6 @@
 <mat-card>
     <!-- panel 2 -->
-    <mat-expansion-panel expanded=true>
+    <mat-expansion-panel class="mat-card-info" [expanded]="features.length !== 0" [disabled]="features.length === 0">
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-danger">General Information</span>
@@ -57,10 +57,10 @@
         </mat-card>
     </mat-expansion-panel>
 
-
     <!-- panel 3 -->
     <mat-divider></mat-divider>
-    <mat-expansion-panel expanded=false>
+
+    <mat-expansion-panel class="mat-card-iah" [expanded]="features.length !== 0" [disabled]="features.length === 0">
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-success">IAH Analysis</span>
@@ -68,7 +68,7 @@
         </mat-expansion-panel-header>
 
         <!-- distribution -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded=false>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-success">Distribution</span>
@@ -118,7 +118,7 @@
         </mat-expansion-panel>
 
         <!-- progression -->
-        <mat-expansion-panel expanded=true>
+        <mat-expansion-panel expanded=false>
             <mat-expansion-panel-header>
                 <mat-panel-title>
                     <span class="badge badge-success">Progression</span>
@@ -141,6 +141,16 @@
                     <span class="badge badge-success">Outlierness</span>
                 </mat-panel-title>
             </mat-expansion-panel-header>
+
+            <mat-card [formGroup]="options" class="mat-card-parameters">
+                <span class="badge badge-danger">Parameter:</span>
+                <mat-radio-group formControlName="ctnIahCalendar" (change)="refreshCalendarCtn('ctnIahCalendar')" class="radio-group">
+                    <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
+                        {{ opt.viewValue }}
+                    </mat-radio-button>
+                </mat-radio-group>
+            </mat-card>
+
             <!-- content -->
             <mat-card>
                 <mat-card-content>
@@ -153,9 +163,10 @@
     </mat-expansion-panel>
 
 
-    <!-- panel 3 -->
+    <!-- panel 4 -->
     <mat-divider></mat-divider>
-    <mat-expansion-panel expanded=false>
+
+    <mat-expansion-panel class="mat-card-bmi" [expanded]="features.length !== 0" [disabled]="features.length === 0">
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-primary">BMI Analysis</span>
@@ -236,6 +247,17 @@
                     <span class="badge badge-primary">Outlierness</span>
                 </mat-panel-title>
             </mat-expansion-panel-header>
+
+            <mat-card [formGroup]="options" class="mat-card-parameters">
+                <span class="badge badge-danger">Parameter:</span>
+                <mat-radio-group formControlName="ctnBmiCalendar" (change)="refreshCalendarCtn('ctnBmiCalendar')"
+                    class="radio-group">
+                    <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
+                        {{ opt.viewValue }}
+                    </mat-radio-button>
+                </mat-radio-group>
+            </mat-card>
+
             <!-- content -->
             <mat-card>
                 <mat-card-content>
@@ -247,10 +269,10 @@
         </mat-expansion-panel>
     </mat-expansion-panel>
 
-
-    <!-- panel 3 -->
+    <!-- panel 5 -->
     <mat-divider></mat-divider>
-    <mat-expansion-panel expanded=false>
+
+    <mat-expansion-panel class="mat-card-epworth" [expanded]="features.length !== 0" [disabled]="features.length === 0"> 
         <mat-expansion-panel-header>
             <mat-panel-title>
                 <span class="badge badge-warning">Epworth Analysis</span>
@@ -331,6 +353,17 @@
                     <span class="badge badge-warning">Outlierness</span>
                 </mat-panel-title>
             </mat-expansion-panel-header>
+
+            <mat-card [formGroup]="options" class="mat-card-parameters">
+                <span class="badge badge-danger">Parameter:</span>
+                <mat-radio-group formControlName="ctnEpworthCalendar" (change)="refreshCalendarCtn('ctnEpworthCalendar')"
+                    class="radio-group">
+                    <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
+                        {{ opt.viewValue }}
+                    </mat-radio-button>
+                </mat-radio-group>
+            </mat-card>
+
             <!-- content -->
             <mat-card>
                 <mat-card-content>

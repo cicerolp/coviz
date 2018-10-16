@@ -165,7 +165,7 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .shapePadding(0)
       .shapeHeight(5)
       .scale(d3.scaleThreshold<number, string>()
-        .domain([0.4, 0.6, 1])
+        .domain([0.5, 0.9, 1])
         .range(['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse())
       );
 
@@ -257,7 +257,7 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
       const cellHeight = height / 6; // cell size
 
       const color = d3.scaleThreshold<number, string>()
-        .domain([0.4, 0.6, 1])
+        .domain([0.5, 0.9, 1)
         .range(['rgb(215,25,28)', 'rgb(253,174,97)', 'rgb(255,255,191)'].reverse());
 
       d3.select('#' + this.uniqueId).selectAll('*').remove();

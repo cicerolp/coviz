@@ -188,7 +188,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       sufix: '_g',
       label: 'mean',
       formatter: {
-        'value': d3.format('.2s'),
+        'value': d3.format('.2f'),
         'value_delta': d3.format('.3f')
       }
     },
@@ -197,7 +197,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       sufix: '_g',
       label: 'variance',
       formatter: {
-        'value': d3.format('.2s'),
+        'value': d3.format('.2f'),
         'value_delta': d3.format('.3f')
       }
     },
@@ -206,7 +206,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       sufix: '_t',
       label: 'quantile',
       formatter: {
-        'value': d3.format('.2s'),
+        'value': d3.format('.2f'),
         'value_delta': d3.format('.3f')
       }
     },

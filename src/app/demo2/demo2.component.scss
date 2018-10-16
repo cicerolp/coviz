@@ -1,7 +1,3 @@
-html, body {
-  overflow:hidden !important;
-}
-
 #map {
   height:100%;
   width:100%;
@@ -112,4 +108,14 @@ html, body {
   display: flex;
   align-content: center;
   align-items: center;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  margin-top: 5px;
+}
+
+.radio-button {
+  margin: 5px;
 }

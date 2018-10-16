@@ -10,6 +10,8 @@ import {
   HostListener
 } from '@angular/core';
 
+import { FormBuilder, FormGroup, FormControl, FormsModule } from '@angular/forms';
+
 import * as d3 from 'd3';
 
 import { DataService } from '../services/data.service';
@@ -49,7 +51,26 @@ export class CompareComponent implements OnInit, AfterViewInit {
     minValue: 2000, maxValue: 2017, currYear: 2017
   }
 
+  payload_map = {
+    value: {
+      viewValue: 'value',
+      formatter: d3.format('.2s')
+    },
+    value_delta: {
+      viewValue: 'delta',
+      formatter: d3.format('.3f')
+    }
+  }
+
+  payload_values = [
+    { value: 'value', viewValue: 'Value' },
+    { value: 'value_delta', viewValue: 'Delta' },
+  ]
+
+  options: FormGroup;
+
   durations = new Map<string, any[]>();
+  default_pipeline_aggr = 'value';
 
   ctn = new Map<string, any[]>();
   /* // minimum
@@ -141,7 +162,8 @@ export class CompareComponent implements OnInit, AfterViewInit {
     private renderer2: Renderer2,
     private componentFactory: ComponentFactoryResolver,
 
-    public snackBar: MatSnackBar
+    public snackBar: MatSnackBar,
+    private formBuilder: FormBuilder,
   ) { }
 
   ngAfterViewInit() {
@@ -158,11 +180,31 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.ctn.set(ctn, []);
   }
 
+  getAgrrValue() {
+    return 'value_t';
+  }
+
+  getCalendarAggr(ctn) {
+    return this.options.get(ctn).value + '_t';
+  }
+
+  getCalenarAggrGaussian(ctn) {
+    return this.options.get(ctn).value + '_g';
+  }
+
+  getFormatter(payload) {
+    return this.payload_map[payload].formatter;
+  }
+
+  getViewValue(payload) {
+    return this.payload_map[payload].viewValue;
+  }
+
   updateCalendars() {
     // calendar
-    this.updateCtnCalendar('ctnBmiCalendar', this.ctnBmiCalendar, '/const=marker.values.(0)/group=marker', 'iah');
-    this.updateCtnCalendar('ctnIahCalendar', this.ctnIahCalendar, '/const=marker.values.(1)/group=marker', 'bmi');
-    this.updateCtnCalendar('ctnEpworthCalendar', this.ctnEpworthCalendar, '/const=marker.values.(2)/group=marker', 'epworth');
+    this.updateCtnCalendar('ctnIahCalendar', this.ctnIahCalendar, '/const=marker.values.(0)', 'iah');
+    this.updateCtnCalendar('ctnBmiCalendar', this.ctnBmiCalendar, '/const=marker.values.(1)', 'bmi');
+    this.updateCtnCalendar('ctnEpworthCalendar', this.ctnEpworthCalendar, '/const=marker.values.(2)', 'epworth');
   }
 
   updateDashboard() {
@@ -176,81 +218,81 @@ export class CompareComponent implements OnInit, AfterViewInit {
     /////////////////////////////////////
 
     /* // minimum
-    this.updateCtnGroupedHistograms('ctnBmiMinLeft', this.ctnBmiMinLeft, 'has_left', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=dead.values.(all)/group=has_left');
-    this.updateCtnGroupedHistograms('ctnBmiMinDead', this.ctnBmiMinDead, 'dead', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedHistograms('ctnBmiMinGender', this.ctnBmiMinGender, 'gender', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
-    this.updateCtnGroupedHistograms('ctnBmiMinAge', this.ctnBmiMinAge, 'age', '/aggr=quantile.value_t.(0)/const=marker.values.(1)/const=age.values.(all)/group=age');
+    this.updateCtnGroupedHistograms('ctnBmiMinLeft', this.ctnBmiMinLeft, 'has_left', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(1)/const=dead.values.(all)/group=has_left');
+    this.updateCtnGroupedHistograms('ctnBmiMinDead', this.ctnBmiMinDead, 'dead', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedHistograms('ctnBmiMinGender', this.ctnBmiMinGender, 'gender', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedHistograms('ctnBmiMinAge', this.ctnBmiMinAge, 'age', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(1)/const=age.values.(all)/group=age');
 
     // maximum
-    this.updateCtnGroupedHistograms('ctnBmiMaxLeft', this.ctnBmiMaxLeft, 'has_left', '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedHistograms('ctnBmiMaxDead', this.ctnBmiMaxDead, 'dead', '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedHistograms('ctnBmiMaxGender', this.ctnBmiMaxGender, 'gender', '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedHistograms('ctnBmiMaxLeft', this.ctnBmiMaxLeft, 'has_left', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(1)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedHistograms('ctnBmiMaxDead', this.ctnBmiMaxDead, 'dead', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedHistograms('ctnBmiMaxGender', this.ctnBmiMaxGender, 'gender', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedHistograms('ctnBmiMaxAge', this.ctnBmiMaxAge, 'age',
-      '/aggr=quantile.value_t.(1)/const=marker.values.(1)/const=age.values.(all)/group=age'); */
+      '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(1)/const=age.values.(all)/group=age'); */
 
     // distributions
-    this.updateCtnGroupedBoxplots('ctnBmiDistLeft', this.ctnBmiDistLeft, 'has_left', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedBoxplots('ctnBmiDistDead', this.ctnBmiDistDead, 'dead', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedBoxplots('ctnBmiDistGender', this.ctnBmiDistGender, 'gender', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedBoxplots('ctnBmiDistLeft', this.ctnBmiDistLeft, 'has_left', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedBoxplots('ctnBmiDistDead', this.ctnBmiDistDead, 'dead', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedBoxplots('ctnBmiDistGender', this.ctnBmiDistGender, 'gender', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedBoxplots('ctnBmiDistAge', this.ctnBmiDistAge, 'age',
-      '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=age.values.(all)/group=age');
+      '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(1)/const=age.values.(all)/group=age');
 
     // progression
-    this.updateCtnTemporalBands('ctnBmiPro', this.ctnBmiPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(1)/const=has_left.values.(all)/group=event_date');
+    this.updateCtnTemporalBands('ctnBmiPro', this.ctnBmiPro, 'event_date', '/aggr=quantile.' + this.getAgrrValue() + '.(0.25:0.5:0.75)/const=marker.values.(1)/const=has_left.values.(all)/group=event_date');
 
     /////////////////////////////////////
     // IAH
     /////////////////////////////////////
 
     /* // minimum
-    this.updateCtnGroupedHistograms('ctnIahMinLeft', this.ctnIahMinLeft, 'has_left', '/aggr=quantile.value_t.(0)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedHistograms('ctnIahMinDead', this.ctnIahMinDead, 'dead', '/aggr=quantile.value_t.(0)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedHistograms('ctnIahMinGender', this.ctnIahMinGender, 'gender', '/aggr=quantile.value_t.(0)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
-    this.updateCtnGroupedHistograms('ctnIahMinAge', this.ctnIahMinAge, 'age', '/aggr=quantile.value_t.(0)/const=marker.values.(0)/const=age.values.(all)/group=age');
+    this.updateCtnGroupedHistograms('ctnIahMinLeft', this.ctnIahMinLeft, 'has_left', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedHistograms('ctnIahMinDead', this.ctnIahMinDead, 'dead', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedHistograms('ctnIahMinGender', this.ctnIahMinGender, 'gender', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedHistograms('ctnIahMinAge', this.ctnIahMinAge, 'age', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(0)/const=age.values.(all)/group=age');
 
     // maximum
-    this.updateCtnGroupedHistograms('ctnIahMaxLeft', this.ctnIahMaxLeft, 'has_left', '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedHistograms('ctnIahMaxDead', this.ctnIahMaxDead, 'dead', '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedHistograms('ctnIahMaxGender', this.ctnIahMaxGender, 'gender', '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedHistograms('ctnIahMaxLeft', this.ctnIahMaxLeft, 'has_left', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedHistograms('ctnIahMaxDead', this.ctnIahMaxDead, 'dead', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedHistograms('ctnIahMaxGender', this.ctnIahMaxGender, 'gender', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedHistograms('ctnIahMaxAge', this.ctnIahMaxAge, 'age',
-      '/aggr=quantile.value_t.(1)/const=marker.values.(0)/const=age.values.(all)/group=age'); */
+      '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(0)/const=age.values.(all)/group=age'); */
 
     // distributions
-    this.updateCtnGroupedBoxplots('ctnIahDistLeft', this.ctnIahDistLeft, 'has_left', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedBoxplots('ctnIahDistDead', this.ctnIahDistDead, 'dead', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedBoxplots('ctnIahDistGender', this.ctnIahDistGender, 'gender', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedBoxplots('ctnIahDistLeft', this.ctnIahDistLeft, 'has_left', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedBoxplots('ctnIahDistDead', this.ctnIahDistDead, 'dead', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedBoxplots('ctnIahDistGender', this.ctnIahDistGender, 'gender', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedBoxplots('ctnIahDistAge', this.ctnIahDistAge, 'age',
-      '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=age.values.(all)/group=age');
+      '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(0)/const=age.values.(all)/group=age');
 
     // progression
-    this.updateCtnTemporalBands('ctnIahPro', this.ctnIahPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(0)/const=has_left.values.(all)/group=event_date');
+    this.updateCtnTemporalBands('ctnIahPro', this.ctnIahPro, 'event_date', '/aggr=quantile.' + this.getAgrrValue() + '.(0.25:0.5:0.75)/const=marker.values.(0)/const=has_left.values.(all)/group=event_date');
 
     /////////////////////////////////////
     // Epworth
     /////////////////////////////////////
 
     /* // minimum
-    this.updateCtnGroupedHistograms('ctnEpworthMinLeft', this.ctnEpworthMinLeft, 'has_left', '/aggr=quantile.value_t.(0)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedHistograms('ctnEpworthMinDead', this.ctnEpworthMinDead, 'dead', '/aggr=quantile.value_t.(0)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedHistograms('ctnEpworthMinGender', this.ctnEpworthMinGender, 'gender', '/aggr=quantile.value_t.(0)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
-    this.updateCtnGroupedHistograms('ctnEpworthMinAge', this.ctnEpworthMinAge, 'age', '/aggr=quantile.value_t.(0)/const=marker.values.(2)/const=age.values.(all)/group=age');
+    this.updateCtnGroupedHistograms('ctnEpworthMinLeft', this.ctnEpworthMinLeft, 'has_left', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedHistograms('ctnEpworthMinDead', this.ctnEpworthMinDead, 'dead', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedHistograms('ctnEpworthMinGender', this.ctnEpworthMinGender, 'gender', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedHistograms('ctnEpworthMinAge', this.ctnEpworthMinAge, 'age', '/aggr=quantile.' + this.getAggr()  + '.(0)/const=marker.values.(2)/const=age.values.(all)/group=age');
 
     // maximum
-    this.updateCtnGroupedHistograms('ctnEpworthMaxLeft', this.ctnEpworthMaxLeft, 'has_left', '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedHistograms('ctnEpworthMaxDead', this.ctnEpworthMaxDead, 'dead', '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedHistograms('ctnEpworthMaxGender', this.ctnEpworthMaxGender, 'gender', '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedHistograms('ctnEpworthMaxLeft', this.ctnEpworthMaxLeft, 'has_left', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedHistograms('ctnEpworthMaxDead', this.ctnEpworthMaxDead, 'dead', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedHistograms('ctnEpworthMaxGender', this.ctnEpworthMaxGender, 'gender', '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedHistograms('ctnEpworthMaxAge', this.ctnEpworthMaxAge, 'age',
-      '/aggr=quantile.value_t.(1)/const=marker.values.(2)/const=age.values.(all)/group=age'); */
+      '/aggr=quantile.' + this.getAggr()  + '.(1)/const=marker.values.(2)/const=age.values.(all)/group=age'); */
 
     // distributions
-    this.updateCtnGroupedBoxplots('ctnEpworthDistLeft', this.ctnEpworthDistLeft, 'has_left', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');
-    this.updateCtnGroupedBoxplots('ctnEpworthDistDead', this.ctnEpworthDistDead, 'dead', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
-    this.updateCtnGroupedBoxplots('ctnEpworthDistGender', this.ctnEpworthDistGender, 'gender', '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
+    this.updateCtnGroupedBoxplots('ctnEpworthDistLeft', this.ctnEpworthDistLeft, 'has_left', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=has_left.values.(all)/group=has_left');
+    this.updateCtnGroupedBoxplots('ctnEpworthDistDead', this.ctnEpworthDistDead, 'dead', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=dead.values.(all)/group=dead');
+    this.updateCtnGroupedBoxplots('ctnEpworthDistGender', this.ctnEpworthDistGender, 'gender', '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=gender.values.(all)/group=gender');
     this.updateCtnGroupedBoxplots('ctnEpworthDistAge', this.ctnEpworthDistAge, 'age',
-      '/aggr=quantile.value_t.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=age.values.(all)/group=age');
+      '/aggr=quantile.' + this.getAgrrValue() + '.(0:0.25:0.5:0.75:1)/const=marker.values.(2)/const=age.values.(all)/group=age');
 
     // progression
-    this.updateCtnTemporalBands('ctnEpworthPro', this.ctnEpworthPro, 'event_date', '/aggr=quantile.value_t.(0.25:0.5:0.75)/const=marker.values.(2)/const=has_left.values.(all)/group=event_date');
+    this.updateCtnTemporalBands('ctnEpworthPro', this.ctnEpworthPro, 'event_date', '/aggr=quantile.' + this.getAgrrValue() + '.(0.25:0.5:0.75)/const=marker.values.(2)/const=has_left.values.(all)/group=event_date');
 
     this.updateCalendars();
   }
@@ -342,37 +384,6 @@ export class CompareComponent implements OnInit, AfterViewInit {
     });
   }
 
-  updateCtnHistograms(ctn, ref, dim, query) {
-    for (let i = 0; i < this.getCtn(ctn).length; ++i) {
-      ref.remove(i);
-    }
-
-    // reset widgets
-    this.setCtn(ctn, []);
-
-    this.features.forEach((entry, index) => {
-      const component = this.componentFactory.resolveComponentFactory(BarChartComponent);
-
-      const componentRef = ref.createComponent(component);
-      const componentInstance = <BarChartComponent>componentRef.instance;
-
-      this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
-
-      componentInstance.register(dim, this.callback);
-      componentInstance.setDataset('health');
-
-      componentInstance.setFormatter(d3.format('.2s'));
-
-      componentInstance.setYLabel('value');
-      componentInstance.setXLabel('');
-
-      componentInstance.setNextTerm(this.getConstraints(index) + query);
-
-      // componentInstance.register(dim, this.setCategoricalData);
-      this.getCtn(ctn).push({ key: 'none', type: 'categorical', widget: componentInstance });
-    });
-  }
-
   updateCtnGroupedHistograms(ctn, ref, dim, query) {
     for (let i = 0; i < this.getCtn(ctn).length; ++i) {
       ref.remove(i);
@@ -406,9 +417,9 @@ export class CompareComponent implements OnInit, AfterViewInit {
       componentInstance.register(dim, this.callback);
       componentInstance.setDataset('health');
 
-      componentInstance.setFormatter(d3.format('.2s'));
+      componentInstance.setFormatter(this.getFormatter('value'));
+      componentInstance.setYLabel(this.getViewValue('value'));
 
-      componentInstance.setYLabel('value');
       componentInstance.setXLabel('');
 
       componentInstance.setNextTerm(data);
@@ -418,57 +429,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     });
   }
 
-  setBoxplotLine = (dim: string, constraints, value, self) => {
-    let query = constraints +
-      '/aggr=inverse.value_t.(' + value + ')' +
-      '/const=' + dim + '.values.(all)' +
-      '/group=' + dim;
-
-    this.dataService.query(query).subscribe(data => {
-      const extents = d3.extent(data[0], d => d[1] * 100);
-      const scale = d3.scaleLinear<string, string>().
-        // interpolate(d3.interpoateRgb).
-        domain(extents as [number, number]).
-        range(['rgb(240,240,240)', 'rgb(2,56,88)']);
-
-      const colors = (<any[]>data[0]).map(d => scale(d[1] * 100));
-
-      self.setColors(colors, scale);
-    });
-  }
-
-  updateCtnBoxplots(ctn, ref, dim, query) {
-    for (let i = 0; i < this.getCtn(ctn).length; ++i) {
-      ref.remove(i);
-    }
-
-    // reset widgets
-    this.setCtn(ctn, []);
-
-    this.features.forEach((entry, index) => {
-      const component = this.componentFactory.resolveComponentFactory(BoxPlotComponent);
-
-      const componentRef = ref.createComponent(component);
-      const componentInstance = <BoxPlotComponent>componentRef.instance;
-
-      this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
-
-      // componentInstance.register(dim, this.callback);
-      componentInstance.setDataset('health');
-
-      // componentInstance.setFormatter(d3.format('.2s'));
-
-      componentInstance.setYLabel('value');
-      componentInstance.setXLabel('');
-
-      componentInstance.setNextTerm(this.getConstraints(index) + query);
-
-      componentInstance.registerConstraints(dim, this.getConstraints(index), this.setBoxplotLine);
-      this.getCtn(ctn).push({ key: 'none', type: 'boxplot', widget: componentInstance });
-    });
-  }
-
-  updateCtnGroupedBoxplots(ctn, ref, dim, query) {
+   updateCtnGroupedBoxplots(ctn, ref, dim, query) {
     for (let i = 0; i < this.getCtn(ctn).length; ++i) {
       ref.remove(i);
     }
@@ -501,9 +462,9 @@ export class CompareComponent implements OnInit, AfterViewInit {
       componentInstance.register(dim, this.callback);
       componentInstance.setDataset('health');
 
-      componentInstance.setFormatter(d3.format('.2s'));
+      componentInstance.setFormatter(this.getFormatter('value'));
+      componentInstance.setYLabel(this.getViewValue('value'));
 
-      componentInstance.setYLabel('value');
       componentInstance.setXLabel('');
 
       componentInstance.setNextTerm(data);
@@ -511,36 +472,6 @@ export class CompareComponent implements OnInit, AfterViewInit {
       // componentInstance.register(dim, this.setCategoricalData);
       this.getCtn(ctn).push({ key: 'none', type: 'boxplot', widget: componentInstance });
     });
-
-
-    /* for (let i = 0; i < this.getCtn(ctn).length; ++i) {
-      ref.remove(i);
-    }
-
-    // reset widgets
-    this.setCtn(ctn, []);
-
-    this.features.forEach((entry, index) => {
-      const component = this.componentFactory.resolveComponentFactory(BoxPlotComponent);
-
-      const componentRef = ref.createComponent(component);
-      const componentInstance = <BoxPlotComponent>componentRef.instance;
-
-      this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
-
-      // componentInstance.register(dim, this.callback);
-      componentInstance.setDataset('health');
-
-      // componentInstance.setFormatter(d3.format('.2s'));
-
-      componentInstance.setYLabel('value');
-      componentInstance.setXLabel('');
-
-      componentInstance.setNextTerm(this.getConstraints(index) + query);
-
-      componentInstance.registerConstraints(dim, this.getConstraints(index), this.setBoxplotLine);
-      this.getCtn(ctn).push({ key: 'none', type: 'boxplot', widget: componentInstance });
-    }); */
   }
 
   updateCtnTemporalBands(ctn, ref, dim, query) {
@@ -562,27 +493,22 @@ export class CompareComponent implements OnInit, AfterViewInit {
       // componentInstance.register(dim, this.callback);
       componentInstance.setDataset('health');
 
-      // componentInstance.setFormatter(d3.format('.2s'));
-
-      componentInstance.setYLabel('quantile');
-      componentInstance.setXLabel(dim);
+      componentInstance.setFormatter(this.getFormatter('value'));
+      componentInstance.setYLabel(this.getViewValue('value'));
+      
+      componentInstance.setXLabel(dim);      
       componentInstance.setNumCurves(3);
       componentInstance.setLabel('Cohort #' + index);
 
       componentInstance.setNextTerm(this.getConstraints(index) + query);
 
-      // componentInstance.registerConstraints(dim, this.getConstraints(index), this.setBoxplotLine);
-
       this.getCtn(ctn).push({ key: 'none', type: 'boxplot', widget: componentInstance });
     });
   }
 
-
-  // this.updateCtnCalendar('ctnBmiCalendar', this.ctnBmiCalendar, '/const=marker.values.(1)/group=marker');
-
   callbackCalendars = (ctn, index, duration) => {
     this.durations.get(ctn)[index] = duration;
-    this.refresCalendar(ctn, index);
+    this.refreshCalendar(ctn, index);
   }
 
   getAugmentedSeries(ctn, index) {
@@ -599,23 +525,35 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
     let currDuration = this.durations.get(ctn)[index];
 
-    let initial = new Date('1/1/' + currDuration.currYear).valueOf() / 1000
+    let initial = new Date('01/01/' + currDuration.currYear).valueOf() / 1000
+    let intervals = 365;
 
-    let compareFrom = new Date('1/1/' + currDuration.minValue).valueOf() / 1000;
+    if (currDuration.currYear == 2017) {
+      intervals = 202;
+    }
 
-    let compareTo = new Date('1/1/' + (currDuration.maxValue + 1)).valueOf() / 1000;
+    let compareFrom = new Date('01/01/' + currDuration.minValue).valueOf() / 1000;
+
+    let compareTo = new Date('01/01/' + (currDuration.maxValue + 1)).valueOf() / 1000;
 
     let term = '/augmented_series' +
-      '/series=event_date.(' + initial + ':86400:365:86400)' +
-      '/pipeline/join=right_join/threshold=0' +
-      '/source/aggr=average.value_g/dataset=health-durations' + this.getConstraints(index) + query +
-      '/destination/aggr=inverse.value_t.($)/dataset=health-durations' + this.getConstraints(index) + query +
+      '/series=event_date.(' + initial + ':86400:' + intervals + ':86400)' +
+      '/pipeline/join=left_join/threshold=1' +
+      '/source/aggr=average.' + this.getCalenarAggrGaussian(ctn) + '/dataset=health-durations' + this.getConstraints(index) + query +
+      '/destination/aggr=inverse.' + this.getCalendarAggr(ctn) + '.($)/dataset=health-durations' + this.getConstraints(index) + query +
       '/const=event_date.interval.(' + compareFrom + ':' + compareTo + ')';
 
     return term;
   }
 
-  refresCalendar(ctn, index) {
+  refreshCalendarCtn(ctn) {
+    for (let i = 0; i < this.getCtn(ctn).length; ++i) {
+      let instance = <CalendarComponent>this.getCtn(ctn)[i].widget;
+      instance.setNextTerm(this.getAugmentedSeries(ctn, i));
+    }
+  }
+
+  refreshCalendar(ctn, index) {
     let instance = <CalendarComponent>this.getCtn(ctn)[index].widget;
     instance.setNextTerm(this.getAugmentedSeries(ctn, index));
   }
@@ -680,6 +618,12 @@ export class CompareComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    this.options = this.formBuilder.group({
+      ctnIahCalendar: new FormControl(this.default_pipeline_aggr),
+      ctnBmiCalendar: new FormControl(this.default_pipeline_aggr),
+      ctnEpworthCalendar: new FormControl(this.default_pipeline_aggr),
+    });
+
     this.getData();
     this.updateDashboard();
   }
