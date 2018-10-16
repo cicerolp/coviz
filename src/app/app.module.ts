@@ -31,19 +31,14 @@ import { BarChartComponent } from './bar-chart/bar-chart.component';
 import { WidgetHostDirective } from './widget-host.directive';
 
 import { Md2Module, NoConflictStyleCompatibilityMode } from 'md2';
-import { Demo1Component } from './demo1/demo1.component';
+
 import { Demo2Component } from './demo2/demo2.component';
-import { Demo3Component } from './demo3/demo3.component';
-import { Demo4Component } from './demo4/demo4.component';
-import { Demo5Component } from './demo5/demo5.component';
+import { CompareComponent } from './compare/compare.component';
+
 import { TemporalBandComponent } from './temporal-band/temporal-band.component';
 import { BoxPlotComponent } from './box-plot/box-plot.component';
 import { TimezoneService } from './services/timezone.service';
-import { Demo6Component } from './demo6/demo6.component';
-import { Demo7Component } from './demo7/demo7.component';
 import { DensityChartComponent } from './density-chart/density-chart.component';
-import { Demo8Component } from './demo8/demo8.component';
-import { CompareComponent } from './compare/compare.component';
 import { GroupedBarChartComponent } from './grouped-bar-chart/grouped-bar-chart.component';
 import { GroupedBoxPlotComponent } from './grouped-box-plot/grouped-box-plot.component';
 
@@ -59,14 +54,7 @@ export function configProviderFactory(provider) {
     NavigatorComponent,
     WidgetHostDirective,
 
-    Demo1Component,
     Demo2Component,
-    Demo3Component,
-    Demo4Component,
-    Demo5Component,
-    Demo6Component,
-    Demo7Component,
-    Demo8Component,
     CompareComponent,
 
     BoxPlotComponent,

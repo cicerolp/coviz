@@ -47,8 +47,12 @@ html, body {
   min-width: 100% !important;
 }
 
+.on-top {
+  z-index: 10000;
+}
+
 .over-map {
-  z-index: 400;
+  z-index: 900;
 }
 
 .on-map {
