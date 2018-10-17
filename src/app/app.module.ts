@@ -41,6 +41,7 @@ import { TimezoneService } from './services/timezone.service';
 import { DensityChartComponent } from './density-chart/density-chart.component';
 import { GroupedBarChartComponent } from './grouped-bar-chart/grouped-bar-chart.component';
 import { GroupedBoxPlotComponent } from './grouped-box-plot/grouped-box-plot.component';
+import { CohortPlotComponent } from './cohort-plot/cohort-plot.component';
 
 export function configProviderFactory(provider) {
   return () => provider.load();
@@ -65,7 +66,8 @@ export function configProviderFactory(provider) {
     DensityChartComponent,
     CompareComponent,
     GroupedBarChartComponent,
-    GroupedBoxPlotComponent    
+    GroupedBoxPlotComponent,
+    CohortPlotComponent    
   ],
   imports: [
     BrowserModule,

@@ -4,6 +4,7 @@ import { Routes, RouterModule } from '@angular/router';
 
 import { Demo2Component } from '../demo2/demo2.component';
 import { CompareComponent } from '../compare/compare.component';
+import { CohortPlotComponent } from '../cohort-plot/cohort-plot.component';
 
 const routes: Routes = [
   {
@@ -21,6 +22,10 @@ const routes: Routes = [
   {
     path: 'compare',
     component: CompareComponent
+  },
+  {
+    path: 'cohort',
+    component: CohortPlotComponent
   }
 ];
 
