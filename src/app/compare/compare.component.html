@@ -381,14 +381,12 @@
             </mat-panel-title>
         </mat-expansion-panel-header>
 
-
-        <mat-card *ngFor="let entry of cohorts">
+        <mat-card>
             <mat-card-content>
                 <div class="flex-container">
-                    {{ entry }}
+                    <div #ctnCohort></div>
                 </div>
             </mat-card-content>
         </mat-card>
-
     </mat-expansion-panel>
 </mat-card>

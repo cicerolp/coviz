@@ -1,8 +1,12 @@
 import { Component, ViewChild, OnInit, ElementRef, AfterViewInit, Input, ViewEncapsulation, OnDestroy } from '@angular/core';
 
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+
 import { Widget } from '../widget';
 
 import * as d3 from 'd3';
+import { legendColor } from 'd3-svg-legend';
+
 import { Subject } from 'rxjs/Subject';
 import { DataService } from '../services/data.service';
 import { ConfigurationService } from '../services/configuration.service';
@@ -15,50 +19,54 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './cohort-plot.component.html',
   styleUrls: ['./cohort-plot.component.scss']
 })
-export class CohortPlotComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDestroy {
   uniqueId = 'id-' + Math.random().toString(36).substr(2, 16);
 
-  constructor() { }
+  dataset: any;
+  data = [];
+  dim = '';
+  subject = new Subject<any>();
+  callbacks: any[] = [];
 
-  ngOnInit() {
-    /* const self = this;
-    let container = (d3.select('#' + this.uniqueId).node() as any);
+  xLabel = '';
+  yLabel = '';
+  yFormat = d3.format('.2s');
 
-    if (container === null || container.parentNode === undefined) {
+  color_range = ['rgb(165,0,38)', 'rgb(215,48,39)', 'rgb(244,109,67)', 'rgb(253,174,97)', 'rgb(254,224,139)', 'rgb(255,255,191)', 'rgb(217,239,139)', 'rgb(166,217,106)', 'rgb(102,189,99)', 'rgb(26,152,80)', 'rgb(0,104,55)'];
+
+  constructor(
+    private httpService: HttpClient,
+    private dataService: DataService,
+    private configService: ConfigurationService,
+    private schemaService: SchemaService,
+    private activatedRoute: ActivatedRoute) {
+    this.activatedRoute.params.subscribe(params => {
+      const param = params['dataset'];
+      if (param !== undefined) {
+        this.dataset = this.schemaService.get(param);
+      } else {
+        this.dataset = this.schemaService.get(this.configService.defaultDataset);
+      }
+    });
+
+    this.subject.subscribe(term => {
+      this.httpService.post('http://localhost:8888/post', term, { responseType: 'text' })
+        .subscribe(response => {
+          this.formatData(response);
+
+          this.loadLegend();
+          this.loadWidget();
+        });
+    });
+  }
+
+  private formatData(bin) {
+    if (bin.length == 0) {
+      this.data = [];
       return;
     }
 
-    container = container.parentNode.getBoundingClientRect();
-
-    const margin = { top: 5, right: 5, bottom: 5, left: 5 };
-    const width = container.width - margin.left - margin.right;
-    const height = container.height - margin.top - margin.bottom;
-
-
-
-    d3.select('#' + this.uniqueId).selectAll('*').remove();
-
-    const svg = d3.select('#' + this.uniqueId)
-      .append('svg')
-      .attr('viewBox', '0 0 ' + container.width + ' ' + container.height)
-      .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')'); */
-
-
-  }
-
-  loadWidget = () => {
-
-  }
-
-
-  ngAfterViewInit() {
-    // window.addEventListener('resize', this.loadWidget);
-
-    let data = 't1:VEN_B (28.57%) t1:AERO_B (45.23%) t1:OXY_B (100.0%) t1:OXY_E (4.761%) t1:PERFCHIMIO_B (7.142%) t1:NUTENT_B (19.04%) t1:NUTENT_E (4.761%) t1:PERFANTID_B (2.380%) t1:COMPL_B (2.380%) t1:PPC_B (30.95%) t2:VEN_B (9.523%) t2:AERO_B (4.761%) t2:OXY_E (2.380%) t2:OXY_B (23.80%) t2:NUTENT_B (2.380%) t3:AERO_E (2.380%) t3:NUTENT_E (2.380%) t3:NUTENT_B (2.380%) t3:PPC_E (2.380%) t3:PPC_B (2.380%) t3:VEN_B (2.380%) t3:OXY_B (2.380%) t4:AERO_B (2.380%) t4:PERFANTIB_B (2.380%) t4:PERFCHIMIO_B (7.142%) t4:PERFCHIMIO_E (4.761%) t4:NUTENT_E (2.380%) t4:NUTENT_B (4.761%) t4:VEN_B (11.90%) t4:OXY_B (9.523%) t4:PPC_E (4.761%) t4:PPC_B (4.761%) t5:OXY_B (21.42%) t5:AERO_E (2.380%) t5:PERFCHIMIO_B (2.380%) t5:COMPL_E (2.380%) t5:VEN_B (9.523%) t5:NUTENT_B (7.142%) t5:PPC_E (2.380%) t6:OXY_B (16.66%) t6:PERFCHIMIO_B (4.761%) t6:PERFANTID_B (2.380%) t6:VEN_B (4.761%) t6:AERO_B (2.380%) t6:NUTENT_B (2.380%) t7:VEN_B (11.90%) t7:OXY_B (38.09%) t7:AERO_E (4.761%) t7:OXY_E (2.380%) t8:VEN_B (2.380%) t8:OXY_B (11.90%) t8:NUTENT_B (4.761%) t8:COMPL_E (2.380%) t9:NUTENT_B (2.380%) t9:NUTENT_E (2.380%) t9:OXY_B (9.523%) t9:AERO_E (2.380%) t9:AERO_B (2.380%) t9:OXY_E (2.380%) t9:PPC_B (2.380%) t9:VEN_B (2.380%) t10:NUTENT_E (2.380%) t10:AERO_E (2.380%) t10:PERFCHIMIO_E (2.380%) t11:OXY_B (9.523%) t11:VEN_B (9.523%) t11:OXY_E (2.380%) t12:OXY_B (4.761%) t12:OXY_E (2.380%) t12:NUTENT_B (2.380%) t13:VEN_B (16.66%) t13:OXY_E (2.380%) t13:OXY_B (16.66%) t13:VEN_E (2.380%) t14:VEN_B (2.380%) t14:NUTENT_E (2.380%) t14:OXY_B (7.142%) t15:NUTENT_B (2.380%) t15:OXY_B (2.380%) t15:PPC_B (2.380%) t16:PERFANTID_E (2.380%) t16:VEN_B (11.90%) t16:OXY_B (7.142%) t17:OXY_B (2.380%) t17:PERFANTID_B (2.380%) t17:VEN_B (11.90%) t17:PPC_E (2.380%) t17:PERFSANG_B (2.380%) t18:OXY_E (2.380%) t18:NUTENT_B (2.380%) t19:VEN_B (14.28%) t19:OXY_B (11.90%) t19:OXY_E (2.380%) t20:VEN_B (2.380%) t20:VEN_E (2.380%) t20:OXY_B (2.380%) t20:AERO_B (2.380%) t21:OXY_E (2.380%) t21:OXY_B (7.142%) t21:VEN_B (2.380%) t22:OXY_B (4.761%) t22:VEN_B (4.761%) t23:PERFANTIB_E (2.380%) t23:PERFANTID_E (2.380%) t23:PERFANTIV_E (2.380%) t23:PERFDIV_E (2.380%) t23:VEN_B (14.28%) t23:OXY_B (2.380%) t24:NUTENT_B (2.380%) t25:VEN_B (16.66%) t25:OXY_E (4.761%) t25:OXY_B (14.28%) t25:NUTENT_B (2.380%) t26:VEN_B (4.761%) t26:VEN_E (2.380%) t26:OXY_B (2.380%) t27:VEN_B (4.761%) t27:OXY_B (9.523%) t27:AERO_E (2.380%) t27:VEN_E (2.380%) t28:VEN_B (2.380%) t28:VEN_E (2.380%) t28:COMPL_E (2.380%) t28:OXY_B (2.380%) t29:OXY_E (2.380%) t29:VEN_B (4.761%) t29:OXY_B (4.761%) t30:OXY_B (2.380%) t30:PERFANTID_B (2.380%) t30:VEN_E (2.380%) t31:VEN_B (14.28%) t31:OXY_B (11.90%) t31:PERFANTID_B (2.380%) t32:OXY_B (23.80%) t32:OXY_E (4.761%) t32:NUTENT_E (2.380%) t32:VEN_B (4.761%) t33:VEN_E (2.380%) t33:OXY_E (4.761%) t33:NUTENT_B (2.380%) t33:VEN_B (4.761%) t33:OXY_B (4.761%) t34:VEN_B (4.761%) t35:VEN_E (2.380%) t36:OXY_B (2.380%) t37:VEN_B (9.523%) t37:OXY_B (9.523%) t37:OXY_E (2.380%) t37:VEN_E (2.380%) t38:OXY_B (16.66%) t38:VEN_B (2.380%) t38:OXY_E (2.380%) t39:VEN_E (2.380%) t39:OXY_B (23.80%) t39:VEN_B (7.142%) t40:VEN_B (7.142%) t40:NUTENT_B (2.380%) t40:OXY_E (2.380%) t42:OXY_E (2.380%) t43:VEN_B (4.761%) t43:OXY_B (2.380%) t44:PERFANTIV_E (2.380%) t44:OXY_B (2.380%) t45:VEN_E (4.761%) t45:OXY_B (2.380%) t46:VEN_E (2.380%) t46:VEN_B (4.761%) t47:OXY_E (2.380%) t47:NUTENT_B (2.380%) t48:PERFANTID_E (2.380%) t48:PERFDIV_E (2.380%) t49:VEN_E (2.380%) t49:VEN_B (2.380%) t49:AERO_E (2.380%) t49:PERFANTIV_E (2.380%) t50:PERFANTIB_B (2.380%) t50:PERFANTIB_E (2.380%) t50:OXY_B (4.761%) t51:OXY_E (2.380%) t51:OXY_B (4.761%) t51:PERFCHIMIO_B (2.380%) t52:VEN_B (4.761%) t52:PERFCHIMIO_B (2.380%) t53:PERFANTIV_E (2.380%) t53:NUTENT_B (2.380%) t53:OXY_B (2.380%) t54:VEN_B (2.380%) t54:OXY_B (2.380%) t55:VEN_B (4.761%) t55:OXY_B (4.761%) t55:AERO_E (2.380%) t56:OXY_E (2.380%) t57:OXY_B (4.761%) t58:VEN_B (2.380%) t59:VEN_E (2.380%) t59:VEN_B (2.380%) t59:OXY_B (2.380%) t60:VEN_E (2.380%) t60:AERO_B (2.380%) t61:AERO_E (2.380%) t61:VEN_B (2.380%) t61:OXY_B (2.380%) t63:VEN_E (2.380%) t63:OXY_B (4.761%) t64:VEN_B (4.761%) t64:PERFANTIB_B (2.380%) t64:PERFANTIB_E (2.380%) t64:OXY_B (2.380%) t65:COMPL_B (2.380%) t65:OXY_B (2.380%) t66:OXY_E (2.380%) t66:OXY_B (2.380%) t67:AERO_E (2.380%) t67:PERFANTIB_E (2.380%) t67:OXY_B (2.380%) t68:OXY_B (2.380%) t70:VEN_B (2.380%) t70:NUTENT_B (2.380%) t73:NUTENT_B (2.380%) t73:AERO_B (2.380%) t74:VEN_B (2.380%) t74:OXY_E (2.380%) t74:OXY_B (4.761%) t76:VEN_B (2.380%) t76:OXY_B (2.380%) t78:AERO_B (2.380%) t78:OXY_E (2.380%) t80:VEN_B (2.380%) t80:OXY_B (2.380%) t80:OXY_E (2.380%) t82:OXY_B (2.380%) t83:OXY_B (2.380%) t86:NUTENT_E (2.380%) t88:OXY_B (2.380%) t93:VEN_E (2.380%) t93:VEN_B (2.380%) t93:NUTENT_E (2.380%) t93:AERO_B (2.380%) t94:OXY_B (2.380%) t94:COMPL_E (2.380%) t94:COMPL_B (2.380%) t96:PERFANTID_B (2.380%) t96:NUTENT_E (2.380%) t96:NUTENT_B (2.380%) t96:AERO_E (2.380%) t96:PERFCHIMIO_B (2.380%) t96:COMPL_B (2.380%) t97:COMPL_B (2.380%) t98:COMPL_E (2.380%) t98:COMPL_B (2.380%) t99:VEN_E (2.380%) t99:AERO_B (2.380%) t100:OXY_B (2.380%) t101:COMPL_B (2.380%) t102:AERO_B (2.380%) t103:COMPL_B (2.380%) t103:COMPL_E (2.380%) t105:AERO_B (2.380%) t105:NUTENT_B (2.380%) t106:OXY_B (2.380%) t108:VEN_E (2.380%) t109:COMPL_E (2.380%) t111:PERFANTIB_E (2.380%) t111:AERO_B (2.380%) t112:PERFANTIB_E (2.380%) t113:NUTENT_B (2.380%) t113:PERFANTIB_B (2.380%) t114:AERO_B (2.380%) t116:AERO_E (2.380%) t120:AERO_B (4.761%) t120:AERO_E (2.380%) t122:AERO_E (2.380%) t126:AERO_B (2.380%) t129:NUTENT_E (2.380%) t143:COMPL_E (2.380%) t143:COMPL_B (2.380%) t146:COMPL_E (2.380%) t150:PERFANTIB_B (2.380%) t156:AERO_B (2.380%) t161:PERFANTIB_E (2.380%) t170:COMPL_E (2.380%) t170:COMPL_B (2.380%) t175:PERFANTID_E (2.380%) t175:PERFANTIV_B (2.380%) t175:PERFANTIV_E (2.380%) t180:PERFDIV_E (2.380%) t182:NUTENT_E (2.380%) t182:PERFANTIB_E (2.380%) t182:PERFANTID_E (2.380%)';
-
-
-    let cohorts = data.match(/[t]\d+[:].{3,10}[_][BE]\s[(]\d{1,3}[.]\d{1,3}[%][)]/mg);
+    let cohorts = bin.match(/[t]\d+[:].{3,10}[_][BE]\s[(]\d{1,3}[.]\d{1,3}[%][)]/mg);
 
     let map = new Map<string, any[]>();
 
@@ -78,48 +86,182 @@ export class CohortPlotComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     });
 
-    // console.log(map.get('t1'));
+    this.data = Array.from(map.entries());
+  }
 
-    var svg = d3.select('#' + this.uniqueId).append('svg')
-      .attr('width', 720)
-      .attr('height', 720);
+  ngOnInit() { }
 
-    Array.from(map.entries()).forEach((entry, tNN) => {
+  setXLabel(value: string) {
+    this.xLabel = value;
+  }
+
+  setYLabel(value: string) {
+    this.yLabel = value;
+  }
+
+  setFormatter(formatter: any) {
+    this.yFormat = formatter;
+  }
+
+  setDataset(dataset: string) {
+    this.dataset = this.schemaService.get(dataset);
+  }
+
+  setNextTerm(query: string) {
+    this.subject.next(query);
+  }
+
+  register(dim: string, callback: any): void {
+    this.dim = dim;
+    this.callbacks.push({ dim, callback });
+  }
+
+  unregister(callback: any): void {
+    this.callbacks = this.callbacks.filter(el => el.callback !== callback);
+  }
+
+  broadcast(): void {
+    for (const pair of this.callbacks) {
+      pair.callback(pair.dim);
+    }
+  }
+
+  loadLegend() {
+    const svg = d3.select('#svg-color-quant-' + this.uniqueId);
+    svg.selectAll('*').remove();
+
+    svg.attr('class', 'svg-color-scale-calendar');
+
+    svg.append('g')
+      .attr('class', 'legendQuant')
+      .attr('transform', 'translate(0, 0)');
+
+    const domain: [number, number] = [0, 1];
+
+    const colorLegend = legendColor()
+      .labelFormat(d3.format('.0f'))
+      .orient('horizontal')
+      .shapeWidth(65)
+      .shapePadding(0)
+      .shapeHeight(5)
+      .scale(d3.scaleQuantize<string>()
+        .domain([0, 100])
+        .range([
+          'rgb(165,0,38)',
+          // 'rgb(215,48,39)',
+          //'rgb(244,109,67)',
+          // 'rgb(253,174,97)',
+          //'rgb(254,224,139)',
+          'rgb(255,255,191)',
+          //'rgb(217,239,139)',
+          // 'rgb(166,217,106)',
+          //'rgb(102,189,99)',
+          // 'rgb(26,152,80)',
+          'rgb(0,104,55)'
+        ])
+      );
+
+
+
+    svg.select('.legendQuant')
+      .call(colorLegend);
+  }
+
+  loadWidget = () => {
+    const self = this;
+    let container = (d3.select('#' + this.uniqueId).node() as any);
+
+    if (container === null || container.parentNode === undefined || this.data.length === 0) {
+      return;
+    }
+
+    container = container.parentNode.getBoundingClientRect();
+
+    let max_length = 0;
+    this.data.forEach(element => {
+      max_length = Math.max(max_length, element[1].length)
+    });
+
+    // bounding box
+    const minCohortHeight = 30;
+
+    const margin = { top: 25, right: 5, bottom: 5, left: 30 };
+    const width = container.width - margin.left - margin.right;
+    const height = (this.data.length * minCohortHeight) - margin.top - margin.bottom;
+
+    d3.select('#' + this.uniqueId).selectAll('*').remove();
+
+    const svg = d3.select('#' + this.uniqueId)
+      .append('svg')
+      .attr('viewBox', '0 0 ' + container.width + ' ' + (this.data.length * minCohortHeight))
+      .append('g')
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    const color = d3.scaleQuantize<string>()
+      .domain([0, 100])
+      .range(this.color_range);
+
+    const xScale = d3.scaleBand<number>()
+      .range([0, width])
+      .paddingInner(0.05)
+      .paddingOuter(0.1)
+      .domain(Array.from(Array(max_length).keys()));
+
+    const yScale = d3.scaleBand()
+      .range([0, height])
+      .paddingInner(0.1)
+      .paddingOuter(0.1)
+      .domain(this.data.map((d) => {
+        return d[0];
+      }));
+
+    const yAxis = d3.axisLeft(yScale);
+
+    svg.append('g')
+      .call(yAxis);
+
+    this.data.forEach((entry, tNN) => {
       let g = svg.selectAll('cohort-' + entry[0])
         .data(entry[1])
         .enter()
         .append('g')
         .attr('transform', (d, index) => {
-          let x = tNN * 50;
-          let y = index * 100;
+          let x = xScale(index);
+          let y = yScale(entry[0]);
           return 'translate(' + x + ',' + y + ')';
         });
 
       g.append('rect')
-        .attr('width', 50)
-        .attr('height', 100)
-        .style('fill', 'red');
-
-      g.append('text')
-        // .attr('text-anchor', 'middle')
-        .attr('dominant-baseline', 'central')
-        .style('fill', 'black')
-        .text((d, index) => {
-          return d.code;
+        .attr('width', (d) => {
+          return xScale.bandwidth();
+        })
+        .attr('height', (d) => {
+          return yScale.bandwidth();
+        })
+        .style('fill', (d, index) => {
+          return color(d['value']);
         });
 
+      g.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .style('fill', 'black')
+        .style("font-size", "10px")
+        .text((d, index) => {
+          return d['code'];
+        })
+        .attr('transform', (d, index) => {
+          let x = xScale.bandwidth() / 2;
+          let y = yScale.bandwidth() / 2;
+          return 'translate(' + x + ',' + y + ')';
+        });;
     });
+  }
 
 
-    /* .attr('x', (value, index) => {
-      // get index o tNN
-      return 0;
-    })
-    .attr('y', (value, index) => {        
-      return index * 100;
-    })
-    .attr('width', 50)
-    .attr('height', 100); */
+  ngAfterViewInit() {
+    window.addEventListener('resize', this.loadWidget);
+    this.loadWidget();
   }
 
   ngOnDestroy() {

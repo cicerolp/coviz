@@ -31,6 +31,7 @@ import { GroupedBoxPlotComponent } from '../grouped-box-plot/grouped-box-plot.co
 import { CalendarComponent } from '../calendar/calendar.component';
 
 import { Options } from 'ng5-slider';
+import { CohortPlotComponent } from '../cohort-plot/cohort-plot.component';
 
 
 // widgets
@@ -79,17 +80,6 @@ export class CompareComponent implements OnInit, AfterViewInit {
   default_pipeline_aggr = 'value';
 
   ctn = new Map<string, any[]>();
-  /* // minimum
-  @ViewChild('ctnBmiMinLeft', { read: ViewContainerRef }) ctnBmiMinLeft: ViewContainerRef;
-  @ViewChild('ctnBmiMinDead', { read: ViewContainerRef }) ctnBmiMinDead: ViewContainerRef;
-  @ViewChild('ctnBmiMinGender', { read: ViewContainerRef }) ctnBmiMinGender: ViewContainerRef;
-  @ViewChild('ctnBmiMinAge', { read: ViewContainerRef }) ctnBmiMinAge: ViewContainerRef;
-
-  // maximum
-  @ViewChild('ctnBmiMaxLeft', { read: ViewContainerRef }) ctnBmiMaxLeft: ViewContainerRef;
-  @ViewChild('ctnBmiMaxDead', { read: ViewContainerRef }) ctnBmiMaxDead: ViewContainerRef;
-  @ViewChild('ctnBmiMaxGender', { read: ViewContainerRef }) ctnBmiMaxGender: ViewContainerRef;
-  @ViewChild('ctnBmiMaxAge', { read: ViewContainerRef }) ctnBmiMaxAge: ViewContainerRef; */
 
   // distribution
   @ViewChild('ctnBmiDistLeft', { read: ViewContainerRef }) ctnBmiDistLeft: ViewContainerRef;
@@ -106,19 +96,6 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
   ////////////////////////////////
 
-
-  /* // minimum
-  @ViewChild('ctnIahMinLeft', { read: ViewContainerRef }) ctnIahMinLeft: ViewContainerRef;
-  @ViewChild('ctnIahMinDead', { read: ViewContainerRef }) ctnIahMinDead: ViewContainerRef;
-  @ViewChild('ctnIahMinGender', { read: ViewContainerRef }) ctnIahMinGender: ViewContainerRef;
-  @ViewChild('ctnIahMinAge', { read: ViewContainerRef }) ctnIahMinAge: ViewContainerRef;
-
-  // maximum
-  @ViewChild('ctnIahMaxLeft', { read: ViewContainerRef }) ctnIahMaxLeft: ViewContainerRef;
-  @ViewChild('ctnIahMaxDead', { read: ViewContainerRef }) ctnIahMaxDead: ViewContainerRef;
-  @ViewChild('ctnIahMaxGender', { read: ViewContainerRef }) ctnIahMaxGender: ViewContainerRef;
-  @ViewChild('ctnIahMaxAge', { read: ViewContainerRef }) ctnIahMaxAge: ViewContainerRef; */
-
   // distribution
   @ViewChild('ctnIahDistLeft', { read: ViewContainerRef }) ctnIahDistLeft: ViewContainerRef;
   @ViewChild('ctnIahDistDead', { read: ViewContainerRef }) ctnIahDistDead: ViewContainerRef;
@@ -134,19 +111,6 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
   /////////////////////////////////
 
-
-  /* // minimum
-  @ViewChild('ctnEpworthMinLeft', { read: ViewContainerRef }) ctnEpworthMinLeft: ViewContainerRef;
-  @ViewChild('ctnEpworthMinDead', { read: ViewContainerRef }) ctnEpworthMinDead: ViewContainerRef;
-  @ViewChild('ctnEpworthMinGender', { read: ViewContainerRef }) ctnEpworthMinGender: ViewContainerRef;
-  @ViewChild('ctnEpworthMinAge', { read: ViewContainerRef }) ctnEpworthMinAge: ViewContainerRef;
-
-  // maximum
-  @ViewChild('ctnEpworthMaxLeft', { read: ViewContainerRef }) ctnEpworthMaxLeft: ViewContainerRef;
-  @ViewChild('ctnEpworthMaxDead', { read: ViewContainerRef }) ctnEpworthMaxDead: ViewContainerRef;
-  @ViewChild('ctnEpworthMaxGender', { read: ViewContainerRef }) ctnEpworthMaxGender: ViewContainerRef;
-  @ViewChild('ctnEpworthMaxAge', { read: ViewContainerRef }) ctnEpworthMaxAge: ViewContainerRef; */
-
   // distribution
   @ViewChild('ctnEpworthDistLeft', { read: ViewContainerRef }) ctnEpworthDistLeft: ViewContainerRef;
   @ViewChild('ctnEpworthDistDead', { read: ViewContainerRef }) ctnEpworthDistDead: ViewContainerRef;
@@ -161,6 +125,9 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
   /////////////////////////////////
 
+  // cohorts
+  @ViewChild('ctnCohort', { read: ViewContainerRef }) ctnCohort: ViewContainerRef;
+
   constructor(
     private httpService: HttpClient,
     private dataService: DataService,
@@ -172,9 +139,6 @@ export class CompareComponent implements OnInit, AfterViewInit {
     public snackBar: MatSnackBar,
     private formBuilder: FormBuilder,
   ) { }
-
-  ngAfterViewInit() {
-  }
 
   getCtn(ctn) {
     if (!this.ctn.has(ctn)) {
@@ -214,40 +178,11 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.updateCtnCalendar('ctnEpworthCalendar', this.ctnEpworthCalendar, '/const=marker.values.(2)', 'epworth');
   }
 
-  sql_map = {
-    gender: {
-      '0': 'F',
-      '1': 'M'
-    }
+  updateCohorts() {
+    this.updateCtnCohort('ctnCohort', this.ctnCohort, 'query');
   }
 
-  updateCohorts() {
-    /* sql[index] = '';
-
-    
-    let cons: [string] = entry.constraints.split('/');
-    console.log(cons);
-    
-    cons.forEach(element => {
-      if (element.search('const=') !== -1) {
-        if (element.search('=gender.') !== -1) {
-          let clausule: string = element.match(/[(]\S*[)]/m)[0];
-          clausule = clausule.replace('(', '');
-          clausule = clausule.replace(')', '');
-
-          let values = clausule.split(':');
-
-          values.forEach(value => {
-            console.log(value);
-            sql[index] = addToSql(sql[index], 'gender = \'' + this.sql_map.gender[value] + '\'');
-          });
-
-        }
-      }
-    });
-
-    console.log(sql[index]); */
-
+  updateCtnCohort(ctn, ref, query) {
     let addToSql = (str, cons) => {
       if (str.length !== 0) {
         return str + ',' + cons;
@@ -282,7 +217,42 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
     // get id_patient from QDS
     Promise.all(promises_qds).then(() => {
-      let promises_cohort = [];
+
+      for (let i = 0; i < this.getCtn(ctn).length; ++i) {
+        ref.remove(i);
+      }
+
+      // reset widgets
+      this.setCtn(ctn, []);
+
+      this.features.forEach((entry, index) => {
+        const component = this.componentFactory.resolveComponentFactory(CohortPlotComponent);
+
+        const componentRef = ref.createComponent(component);
+        const componentInstance = <CohortPlotComponent>componentRef.instance;
+
+        this.renderer2.addClass(componentRef.location.nativeElement, 'app-footer-item');
+
+        // componentInstance.register(dim, this.callback);
+        // componentInstance.setDataset('health');
+
+        // componentInstance.setFormatter(d3.format('.2s'));
+
+        // componentInstance.setYLabel('quantile');
+        // componentInstance.setXLabel(dim);
+        // componentInstance.setLabel('Cohort #' + index);
+
+        let bin = btoa(pako.gzip(sql[index], { to: 'string' }));
+
+        this.getCtn(ctn).push({ key: 'none', type: 'cohort', widget: componentInstance, 'bin': bin });
+
+        // componentInstance.registerCtn(ctn, index, this.callbackCalendars);
+        
+        componentInstance.setNextTerm(bin);
+      });
+
+
+      /* let promises_cohort = [];
 
       // get cohorts from Behrooz's code
       this.features.forEach((entry, index) => {
@@ -305,25 +275,13 @@ export class CompareComponent implements OnInit, AfterViewInit {
               reject(err.message);
             });
         }));
-
-
-        /* promises_cohort.push(new Promise((resolve, reject) => {
-          this.httpService.get('http://localhost:8888/?threshold=0.1&cohort=' + sql[index], { responseType: 'text' })
-            .subscribe(response => {
-              this.cohorts[index] = response;
-              resolve(true);
-            }, (err) => {
-              reject(err.message);
-            });
-        })); */
       });
 
       // get cohorts from Behrooz's code
       Promise.all(promises_cohort).then(() => {
         // stop loading animation
-      });
+      }); */
     });
-
   }
 
   updateDashboard() {
@@ -746,5 +704,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
 
     this.getData();
     this.updateDashboard();
+  }
+  ngAfterViewInit() {
   }
 }
