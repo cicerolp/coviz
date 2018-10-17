@@ -374,17 +374,17 @@
         </mat-expansion-panel>
     </mat-expansion-panel>
 
-    <mat-expansion-panel class="mat-card-epworth" [expanded]="features.length !== 0" [disabled]="features.length === 0">
+    <mat-expansion-panel class="mat-card-cohort" [expanded]="features.length !== 0" [disabled]="features.length === 0">
         <mat-expansion-panel-header>
             <mat-panel-title>
-                <span class="badge badge-warning">Cohort Analysis</span>
+                <span class="badge badge-info">Cohort Analysis</span>
             </mat-panel-title>
         </mat-expansion-panel-header>
 
 
         <mat-card *ngFor="let entry of cohorts">
             <mat-card-content>
-                <div class="flex-container extra-extra-large">
+                <div class="flex-container">
                     {{ entry }}
                 </div>
             </mat-card-content>

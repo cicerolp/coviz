@@ -15,6 +15,7 @@ import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http'
 import { FormBuilder, FormGroup, FormControl, FormsModule } from '@angular/forms';
 
 import * as d3 from 'd3';
+import * as pako from 'pako';
 
 import { DataService } from '../services/data.service';
 import { DataSharingService } from '../services/data-sharing.service';
@@ -221,68 +222,108 @@ export class CompareComponent implements OnInit, AfterViewInit {
   }
 
   updateCohorts() {
-    /* let addToSql = (str, cons) => {
+    /* sql[index] = '';
+
+    
+    let cons: [string] = entry.constraints.split('/');
+    console.log(cons);
+    
+    cons.forEach(element => {
+      if (element.search('const=') !== -1) {
+        if (element.search('=gender.') !== -1) {
+          let clausule: string = element.match(/[(]\S*[)]/m)[0];
+          clausule = clausule.replace('(', '');
+          clausule = clausule.replace(')', '');
+
+          let values = clausule.split(':');
+
+          values.forEach(value => {
+            console.log(value);
+            sql[index] = addToSql(sql[index], 'gender = \'' + this.sql_map.gender[value] + '\'');
+          });
+
+        }
+      }
+    });
+
+    console.log(sql[index]); */
+
+    let addToSql = (str, cons) => {
       if (str.length !== 0) {
-        return str + ' and ' + cons;
+        return str + ',' + cons;
       } else {
         return cons;
       }
     }
 
-
     // reset widgets
-    let sql = [];
+    let sql: [string] = [''];
     this.cohorts = [];
 
-    let promises = [];
+    let promises_qds = [];
 
+    // get id_patient from QDS
     this.features.forEach((entry, index) => {
       sql[index] = '';
+      promises_qds.push(new Promise((resolve, reject) => {
+        this.dataService.query(entry.constraints + '/aggr=count/const=user_id.values.(all)/group=user_id').subscribe(response => {
+          response[0].forEach(element => {
+            sql[index] = addToSql(sql[index], element[0]);
+          });
 
-      
-      let cons: [string] = entry.constraints.split('/');
-      console.log(cons);
-      
-      cons.forEach(element => {
-        if (element.search('const=') !== -1) {
-          if (element.search('=gender.') !== -1) {
-            let clausule: string = element.match(/[(]\S*[)]/m)[0];
-            clausule = clausule.replace('(', '');
-            clausule = clausule.replace(')', '');
-
-            let values = clausule.split(':');
-
-            values.forEach(value => {
-              console.log(value);
-              sql[index] = addToSql(sql[index], 'gender = \'' + this.sql_map.gender[value] + '\'');
-            });
-
+          if (sql[index].length !== 0) {
+            sql[index] = 'id_patient in (' + sql[index] + ')';
           }
-        }
-      });
 
-      console.log(sql[index]);
+          resolve(true);
+        });
+      }));
+    });
 
+    // get id_patient from QDS
+    Promise.all(promises_qds).then(() => {
+      let promises_cohort = [];
 
-      promises.push(
-        new Promise((resolve, reject) => {
-          this.httpService.get(
-            'http://localhost:8888/?threshold=0.1&cohort=' + sql[index],
-            { responseType: 'text' }
-          )
+      // get cohorts from Behrooz's code
+      this.features.forEach((entry, index) => {
+
+        let Options = {
+          headers: new HttpHeaders({
+            'Content-Type': 'application/x-www-form-urlencoded'
+          })
+        };
+
+        promises_cohort.push(new Promise((resolve, reject) => {
+
+          var bin = btoa(pako.gzip(sql[index], { to: 'string' }));
+
+          this.httpService.post('http://localhost:8888/post', bin, { responseType: 'text' })
             .subscribe(response => {
               this.cohorts[index] = response;
               resolve(true);
             }, (err) => {
               reject(err.message);
             });
-        })
-      );
+        }));
+
+
+        /* promises_cohort.push(new Promise((resolve, reject) => {
+          this.httpService.get('http://localhost:8888/?threshold=0.1&cohort=' + sql[index], { responseType: 'text' })
+            .subscribe(response => {
+              this.cohorts[index] = response;
+              resolve(true);
+            }, (err) => {
+              reject(err.message);
+            });
+        })); */
+      });
+
+      // get cohorts from Behrooz's code
+      Promise.all(promises_cohort).then(() => {
+        // stop loading animation
+      });
     });
 
-    Promise.all(promises).then(() => {
-      // stop loading animation
-    }); */
   }
 
   updateDashboard() {
