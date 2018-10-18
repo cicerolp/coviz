@@ -1,12 +1,23 @@
-.svg-color-scale-calendar {
+.svg-color-scale-cohort {
   background-color: rgba(255, 255, 255, 0.5);
   border-radius: 0px;
   box-shadow: none;
   position: absolute;
-  top: 5px;
-  right: 80px;
+  top: 10px;
+  right: 24px;
   padding: 5px 5px 0px;
   height: 34px;
-  font-size: 10px;
-  width: 205px;
+  width: 547px;
+}
+
+.svg-legend-cohort {
+  position: absolute;
+  top: 8px;
+  right: 572px;
+}
+
+.cohort-info {
+  position: absolute;
+  top: 30px;
+  left: 30px;
 }

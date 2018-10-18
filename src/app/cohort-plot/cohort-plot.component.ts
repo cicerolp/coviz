@@ -32,6 +32,9 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
   yLabel = '';
   yFormat = d3.format('.2s');
 
+  no_data = false;
+  progress_spinner = false;
+
   color_range = ['rgb(165,0,38)', 'rgb(215,48,39)', 'rgb(244,109,67)', 'rgb(253,174,97)', 'rgb(254,224,139)', 'rgb(255,255,191)', 'rgb(217,239,139)', 'rgb(166,217,106)', 'rgb(102,189,99)', 'rgb(26,152,80)', 'rgb(0,104,55)'];
 
   constructor(
@@ -50,9 +53,13 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
     });
 
     this.subject.subscribe(term => {
+      this.progress_spinner = true;
+
       this.httpService.post('http://localhost:8888/post', term, { responseType: 'text' })
         .subscribe(response => {
           this.formatData(response);
+
+          this.progress_spinner = false;
 
           this.loadLegend();
           this.loadWidget();
@@ -62,9 +69,12 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
 
   private formatData(bin) {
     if (bin.length == 0) {
+      this.no_data = true;
       this.data = [];
       return;
     }
+
+    this.no_data = false;
 
     let cohorts = bin.match(/[t]\d+[:].{3,10}[_][BE]\s[(]\d{1,3}[.]\d{1,3}[%][)]/mg);
 
@@ -130,7 +140,7 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
     const svg = d3.select('#svg-color-quant-' + this.uniqueId);
     svg.selectAll('*').remove();
 
-    svg.attr('class', 'svg-color-scale-calendar');
+    svg.attr('class', 'svg-color-scale-cohort');
 
     svg.append('g')
       .attr('class', 'legendQuant')
@@ -139,23 +149,23 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
     const domain: [number, number] = [0, 1];
 
     const colorLegend = legendColor()
-      .labelFormat(d3.format('.0f'))
+      .labelFormat(d3.format('.0%'))
       .orient('horizontal')
-      .shapeWidth(65)
+      .shapeWidth(90)
       .shapePadding(0)
       .shapeHeight(5)
       .scale(d3.scaleQuantize<string>()
-        .domain([0, 100])
+        .domain([0, 1])
         .range([
           'rgb(165,0,38)',
           // 'rgb(215,48,39)',
-          //'rgb(244,109,67)',
+          'rgb(244,109,67)',
           // 'rgb(253,174,97)',
-          //'rgb(254,224,139)',
-          'rgb(255,255,191)',
-          //'rgb(217,239,139)',
+          'rgb(254,224,139)',
+          // 'rgb(255,255,191)',
+          'rgb(217,239,139)',
           // 'rgb(166,217,106)',
-          //'rgb(102,189,99)',
+          'rgb(102,189,99)',
           // 'rgb(26,152,80)',
           'rgb(0,104,55)'
         ])
@@ -167,6 +177,7 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
       .call(colorLegend);
   }
 
+  
   loadWidget = () => {
     const self = this;
     let container = (d3.select('#' + this.uniqueId).node() as any);
@@ -185,7 +196,7 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
     // bounding box
     const minCohortHeight = 30;
 
-    const margin = { top: 25, right: 5, bottom: 5, left: 30 };
+    const margin = { top: 30, right: 5, bottom: 5, left: 30 };
     const width = container.width - margin.left - margin.right;
     const height = (this.data.length * minCohortHeight) - margin.top - margin.bottom;
 
@@ -261,7 +272,7 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
 
   ngAfterViewInit() {
     window.addEventListener('resize', this.loadWidget);
-    this.loadWidget();
+    this.loadLegend()
   }
 
   ngOnDestroy() {

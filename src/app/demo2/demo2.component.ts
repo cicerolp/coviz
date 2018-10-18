@@ -913,8 +913,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   setMapRegion(event) {
-    // this.updateAggr();
-    // this.loadWidgetsData();
     this.setMapData();
   }
 

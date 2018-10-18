@@ -124,7 +124,7 @@ export class GroupedBoxPlotComponent implements OnInit {
     const svg = d3.select('#svg-color-quant-' + this.uniqueId);
     svg.selectAll('*').remove();
 
-    svg.attr('class', 'svg-color-quant-calendar');
+    svg.attr('class', 'svg-color-quant-grouped-box-plot');
 
     svg.append('g')
       .attr('class', 'legendQuant')

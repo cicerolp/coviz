@@ -46,6 +46,18 @@
   height: 350px;
 }
 
+.min-very-small {
+  min-height: 40px;
+}
+
+.min-small {
+  min-height: 100px;
+}
+
+.min-median {
+  min-height: 150px;
+}
+
 .mat-card-parameters {
   background: rgb(216, 216, 216);
 }

@@ -1,12 +1,17 @@
-.svg-color-quant-calendar {
+.svg-color-quant-grouped-box-plot {
     background-color: rgba(255, 255, 255, 0.5);
     border-radius: 0px;
     box-shadow: none;
-  
     position: absolute;
-    top: 15px;
+    top: 26px;
     left: 120px;
     padding: 5px 5px 0px;
     height: 34px;
   }
   
+  .svg-legend-grouped-box-plot {
+    position: absolute;
+    top: 7px;
+    /* right: 338px; */
+    left: 148px;
+  }

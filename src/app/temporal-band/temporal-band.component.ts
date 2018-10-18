@@ -351,7 +351,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     // text label for the x axis
     xAxis(svg.select('.xAxis'));
     svg.select('#labelXAxis')
-      .attr('x', (width / 2.0))
+      .attr('x', (width / 2.0) + margin.left)
       .attr('y', height + margin.bottom + margin.top - 2)
       .style('text-anchor', 'middle')
       .text(this.xLabel);
@@ -359,7 +359,7 @@ export class TemporalBandComponent implements OnInit, AfterViewInit, OnDestroy {
     // title label
     xAxis(svg.select('.xAxis'));
     svg.select('#label')
-      .attr('x', (width / 2.0))
+      .attr('x', (width / 2.0) + margin.left)
       .attr('y', margin.top)
       .style('text-anchor', 'middle')
       .text(this.Label);

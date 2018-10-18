@@ -1,2 +1,11 @@
 <svg id="svg-color-quant-{{uniqueId}}"></svg>
+<span class="svg-legend-cohort">Confidence</span>
+
+<div class="cohort-info" *ngIf="no_data">
+    Insufficient Data
+</div>
+
+<mat-spinner [diameter]="50" class="cohort-info" *ngIf="progress_spinner">
+</mat-spinner>
+
 <div id="{{uniqueId}}"></div>
