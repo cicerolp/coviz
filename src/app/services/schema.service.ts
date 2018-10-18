@@ -31,13 +31,13 @@ export class SchemaService {
       'payloadValues': {
         'value': {
           'quantile': { 'min_value': 0, 'max_value': 52, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
-          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 42, 'min': 0, 'max': 52, 'step': 1 },
+          'cdf': { 'min_value': 0, 'max_value': 1, 'value': 30, 'min': 0, 'max': 60, 'step': 1 },
           'mean': { 'min_value': 0, 'max_value': 52 },
           'variance': { 'min_value': 0, 'max_value': 100 },
           'pipeline': { 'min_value': 0, 'max_value': 1 }
         },
         'value_delta': {
-          'quantile': { 'min_value': 0, 'max_value': 52, 'value': 0.5, 'min': 0, 'max': 1, 'step': 0.05 },
+          'quantile': { 'min_value': 0, 'max_value': 52, 'value': 0.75, 'min': 0, 'max': 1, 'step': 0.05 },
           'cdf': { 'min_value': 0, 'max_value': 1, 'value': 0, 'min': -10, 'max': 10, 'step': 0.01 },
           'mean': { 'min_value': 0, 'max_value': 52 },
           'variance': { 'min_value': 0, 'max_value': 100 },

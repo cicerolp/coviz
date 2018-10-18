@@ -116,6 +116,7 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
     this.data = <[[number, number]]>this.data.sort((lhs, rhs) => {
       return lhs[0] - rhs[0];
     });
+
     // set the ranges
     const x = d3.scaleBand()
       .range([0, width])
@@ -133,17 +134,21 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
     let yDomain = d3.extent<number, number>(this.data, (d) => d[1]);
-    yDomain[1] += (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
-    yDomain[0] -= (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.10);
-    
+    yDomain[0] -= (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.15);
+    // yDomain[1] += (Math.abs(yDomain[1] - Math.abs(yDomain[0])) * 0.25);
+
+    if (yDomain[0] == yDomain[1]) {
+      yDomain[0] -= (Math.abs(yDomain[0]) * 0.10);
+    }
+
     // scale the range of the data
-    x.domain(this.data.map(d => this.dataset.aliases[this.dim][d[0]]));
+    x.domain(this.dataset.aliases[this.dim]);
     y.domain(yDomain);
 
     let colorScale;
     if (self.range == 'outlier') {
       colorScale = d3.scaleThreshold<number, string>()
-        .domain([0.4, 0.6, 1])
+        .domain([0.5, 0.9, 1])
         .range(this.range_map.outlier);
     } else {
       colorScale = d3.scaleQuantize<string>()

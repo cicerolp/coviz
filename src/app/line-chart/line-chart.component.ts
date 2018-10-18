@@ -228,7 +228,7 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
     let colorScale;
     if (self.range == 'outlier') {
       colorScale = d3.scaleThreshold<number, string>()
-        .domain([0.4, 0.6, 1])
+        .domain([0.5, 0.9, 1])
         .range(this.range_map.outlier);
     } else {
       colorScale = d3.scaleQuantize<string>()
@@ -239,8 +239,8 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
     let colorData = [];
     if (self.range == 'outlier') {
       colorData.push({ offset: "0%", color: d3.rgb(colorScale(0)).toString() });
-      colorData.push({ offset: "40%", color: d3.rgb(colorScale(0.4)).toString() });
-      colorData.push({ offset: "60%", color: d3.rgb(colorScale(0.6)).toString() });
+      colorData.push({ offset: "40%", color: d3.rgb(colorScale(0.5)).toString() });
+      colorData.push({ offset: "60%", color: d3.rgb(colorScale(0.9)).toString() });
       colorData.push({ offset: "100%", color: d3.rgb(colorScale(1.0)).toString() });
     } else {
       let stride_offset = 100 / this.range_map.normal.length;

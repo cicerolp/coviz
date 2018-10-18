@@ -43,6 +43,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { TemporalBandComponent } from '../temporal-band/temporal-band.component';
 import { DataSharingService } from '../services/data-sharing.service';
 import { GeoDataService } from '../services/geo-data.service';
+import { resolve } from 'dns';
+import { reject } from 'q';
 
 interface WidgetType {
   key: string;
@@ -197,7 +199,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       sufix: '_g',
       label: 'variance',
       formatter: {
-        'value': d3.format('.2f'),
+        'value': d3.format('.1f'),
         'value_delta': d3.format('.3f')
       }
     },
@@ -249,7 +251,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       .range(this.range_map.normal),
 
     'outlier': (dim) => d3.scaleThreshold<number, string>()
-      .domain([0.4, 0.6, 1])
+      .domain([0.5, 0.9, 1])
       .range(this.range_map.outlier)
   };
 
@@ -441,97 +443,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
     })
   }
 
-  loadLayer() {
+  getMapPromises = () => {
     let self = this;
 
     // reset values    
     this.geo.json_value.set(self.getPrevRegion(), new Map());
     this.geo.json_value.set(self.getCurrRegion(), new Map());
-
-    let getLayerColor = (feature, dim) => {
-      let value = self.geo.json_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
-      let style = { fillColor: self.color(dim)(value), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
-
-      // selected layer
-      if (self.geo.json_selected.get(dim).get(feature)) {
-        style.weight = 4;
-        style.fillColor = 'darkblue';
-      }
-
-      return style;
-    };
-
-    let layerOnMouseOver = (feature, el, dim) => {
-      if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
-        return;
-      }
-
-      // already selected feature
-      if (self.geo.json_curr.get(dim) === feature) {
-        return;
-      }
-
-      let code = Number.parseInt(feature.properties.code);
-      let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
-
-      let style = getLayerColor(feature, dim);
-
-      style.weight = 4;
-
-      self.geo.json_curr.set(dim, feature);
-
-      el.target.setStyle(style);
-
-      // update info on mousemove
-      self.updateInfo();
-
-      return style;
-    };
-
-    let layerOnMouseOut = (feature, el, dim) => {
-      if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
-        return;
-      }
-
-      let code = Number.parseInt(feature.properties.code);
-      let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
-
-      let style = getLayerColor(feature, dim);
-
-      // self.geo.json_curr.set(dim, undefined);
-
-      el.target.setStyle(style);
-
-      // update info on mouseout
-      // self.updateInfo();
-
-      return style;
-    };
-
-    let layerOnMouseClick = (feature, el, dim) => {
-      if (!self.geo.json_value || !self.geo.json_value.get(dim)) {
-        return;
-      }
-
-      let code = Number.parseInt(feature.properties.code);
-      let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
-
-      // swith selected
-      if (self.geo.json_selected.get(dim).get(feature)) {
-        self.geo.json_selected.get(dim).set(feature, false);
-      } else {
-        self.geo.json_selected.get(dim).set(feature, true);
-      }
-
-      let style = getLayerColor(feature, dim);
-
-      style.weight = 4;
-
-      el.target.setStyle(style);
-      self.loadWidgetsData();
-
-      return style;
-    }
 
     const constrainsts = self.getCategoricalConst() +
       self.getTemporalConst() +
@@ -594,35 +511,135 @@ export class Demo2Component implements OnInit, AfterViewInit {
     promises.push(getPromise(self.getCurrRegion()));
     promises.push(self.getPromiseGeojsonValid());
 
-    Promise.all(promises).then(() => {
-      self.updateAggr();
+    return promises;
+  }
 
+  loadLayer() {
+    let self = this;
+
+    let promises = self.getMapPromises();
+
+    Promise.all(promises).then(() => {
+      let getLayerColor = (feature, dim) => {
+        let value = self.geo.json_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
+        let style = { fillColor: self.color(dim)(value), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
+
+        // selected layer
+        if (self.geo.json_selected.get(dim).get(feature)) {
+          style.weight = 4;
+          style.fillColor = 'darkblue';
+        }
+
+        return style;
+      };
+
+      let layerOnMouseOver = (feature, el, dim) => {
+        if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
+          return;
+        }
+
+        // already selected feature
+        if (self.geo.json_curr.get(dim) === feature) {
+          return;
+        }
+
+        let code = Number.parseInt(feature.properties.code);
+        let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
+
+        let style = getLayerColor(feature, dim);
+
+        style.weight = 4;
+
+        self.geo.json_curr.set(dim, feature);
+
+        el.target.setStyle(style);
+
+        // update info on mousemove
+        self.updateInfo();
+
+        return style;
+      };
+
+      let layerOnMouseOut = (feature, el, dim) => {
+        if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
+          return;
+        }
+
+        let code = Number.parseInt(feature.properties.code);
+        let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
+
+        let style = getLayerColor(feature, dim);
+
+        // self.geo.json_curr.set(dim, undefined);
+
+        el.target.setStyle(style);
+
+        // update info on mouseout
+        // self.updateInfo();
+
+        return style;
+      };
+
+      let layerOnMouseClick = (feature, el, dim) => {
+        if (!self.geo.json_value || !self.geo.json_value.get(dim)) {
+          return;
+        }
+
+        let code = Number.parseInt(feature.properties.code);
+        let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
+
+        // swith selected
+        if (self.geo.json_selected.get(dim).get(feature)) {
+          self.geo.json_selected.get(dim).set(feature, false);
+        } else {
+          self.geo.json_selected.get(dim).set(feature, true);
+        }
+
+        let style = getLayerColor(feature, dim);
+
+        style.weight = 4;
+
+        el.target.setStyle(style);
+        self.loadWidgetsData();
+
+        return style;
+      }
+
+      self.updateAggr();
       self.loadLegend(self.getCurrRegion());
 
-      let getLayer = (dim) => {
-        return L.geoJSON(this.geo.json.get(dim), {
+      let getLayerByKey = (key) => {
+        if (key == 'curr') {
+          return self.getCurrRegion();
+        } else {
+          return self.getPrevRegion();
+        }
+      }
+
+      let getLayer = (key) => {
+        return L.geoJSON(this.geo.json.get(getLayerByKey(key)), {
           style: (feature) => {
-            if (dim !== self.getCurrRegion()) {
+            if (key == 'prev') {
               return { fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
             } else {
-              return getLayerColor(feature, dim);
+              return getLayerColor(feature, self.getCurrRegion());
             }
           },
           onEachFeature: (feature, layer) => {
-            if (dim == self.getCurrRegion()) {
+            if (key == 'curr') {
               layer.on({
-                mouseover: (el) => layerOnMouseOver(feature, el, dim),
-                mouseout: (el) => layerOnMouseOut(feature, el, dim),
-                click: (el) => layerOnMouseClick(feature, el, dim)
+                mouseover: (el) => layerOnMouseOver(feature, el, self.getCurrRegion()),
+                mouseout: (el) => layerOnMouseOut(feature, el, self.getCurrRegion()),
+                click: (el) => layerOnMouseClick(feature, el, self.getCurrRegion())
               });
             }
           },
           filter: function (feature, layer) {
-            if (dim !== self.getCurrRegion()) {
+            if (key == 'prev') {
               return true;
             } else {
               let code = Number.parseInt(feature.properties.code);
-              let isValid = self.geo.json_valid.get(dim).find((el) => el[0] === code);
+              let isValid = self.geo.json_valid.get(self.getCurrRegion()).find((el) => el[0] === code);
 
               if (isValid && isValid[1] >= self.options.get('display_threshold').value) {
                 return true;
@@ -635,7 +652,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       }
 
       if (this.BottomRegionLayer) this.mapService.map.removeLayer(this.BottomRegionLayer);
-      this.BottomRegionLayer = getLayer(self.getPrevRegion());
+      this.BottomRegionLayer = getLayer('prev');
       this.mapService.map.addLayer(this.BottomRegionLayer);
 
       // add transparent layer
@@ -643,7 +660,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.mapService.map.addLayer(this.MiddleRegionLayer);
 
       if (this.TopRegionLayer) this.mapService.map.removeLayer(this.TopRegionLayer);
-      this.TopRegionLayer = getLayer(self.getCurrRegion());
+      this.TopRegionLayer = getLayer('curr');
       this.mapService.map.addLayer(this.TopRegionLayer);
 
       this.mapService.map.on('move', this.onMapMoveStart, this);
@@ -736,27 +753,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
   loadWidgetsData() {
     // update info
     this.updateInfo();
-
-    /*  if (this.options.get('aggr').value === 'outlier') {
-       query = '/pipeline' +
-         '/join=right_join' +
-         '/threshold=' + self.options.get('display_threshold').value +
-         '/datset=' + self.dataset.datasetName +
-         //left
-         self.getLeftPipeline() +
-         constrainsts +
-         '/const=' + dim + '.values.(all)/group=' + dim +
-         // right
-         self.getRightPipeline() +
-         constrainsts +
-         '/const=' + dim + '.values.(all)/group=' + dim;
-     } else {
-       query = '/query' +
-         '/dataset=' + self.dataset.datasetName +
-         this.getAggr() +
-         constrainsts + 
-         '/const=' + dim + '.values.(all)/group=' + dim;
-     } */
 
     let color = 'normal';
     if (this.options.get('aggr').value == 'outlier') {
@@ -856,7 +852,17 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   setMapData() {
-    this.loadLayer();
+    let promises = this.getMapPromises();
+
+    Promise.all(promises).then(() => {
+      this.loadLegend(this.getCurrRegion());
+
+      this.BottomRegionLayer.clearLayers();
+      this.BottomRegionLayer.addData(this.geo.json.get(this.getPrevRegion()));
+
+      this.TopRegionLayer.clearLayers();
+      this.TopRegionLayer.addData(this.geo.json.get(this.getCurrRegion()));
+    });
   }
 
   updateAggr() {
@@ -901,22 +907,19 @@ export class Demo2Component implements OnInit, AfterViewInit {
   }
 
   setMarker() {
-    this.updateAggr();
-
+    // this.updateAggr();
     this.loadWidgetsData();
     this.setMapData();
   }
 
   setMapRegion(event) {
-    this.updateAggr();
-
-    this.loadWidgetsData();
+    // this.updateAggr();
+    // this.loadWidgetsData();
     this.setMapData();
   }
 
   setAggr() {
     this.updateAggr();
-
     this.loadWidgetsData();
     this.setMapData();
   }
@@ -1086,7 +1089,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.options = this.formBuilder.group({
       // visualization setup
       display_threshold: new FormControl(0),
-      aggr: new FormControl('mean'),
+      aggr: new FormControl('count'),
       marker: new FormControl(3),
       payload: new FormControl(this.dataset.payloads[0]),
       dataset: new FormControl(this.dataset.datasetName)
