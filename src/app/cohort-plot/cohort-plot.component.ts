@@ -177,7 +177,7 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
       .call(colorLegend);
   }
 
-  
+
   loadWidget = () => {
     const self = this;
     let container = (d3.select('#' + this.uniqueId).node() as any);

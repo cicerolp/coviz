@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { DataService } from './data.service';
 import { SchemaService } from './schema.service';
 
@@ -13,6 +13,10 @@ export class GeoDataService {
   public json_value = new Map();
   public json_min_max = new Map();
   public json_selected = new Map();
+
+  private headers = new HttpHeaders({
+    'Cache-control': 'public'
+  });
 
   constructor(
     private httpService: HttpClient,
@@ -36,7 +40,7 @@ export class GeoDataService {
 
     let getRegionPromise = (dim, file) => {
       return new Promise((resolve, reject) => {
-        this.httpService.get(file)
+        this.httpService.get(file, { headers: this.headers })
           .subscribe(response => {
             this.json.set(dim, response);
             resolve(true);
