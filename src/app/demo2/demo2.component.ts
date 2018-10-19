@@ -1081,6 +1081,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.marker.register(this.setRegionData);
 
     this.mapService.disableEvent(this.mapwidgets);
+
+    this.loadWidgetsData();
   }
 
   initialize() {

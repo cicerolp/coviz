@@ -179,7 +179,7 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
     const self = this;
     let container = (d3.select('#' + this.uniqueId).node() as any);
 
-    if (container === undefined || container.parentNode === undefined) {
+    if (container == (undefined || null) || container.parentNode == (undefined || null)) {
       return;
     }
 

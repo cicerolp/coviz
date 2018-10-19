@@ -15,7 +15,7 @@ export class GeoDataService {
   public json_selected = new Map();
 
   private headers = new HttpHeaders({
-    'Cache-control': 'public'
+    // 'Cache-control': 'public'
   });
 
   constructor(

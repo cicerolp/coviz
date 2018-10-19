@@ -6,6 +6,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { HttpClientModule } from '@angular/common/http';
 
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RoutingModule } from './routing/routing.module';
 
@@ -42,6 +44,9 @@ import { DensityChartComponent } from './density-chart/density-chart.component';
 import { GroupedBarChartComponent } from './grouped-bar-chart/grouped-bar-chart.component';
 import { GroupedBoxPlotComponent } from './grouped-box-plot/grouped-box-plot.component';
 import { CohortPlotComponent } from './cohort-plot/cohort-plot.component';
+
+import { CacheInterceptor } from './cache-interceptor';
+import { RequestCacheService } from './request-cache.service';
 
 export function configProviderFactory(provider) {
   return () => provider.load();
@@ -96,6 +101,7 @@ export function configProviderFactory(provider) {
       deps: [SchemaService],
       multi: true
     },
+    RequestCacheService,
     GeoDataService,
     {
       provide: APP_INITIALIZER,
@@ -106,9 +112,14 @@ export function configProviderFactory(provider) {
     GeocodingService,    
     MapService,
     DataService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: CacheInterceptor,
+      multi: true,
+    },
     ConfigurationService,
     TimezoneService,
-    DataSharingService
+    DataSharingService,    
   ],
   bootstrap: [AppComponent],
   entryComponents: [
