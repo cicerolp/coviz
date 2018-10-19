@@ -10,8 +10,7 @@ import {
     HttpInterceptor
 } from "@angular/common/http";
 
-
-const TTL = 10;
+const TTL = 86400;
 
 @Injectable()
 export class CacheInterceptor implements HttpInterceptor {
