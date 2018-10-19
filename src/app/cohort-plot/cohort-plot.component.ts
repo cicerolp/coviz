@@ -182,7 +182,7 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
     const self = this;
     let container = (d3.select('#' + this.uniqueId).node() as any);
 
-    if (container === null || container.parentNode === undefined || this.data.length === 0) {
+    if (container == (undefined || null) || container.parentNode == (undefined || null) || this.data.length === 0) {
       return;
     }
 
@@ -272,7 +272,8 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
 
   ngAfterViewInit() {
     window.addEventListener('resize', this.loadWidget);
-    this.loadLegend()
+    this.loadLegend();
+    this.loadWidget();
   }
 
   ngOnDestroy() {

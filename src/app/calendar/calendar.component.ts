@@ -238,7 +238,7 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
       const self = this;
       let container = (d3.select('#' + this.uniqueId).node() as any);
 
-      if (container === undefined || container.parentNode === undefined) {
+      if (container == (undefined || null) || container.parentNode == (undefined || null)) {
         return;
       }
 
@@ -355,6 +355,8 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
   ngAfterViewInit() {
     window.addEventListener('resize', this.loadWidget);
+    this.loadLegend();
+    this.loadWidget();
   }
 
   ngOnDestroy() {

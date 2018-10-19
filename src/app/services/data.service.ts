@@ -12,7 +12,7 @@ export class DataService {
 
   private headers = new HttpHeaders({
     // 'Cache-Control': 'public, max-age=86400',
-    'Content-Type': 'application/json',
+    // 'Content-Type': 'application/json',
     'Accept': 'application/json'
   });
 

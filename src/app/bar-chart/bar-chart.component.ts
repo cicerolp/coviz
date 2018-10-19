@@ -248,6 +248,8 @@ export class BarChartComponent implements Widget, OnInit, AfterViewInit, OnDestr
 
   ngAfterViewInit() {
     window.addEventListener('resize', this.loadWidget);
+    // this.loadLegend();
+    this.loadWidget();
   }
 
   ngOnDestroy() {

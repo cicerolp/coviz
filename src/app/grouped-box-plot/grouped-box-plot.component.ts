@@ -110,7 +110,7 @@ export class GroupedBoxPlotComponent implements OnInit {
     const self = this;
     let container = (d3.select('#' + this.uniqueId).node() as any);
 
-    if (container === null || container.parentNode === undefined) {
+    if (container == (undefined || null) || container.parentNode == (undefined || null)) {
       return;
     }
 
@@ -399,8 +399,6 @@ export class GroupedBoxPlotComponent implements OnInit {
 
   ngAfterViewInit() {
     window.addEventListener('resize', this.loadWidget);
-
-    // force widget refresh
     this.loadLegend();
     this.loadWidget();
   }

@@ -636,5 +636,6 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.updateDashboard();
   }
   ngAfterViewInit() {
+    // this.updateDashboard();
   }
 }

@@ -134,7 +134,7 @@ export class GroupedBarChartComponent implements Widget, OnInit, AfterViewInit, 
     const self = this;
     let container = (d3.select('#' + this.uniqueId).node() as any);
 
-    if (container === null || container.parentNode === undefined) {
+    if (container == (undefined || null) || container.parentNode == (undefined || null)) {
       return;
     }
 

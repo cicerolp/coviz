@@ -259,29 +259,6 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
       colorData.push({ offset: '100%', color: d3.rgb(colorScale(yDomain[1])).toString() });
     }
 
-    // set the gradient
-    svg.append("linearGradient")
-      .attr("id", "line-gradient")
-      .attr("gradientUnits", "userSpaceOnUse")
-      .attr("x1", 0).attr("y1", y(yDomain[0]))
-      .attr("x2", 0).attr("y2", y(yDomain[1]))
-      .selectAll("stop")
-      .data(colorData)
-      .enter().append("stop")
-      .attr("offset", (d) => {
-        return d.offset;
-      })
-      .attr("stop-color", (d) => {
-        return d.color;
-      });
-
-      // add the valueline path
-    svg.append('path')
-      .data([this.data])
-      .attr('class', 'line')
-      .attr('d', line)
-      .attr('stroke-width', '1.0px');
-
     // add the X axis
     const xAxis = d3.axisBottom(x);
     svg.append('g')
@@ -316,10 +293,39 @@ export class LineChartComponent implements Widget, OnInit, AfterViewInit, OnDest
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
       .text(this.yLabel);
+
+    if (this.data.length == 0) {
+      return;
+    }
+
+    // set the gradient
+    svg.append("linearGradient")
+      .attr("id", "line-gradient")
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("x1", 0).attr("y1", y(yDomain[0]))
+      .attr("x2", 0).attr("y2", y(yDomain[1]))
+      .selectAll("stop")
+      .data(colorData)
+      .enter().append("stop")
+      .attr("offset", (d) => {
+        return d.offset;
+      })
+      .attr("stop-color", (d) => {
+        return d.color;
+      });
+
+    // add the valueline path
+    svg.append('path')
+      .data([this.data])
+      .attr('class', 'line')
+      .attr('d', line)
+      .attr('stroke-width', '1.0px');
   }
 
   ngAfterViewInit() {
     window.addEventListener('resize', this.loadWidget);
+    // this.loadLegend();
+    this.loadWidget();
   }
 
   ngOnDestroy() {
