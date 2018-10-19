@@ -598,7 +598,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
     });
   }
 
-  @HostListener('window:storage', ['$event'])
+  /* @HostListener('window:storage', ['$event'])
   onStorageChange(ev: StorageEvent) {
     if (ev.key === 'dim') {
       this.dim = JSON.parse(ev.newValue);
@@ -606,7 +606,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
       this.features = JSON.parse(ev.newValue);
       this.updateDashboard();
     }
-  }
+  } */
 
   getData() {
     let storage_dim = localStorage.getItem('dim');

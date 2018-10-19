@@ -17,7 +17,7 @@ export class CacheInterceptor implements HttpInterceptor {
     constructor(private cache: RequestCacheService) { }
 
     intercept(req: HttpRequest<any>, next: HttpHandler) {
-        const cachedResponse = this.cache.get(req.url);
+        const cachedResponse = this.cache.get(req.url  + req.body);
         return cachedResponse
             ? Observable.of(cachedResponse)
             : this.sendRequest(req, next);
@@ -29,7 +29,7 @@ export class CacheInterceptor implements HttpInterceptor {
     ): Observable<HttpEvent<any>> {
         return next.handle(req).do(event => {
             if (event instanceof HttpResponse) {
-                this.cache.set(req.url, event, TTL);
+                this.cache.set(req.url  + req.body, event, TTL);
             }
         });
     }
