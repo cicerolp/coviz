@@ -135,6 +135,31 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
   }
 
+  no2_window = {
+    minValue: 0,
+    maxValue: 59,
+
+    bin: 2633760,
+    lower: 1229385600,
+
+    visible: false
+  }
+
+  optionsNO2: Options = {
+    floor: 0,
+    ceil: 59,
+    // showTicks: true,
+    // showSelectionBar: true,
+    /* selectionBarGradient: {
+      from: 'white',
+      to: '#FC0'
+    }, */
+    translate: (value: number): string => {
+      let date = new Date((this.no2_window.lower + (this.no2_window.bin * value)) * 1000);
+      return date.getUTCFullYear() + '/' + date.getUTCMonth();
+    }
+  }
+
   optionsTreatments: Options = {
     floor: 0,
     ceil: 6,
@@ -585,6 +610,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
       ctx.clearRect(0, 0, tile_size.x, tile_size.y);
 
       const query = grid_query +
+        '/const=date.interval.(' +
+        (this.no2_window.lower + this.no2_window.bin * this.no2_window.minValue) + ':' + 
+        (this.no2_window.lower + this.no2_window.bin * this.no2_window.maxValue) + ')' +
         '/const=' + 'coord.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + resolution + ')';
 
       this.dataService.query(query).subscribe(data => {
@@ -617,6 +645,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       return tile;
     };
+
+    this.CanvasLayer.on('add', this.onCanvasAdd, this);
+    this.CanvasLayer.on('remove', this.onCanvasRemove, this);
 
     /////////////////////////////////////////////////////////////////////
     // load geojson
@@ -714,7 +745,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       self.loadLegend(self.getCurrRegion());
 
       let getLayerByKey = (key) => {
-        if (key == 'curr') {
+        if (key == 'curr' || key == 'curr_heat') {
           return self.getCurrRegion();
         } else {
           return self.getPrevRegion();
@@ -792,6 +823,14 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.mapService.map.on('move', this.onMapMoveStart, this);
       this.mapService.map.on('moveend', this.onMapMoveEnd, this);
     });
+  }
+
+  onCanvasAdd() {
+    this.no2_window.visible = true;
+  }
+
+  onCanvasRemove() {
+    this.no2_window.visible = false;
   }
 
   onMapMoveStart() {
@@ -1147,6 +1186,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     return constrainsts;
   }
+
+  setNO2Window(event) {
+    // refresh map data
+    this.CanvasLayer.redraw();
+  }
+
 
   setTreatment(event, entry) {
     this.loadWidgetsData();

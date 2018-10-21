@@ -3,7 +3,7 @@
   <div id="map">
     <div #mapwidgets>
       <!-- navigator -->
-      <app-navigator></app-navigator>
+      <!-- <app-navigator></app-navigator> -->
 
       <!-- color scale -->
       <svg id="svg-color-quant" class="on-map"></svg>
@@ -43,7 +43,7 @@
             <span class="badge badge-info">Parameter:</span>
             <mat-radio-group formControlName="payload" (change)="setAggr()" class="radio-group">
               <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
-                  {{ opt.viewValue }}
+                {{ opt.viewValue }}
               </mat-radio-button>
             </mat-radio-group>
 
@@ -109,6 +109,15 @@
       <mat-slider [min]="getPayloadInfo('min')" [max]="getPayloadInfo('max')" [step]="getPayloadInfo('step')"
         thumbLabel="true" tickInterval="auto" [ngModel]="getPayloadInfo('value')" (ngModelChange)="setPayloadInfo('value', $event)"
         (change)="setMapData()"></mat-slider>
+    </section>
+  </div>
+
+
+  <!-- no2 toolbar -->
+  <div class="app-no2-toolbar app-footer-container over-map" *ngIf="no2_window.visible">
+    <section class="app-footer-item">
+      <span class="badge badge-warning">NO2 Exposure Window:</span>
+      <ng5-slider [(value)]="no2_window.minValue" [(highValue)]="no2_window.maxValue" [options]="optionsNO2" (userChangeEnd)="setNO2Window($event)"></ng5-slider>
     </section>
   </div>
 
