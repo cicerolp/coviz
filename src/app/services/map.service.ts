@@ -40,7 +40,8 @@ export class MapService {
 
   load_CRSEPSG3857() {
     this.map = L.map('map', {
-      worldCopyJump: true
+      worldCopyJump: true,
+      zoomControl: false
     }).setView(this.lastPosition.center, this.lastPosition.zoom);
 
     // L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjmrqq48d06jo2ss24jxpa5ge/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
@@ -49,7 +50,7 @@ export class MapService {
 
     L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: '',
-      maxZoom: 18,
+      maxZoom: 10,
       id: 'mapbox.streets',
       accessToken: 'pk.eyJ1IjoiY2FscGFoaW5zIiwiYSI6ImNqaDduaGVtdDBhM28zM21qN2hoOTh1d2IifQ.JyQl2tr6nStL5271bNz7FA'
     }).addTo(this.map);

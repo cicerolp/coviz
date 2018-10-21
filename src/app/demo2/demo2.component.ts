@@ -18,6 +18,7 @@ import { MapService } from '../services/map.service';
 
 import * as d3 from 'd3';
 import * as L from 'leaflet';
+
 import * as moment from 'moment';
 import { legendColor } from 'd3-svg-legend';
 
@@ -71,6 +72,11 @@ export class Demo2Component implements OnInit, AfterViewInit {
   private BottomRegionLayer: L.GridLayer;
   private MiddleRegionLayer: L.GridLayer;
   private TopRegionLayer: L.GridLayer;
+
+  private BottomCanvasLayer: L.GridLayer;
+  private TopCanvasLayer: L.GridLayer;
+
+  private CanvasLayer: L.GridLayer;
 
   // schema
   ///////////////////////////////////
@@ -252,7 +258,17 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
     'outlier': (dim) => d3.scaleThreshold<number, string>()
       .domain([0.5, 0.9, 1])
-      .range(this.range_map.outlier)
+      .range(this.range_map.outlier),
+
+    'ryw': (count) => {
+      const lc = Math.log(count) / Math.log(100);
+
+      const r = Math.floor(256 * Math.min(1, lc));
+      const g = Math.floor(256 * Math.min(1, Math.max(0, lc - 1)));
+      const b = Math.floor(256 * Math.min(1, Math.max(0, lc - 2)));
+
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.75 + ')';
+    }
   };
 
   info_name = '';
@@ -366,13 +382,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
     const svg = d3.select('#svg-color-quant');
     svg.selectAll('*').remove();
 
+    if (this.geo.json_min_max.get(dim)[0] == Number.MAX_SAFE_INTEGER) {
+      return;
+    }
+
     svg.append('g')
       .attr('class', 'legendQuant')
       .attr('transform', 'translate(0, 0)');
-
-    /* let getScale = () => {
-      this.
-    } */
 
     const colorLegend = legendColor()
       .ascending(true)
@@ -517,6 +533,95 @@ export class Demo2Component implements OnInit, AfterViewInit {
   loadLayer() {
     let self = this;
 
+    /////////////////////////////////////////////////////////////////////
+    // load grid layer
+    /////////////////////////////////////////////////////////////////////
+
+    let mult = 2;
+    const no2_scale = d3.scaleThreshold<number, string>()
+      // .domain([5, 10, 15, 20, 30])
+      .domain([5 * mult, 10 * mult, 15 * mult, 20 * mult, 30 * mult])
+      .range(['rgba(215,25,28,0.75)', 'rgba(253,174,97,0.75)', 'rgba(255,255,191,0.75)', 'rgba(166,217,106,0.75)', 'rgba(26,150,65,0.85)'].reverse());
+
+    /////////////////////////////////////////////////////////////////////
+    // load heat map
+    /////////////////////////////////////////////////////////////////////
+
+    const grid_query = '/query' +
+      '/dataset=' + 'pollution' +
+      '/aggr=' + 'average.no2-value' +
+      '/group=' + 'coord';
+
+    this.CanvasLayer = new L.GridLayer({
+      updateWhenIdle: false,
+      updateWhenZooming: false,
+      keepBuffer: 2,
+      updateInterval: 1000
+    });
+
+    const tile_size = this.CanvasLayer.getTileSize();
+
+    this.CanvasLayer.createTile = (coords) => {
+      let resolution = this.options.get('resolution').value;
+
+      if (coords.z > 6) {
+        resolution -= coords.z - 6;
+      }
+
+      /* const tile = document.createElement('div');
+      tile.style.outline = '1px solid green';
+      tile.style.fontWeight = 'bold';
+      tile.style.fontSize = '14pt';
+      tile.innerHTML = [coords.z, coords.x, coords.y].join('/');
+      return tile; */
+
+      const tile = document.createElement('canvas');
+
+      tile.setAttribute('width', tile_size.x.toString());
+      tile.setAttribute('height', tile_size.y.toString());
+
+      const ctx = tile.getContext('2d');
+      // ctx.globalCompositeOperation = 'lighter';
+      ctx.clearRect(0, 0, tile_size.x, tile_size.y);
+
+      const query = grid_query +
+        '/const=' + 'coord.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + resolution + ')';
+
+      this.dataService.query(query).subscribe(data => {
+        if (data[0] === undefined) {
+          return tile;
+        }
+
+        for (const d of data[0]) {
+          /* if (d[2] < coords.z + resolution) {
+            d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + resolution);
+            d[1] = Mercator.lat2tiley(Mercator.tiley2lat(d[1] + 0.5, d[2]), coords.z + resolution);
+            d[2] = coords.z + resolution;
+          } */
+
+          const lon0 = Mercator.tilex2lon(d[0], d[2]);
+          const lat0 = Mercator.tiley2lat(d[1], d[2]);
+          const lon1 = Mercator.tilex2lon(d[0] + 1, d[2]);
+          const lat1 = Mercator.tiley2lat(d[1] + 1, d[2]);
+
+          const x0 = (Mercator.lon2tilex(lon0, coords.z) - coords.x) * 256;
+          const y0 = (Mercator.lat2tiley(lat0, coords.z) - coords.y) * 256;
+          const x1 = (Mercator.lon2tilex(lon1, coords.z) - coords.x) * 256;
+          const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
+
+
+          ctx.fillStyle = no2_scale(d[3]);
+          ctx.fillRect(x0, y0, (x1 - x0), (y1 - y0));
+        }
+      });
+
+      return tile;
+    };
+
+    /////////////////////////////////////////////////////////////////////
+    // load geojson
+    /////////////////////////////////////////////////////////////////////
+
     let promises = self.getMapPromises();
 
     Promise.all(promises).then(() => {
@@ -618,8 +723,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       let getLayer = (key) => {
         return L.geoJSON(this.geo.json.get(getLayerByKey(key)), {
+          zIndex: 1,
+
           style: (feature) => {
-            if (key == 'prev') {
+            if (key == 'prev' || key == 'prev_heat' || key == 'curr_heat') {
               return { fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
             } else {
               return getLayerColor(feature, self.getCurrRegion());
@@ -635,7 +742,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
             }
           },
           filter: function (feature, layer) {
-            if (key == 'prev') {
+            if (key == 'prev' || key == 'prev_heat') {
               return true;
             } else {
               let code = Number.parseInt(feature.properties.code);
@@ -653,15 +760,34 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       if (this.BottomRegionLayer) this.mapService.map.removeLayer(this.BottomRegionLayer);
       this.BottomRegionLayer = getLayer('prev');
-      this.mapService.map.addLayer(this.BottomRegionLayer);
+      // this.mapService.map.addLayer(this.BottomRegionLayer);
 
       // add transparent layer
       if (this.MiddleRegionLayer) this.mapService.map.removeLayer(this.MiddleRegionLayer);
-      this.mapService.map.addLayer(this.MiddleRegionLayer);
+      // this.mapService.map.addLayer(this.MiddleRegionLayer);
 
       if (this.TopRegionLayer) this.mapService.map.removeLayer(this.TopRegionLayer);
       this.TopRegionLayer = getLayer('curr');
-      this.mapService.map.addLayer(this.TopRegionLayer);
+      // this.mapService.map.addLayer(this.TopRegionLayer);
+
+      let agiradom = L.layerGroup([this.BottomRegionLayer, this.MiddleRegionLayer, this.TopRegionLayer])
+        .addTo(this.mapService.map);
+
+      this.BottomCanvasLayer = getLayer('prev_heat');
+      this.TopCanvasLayer = getLayer('curr_heat');
+
+      let heatmap = L.layerGroup([this.BottomCanvasLayer, this.CanvasLayer, this.TopCanvasLayer]);
+
+      let overlay_maps = {
+        'AGIRADOM': agiradom,
+        'Average NO2': heatmap
+      }
+
+      L.control.layers(null, overlay_maps, {
+        collapsed: false,
+        hideSingleBase: true,
+        position: 'topleft'
+      }).addTo(this.mapService.map);
 
       this.mapService.map.on('move', this.onMapMoveStart, this);
       this.mapService.map.on('moveend', this.onMapMoveEnd, this);
@@ -857,11 +983,20 @@ export class Demo2Component implements OnInit, AfterViewInit {
     Promise.all(promises).then(() => {
       this.loadLegend(this.getCurrRegion());
 
+      let prev_data = this.geo.json.get(this.getPrevRegion());
+      let curr_data = this.geo.json.get(this.getCurrRegion());
+
       this.BottomRegionLayer.clearLayers();
-      this.BottomRegionLayer.addData(this.geo.json.get(this.getPrevRegion()));
+      this.BottomRegionLayer.addData(prev_data);
+
+      this.BottomCanvasLayer.clearLayers();
+      this.BottomCanvasLayer.addData(prev_data);
 
       this.TopRegionLayer.clearLayers();
-      this.TopRegionLayer.addData(this.geo.json.get(this.getCurrRegion()));
+      this.TopRegionLayer.addData(curr_data);
+
+      this.TopCanvasLayer.clearLayers();
+      this.TopCanvasLayer.addData(curr_data);
     });
   }
 
@@ -1091,6 +1226,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
       display_threshold: new FormControl(0),
       aggr: new FormControl('count'),
       marker: new FormControl(3),
+
+      color: new FormControl('ryw'),
+      geometry: new FormControl('rect'),
+      geom_size: new FormControl(0),
+      resolution: new FormControl(8),
+
       payload: new FormControl(this.dataset.payloads[0]),
       dataset: new FormControl(this.dataset.datasetName)
     });
