@@ -107,7 +107,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   bandQuantiles = '0.25:0.5:0.75';
 
   currRegion = 0;
-  region_map = ['region', 'department', 'arrondissement', 'commune'];
+  region_map = ['region', 'department', 'arrondissement', /* 'canton', */ 'commune'];
 
   // région, département, arrondissement até cantons
   optionsRegions: Options = {
@@ -123,6 +123,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
           return 'Département';
         case 2:
           return 'Arrondissement';
+        /* case 3:
+          return 'Canton'; */
         case 3:
         default:
           return 'Commune';
@@ -725,7 +727,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
       };
 
       let layerOnMouseOver = (feature, el, dim) => {
-        console.log(dim);
         if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
           return;
         }
