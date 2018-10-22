@@ -31,6 +31,13 @@ html, body {
   margin: 0;
 }
 
+.leaflet-control-layers-overlays {
+  width: 250px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+}
+
 .leaflet-container {
   background: rgb(202, 210, 211);
 }
@@ -80,3 +87,4 @@ html, body {
 }
 
 [hidden] { display: none !important;}
+

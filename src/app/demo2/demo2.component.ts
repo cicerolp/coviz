@@ -135,6 +135,12 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
   }
 
+  agiradom = {
+    visible: false
+  }
+
+  no2_scale = ['rgba(215,25,28,0.75)', 'rgba(253,174,97,0.75)', 'rgba(255,255,191,0.75)', 'rgba(166,217,106,0.75)', 'rgba(26,150,65,0.85)'].reverse();
+
   no2_window = {
     minValue: 0,
     maxValue: 59,
@@ -142,7 +148,45 @@ export class Demo2Component implements OnInit, AfterViewInit {
     bin: 2633760,
     lower: 1229385600,
 
-    visible: false
+    visible: false,
+
+    scale_switcher: 1,
+
+    scale: {
+      0: d3.scaleThreshold<number, string>()
+        .domain([5, 10, 15, 20, 30])
+        .range(this.no2_scale),
+
+      1: d3.scaleThreshold<number, string>()
+        .domain([10, 20, 30, 40, 60])
+        .range(this.no2_scale),
+
+      2: d3.scaleThreshold<number, string>()
+        .domain([50, 100, 150, 200, 300])
+        .range(this.no2_scale)
+    }
+  }
+
+  optionsNO2Scale: Options = {
+    floor: 0,
+    ceil: 2,
+    // showTicks: true,
+    // showSelectionBar: true,
+    /* selectionBarGradient: {
+      from: 'white',
+      to: '#FC0'
+    }, */
+    translate: (value: number): string => {
+      switch (value) {
+        case 0:
+          return '[5,30]';
+        case 1:
+          return '[10,60]';
+        case 2:
+        default:
+          return '[50,300]';
+      }
+    }
   }
 
   optionsNO2: Options = {
@@ -403,11 +447,32 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.maximumZoom = this.mapService.map.getMaxZoom();
   }
 
-  loadLegend(dim) {
-    const svg = d3.select('#svg-color-quant');
+  loadNO2Legend() {
+    const svg = d3.select('#svg-color-no2');
     svg.selectAll('*').remove();
 
-    if (this.geo.json_min_max.get(dim)[0] == Number.MAX_SAFE_INTEGER) {
+    if (!this.no2_window.visible) {
+      return;
+    }
+
+    svg.append('g')
+      .attr('class', 'legendQuant')
+      .attr('transform', 'translate(0, 0)');
+
+    const colorLegend = legendColor()
+      .ascending(true)
+      // .labelFormat(this.getFormatter())
+      .scale(this.no2_window.scale[this.no2_window.scale_switcher]);
+
+    svg.select('.legendQuant')
+      .call(colorLegend);
+  }
+
+  loadAgiradomLegend(dim) {
+    const svg = d3.select('#svg-color-agiradom');
+    svg.selectAll('*').remove();
+
+    if (!this.agiradom.visible || this.geo.json_min_max.get(dim)[0] == Number.MAX_SAFE_INTEGER) {
       return;
     }
 
@@ -559,16 +624,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
     let self = this;
 
     /////////////////////////////////////////////////////////////////////
-    // load grid layer
-    /////////////////////////////////////////////////////////////////////
-
-    let mult = 2;
-    const no2_scale = d3.scaleThreshold<number, string>()
-      // .domain([5, 10, 15, 20, 30])
-      .domain([5 * mult, 10 * mult, 15 * mult, 20 * mult, 30 * mult])
-      .range(['rgba(215,25,28,0.75)', 'rgba(253,174,97,0.75)', 'rgba(255,255,191,0.75)', 'rgba(166,217,106,0.75)', 'rgba(26,150,65,0.85)'].reverse());
-
-    /////////////////////////////////////////////////////////////////////
     // load heat map
     /////////////////////////////////////////////////////////////////////
 
@@ -611,7 +666,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       const query = grid_query +
         '/const=date.interval.(' +
-        (this.no2_window.lower + this.no2_window.bin * this.no2_window.minValue) + ':' + 
+        (this.no2_window.lower + this.no2_window.bin * this.no2_window.minValue) + ':' +
         (this.no2_window.lower + this.no2_window.bin * this.no2_window.maxValue) + ')' +
         '/const=' + 'coord.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + resolution + ')';
 
@@ -638,7 +693,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
           const y1 = (Mercator.lat2tiley(lat1, coords.z) - coords.y) * 256;
 
 
-          ctx.fillStyle = no2_scale(d[3]);
+          ctx.fillStyle = self.no2_window.scale[this.no2_window.scale_switcher](d[3]);
           ctx.fillRect(x0, y0, (x1 - x0), (y1 - y0));
         }
       });
@@ -742,7 +797,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       }
 
       self.updateAggr();
-      self.loadLegend(self.getCurrRegion());
+      self.loadAgiradomLegend(self.getCurrRegion());
 
       let getLayerByKey = (key) => {
         if (key == 'curr' || key == 'curr_heat') {
@@ -757,8 +812,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
           zIndex: 1,
 
           style: (feature) => {
-            if (key == 'prev' || key == 'prev_heat' || key == 'curr_heat') {
-              return { fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
+            if (key == 'prev' || key == 'prev_heat') {
+              return { fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 3.0, opacity: 1.0, fillOpacity: 1.0 };
+            } else if (key == 'curr_heat') {
+              return { fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 1.0, opacity: 1.0, fillOpacity: 1.0 };
             } else {
               return getLayerColor(feature, self.getCurrRegion());
             }
@@ -801,6 +858,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.TopRegionLayer = getLayer('curr');
       // this.mapService.map.addLayer(this.TopRegionLayer);
 
+      this.TopRegionLayer.on('add', this.onRegionAdd, this);
+      this.TopRegionLayer.on('remove', this.onRegionRemove, this);
+
       let agiradom = L.layerGroup([this.BottomRegionLayer, this.MiddleRegionLayer, this.TopRegionLayer])
         .addTo(this.mapService.map);
 
@@ -825,12 +885,24 @@ export class Demo2Component implements OnInit, AfterViewInit {
     });
   }
 
+  onRegionAdd() {
+    this.agiradom.visible = true;
+    this.loadAgiradomLegend(this.getCurrRegion());
+  }
+
+  onRegionRemove() {
+    this.agiradom.visible = false;
+    this.loadAgiradomLegend(this.getCurrRegion());
+  }
+
   onCanvasAdd() {
     this.no2_window.visible = true;
+    this.loadNO2Legend();
   }
 
   onCanvasRemove() {
     this.no2_window.visible = false;
+    this.loadNO2Legend();
   }
 
   onMapMoveStart() {
@@ -1020,7 +1092,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     let promises = this.getMapPromises();
 
     Promise.all(promises).then(() => {
-      this.loadLegend(this.getCurrRegion());
+      this.loadAgiradomLegend(this.getCurrRegion());
 
       let prev_data = this.geo.json.get(this.getPrevRegion());
       let curr_data = this.geo.json.get(this.getCurrRegion());
@@ -1185,6 +1257,11 @@ export class Demo2Component implements OnInit, AfterViewInit {
     }
 
     return constrainsts;
+  }
+
+  setNO2Scale() {
+    this.loadNO2Legend();
+    this.CanvasLayer.redraw();
   }
 
   setNO2Window(event) {
