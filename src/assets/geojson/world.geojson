@@ -1,1 +1,39 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"ADMIN":"World","ISO_A3":"World"},"geometry":{"type":"Polygon","coordinates":[[[-180,90],[180,90],[180,-90],[-180,-90],[-180,90]]]}}]}
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "ADMIN": "World",
+                "ISO_A3": "World"
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -180,
+                            90
+                        ],
+                        [
+                            180,
+                            90
+                        ],
+                        [
+                            180,
+                            -90
+                        ],
+                        [
+                            -180,
+                            -90
+                        ],
+                        [
+                            -180,
+                            90
+                        ]
+                    ]
+                ]
+            }
+        }
+    ]
+}
