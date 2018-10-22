@@ -31,7 +31,7 @@ html, body {
   margin: 0;
 }
 
-.leaflet-control-layers-overlays {
+.leaflet-control-layers-overlays, .leaflet-control-layers-base {
   width: 250px !important;
   display: flex !important;
   flex-direction: row !important;

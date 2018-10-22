@@ -50,7 +50,7 @@ export class MapService {
 
     L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: '',
-      maxZoom: 10,
+      maxZoom: 12,
       id: 'mapbox.streets',
       accessToken: 'pk.eyJ1IjoiY2FscGFoaW5zIiwiYSI6ImNqaDduaGVtdDBhM28zM21qN2hoOTh1d2IifQ.JyQl2tr6nStL5271bNz7FA'
     }).addTo(this.map);

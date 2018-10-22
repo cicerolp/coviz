@@ -636,7 +636,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       updateWhenIdle: false,
       updateWhenZooming: false,
       keepBuffer: 2,
-      updateInterval: 1000
+      updateInterval: 40
     });
 
     const tile_size = this.CanvasLayer.getTileSize();
@@ -644,9 +644,9 @@ export class Demo2Component implements OnInit, AfterViewInit {
     this.CanvasLayer.createTile = (coords) => {
       let resolution = this.options.get('resolution').value;
 
-      if (coords.z > 6) {
-        resolution -= coords.z - 6;
-      }
+      /* if (coords.z > 8) {
+        resolution -= coords.z - 8;
+      } */
 
       /* const tile = document.createElement('div');
       tile.style.outline = '1px solid green';
@@ -725,28 +725,25 @@ export class Demo2Component implements OnInit, AfterViewInit {
       };
 
       let layerOnMouseOver = (feature, el, dim) => {
+        console.log(dim);
         if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
           return;
         }
 
         // already selected feature
-        if (self.geo.json_curr.get(dim) === feature) {
-          return;
+        if (self.geo.json_curr.get(dim) !== feature) {
+          // update info on mousemove
+          self.geo.json_curr.set(dim, feature);
+          self.updateInfo();
         }
 
-        let code = Number.parseInt(feature.properties.code);
-        let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1];
+        /* let code = Number.parseInt(feature.properties.code);
+        let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1]; */
 
         let style = getLayerColor(feature, dim);
-
         style.weight = 4;
 
-        self.geo.json_curr.set(dim, feature);
-
         el.target.setStyle(style);
-
-        // update info on mousemove
-        self.updateInfo();
 
         return style;
       };
@@ -861,23 +858,27 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.TopRegionLayer.on('add', this.onRegionAdd, this);
       this.TopRegionLayer.on('remove', this.onRegionRemove, this);
 
-      let agiradom = L.layerGroup([this.BottomRegionLayer, this.MiddleRegionLayer, this.TopRegionLayer])
-        .addTo(this.mapService.map);
+      let agiradom = L.layerGroup([this.BottomRegionLayer, this.MiddleRegionLayer, this.TopRegionLayer], {
+        zIndex: 1000
+      }).addTo(this.mapService.map);
 
       this.BottomCanvasLayer = getLayer('prev_heat');
       this.TopCanvasLayer = getLayer('curr_heat');
 
-      let heatmap = L.layerGroup([this.BottomCanvasLayer, this.CanvasLayer, this.TopCanvasLayer]);
+      let heatmap = L.layerGroup([this.BottomCanvasLayer, this.CanvasLayer, this.TopCanvasLayer], {
+        zIndex: 100
+      });
 
       let overlay_maps = {
         'AGIRADOM': agiradom,
         'Average NO2': heatmap
       }
 
-      L.control.layers(null, overlay_maps, {
+      L.control.layers(overlay_maps, null, {
         collapsed: false,
         hideSingleBase: true,
-        position: 'topleft'
+        position: 'topleft',
+        autoZIndex: false
       }).addTo(this.mapService.map);
 
       this.mapService.map.on('move', this.onMapMoveStart, this);
