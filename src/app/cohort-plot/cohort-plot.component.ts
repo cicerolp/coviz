@@ -74,6 +74,8 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
       return;
     }
 
+    console.log(bin)
+
     this.no_data = false;
 
     let cohorts = bin.match(/[t]\d+[:].{3,10}[_][BE]\s[(]\d{1,3}[.]\d{1,3}[%][)]/mg);
@@ -198,13 +200,13 @@ export class CohortPlotComponent implements Widget, OnInit, AfterViewInit, OnDes
 
     const margin = { top: 30, right: 5, bottom: 5, left: 30 };
     const width = container.width - margin.left - margin.right;
-    const height = (this.data.length * minCohortHeight) - margin.top - margin.bottom;
+    const height = ((this.data.length + 1) * minCohortHeight) - margin.top - margin.bottom;
 
     d3.select('#' + this.uniqueId).selectAll('*').remove();
 
     const svg = d3.select('#' + this.uniqueId)
       .append('svg')
-      .attr('viewBox', '0 0 ' + container.width + ' ' + (this.data.length * minCohortHeight))
+      .attr('viewBox', '0 0 ' + container.width + ' ' + ((this.data.length + 1) * minCohortHeight))
       .append('g')
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 

@@ -171,7 +171,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   optionsNO2Scale: Options = {
     floor: 0,
-    ceil: 2,    
+    ceil: 2,
     showTicks: true,
     // showSelectionBar: true,
     /* selectionBarGradient: {
@@ -679,12 +679,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
         }
 
         for (const d of data[0]) {
-          /* if (d[2] < coords.z + resolution) {
-            d[0] = Mercator.lon2tilex(Mercator.tilex2lon(d[0] + 0.5, d[2]), coords.z + resolution);
-            d[1] = Mercator.lat2tiley(Mercator.tiley2lat(d[1] + 0.5, d[2]), coords.z + resolution);
-            d[2] = coords.z + resolution;
-          } */
-
           const lon0 = Mercator.tilex2lon(d[0], d[2]);
           const lat0 = Mercator.tiley2lat(d[1], d[2]);
           const lon1 = Mercator.tilex2lon(d[0] + 1, d[2]);
@@ -700,7 +694,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
           ctx.fillRect(x0, y0, (x1 - x0), (y1 - y0));
         }
       });
-      
+
       return tile;
     };
 
@@ -746,6 +740,38 @@ export class Demo2Component implements OnInit, AfterViewInit {
         style.weight = 4;
 
         el.target.setStyle(style);
+
+        return style;
+      };
+
+      let heatOnMouseOver = (feature, el, dim) => {
+        if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
+          return;
+        }
+
+        // already selected feature
+        if (self.geo.json_curr.get(dim) !== feature) {
+          // update info on mousemove
+          self.geo.json_curr.set(dim, feature);
+          self.updateInfo();
+        }
+
+        /* let code = Number.parseInt(feature.properties.code);
+        let value = self.geo.json_value.get(dim).find((el) => el[0] === code)[1]; */
+
+        let style = getLayerColor(feature, dim);
+
+        el.target.setStyle({ fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 4.0, opacity: 1.0, fillOpacity: 1.0 });
+
+        return style;
+      };
+
+      let heatOnMouseOut = (feature, el, dim) => {
+        if (!self.geo.json_value || !self.geo.json_value.get(dim) || !self.ableToGetData) {
+          return;
+        }
+        let style = getLayerColor(feature, dim);
+        el.target.setStyle({ fillColor: 'rgba(0,0,0,0)', color: 'black', weight: 1.0, opacity: 1.0, fillOpacity: 1.0 });
 
         return style;
       };
@@ -829,6 +855,11 @@ export class Demo2Component implements OnInit, AfterViewInit {
                 mouseout: (el) => layerOnMouseOut(feature, el, self.getCurrRegion()),
                 click: (el) => layerOnMouseClick(feature, el, self.getCurrRegion())
               });
+            } else if (key == 'curr_heat') {
+              layer.on({
+                mouseover: (el) => heatOnMouseOver(feature, el, self.getCurrRegion()),
+                mouseout: (el) => heatOnMouseOut(feature, el, self.getCurrRegion())
+              });
             }
           },
           filter: function (feature, layer) {
@@ -870,7 +901,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       this.BottomCanvasLayer = getLayer('prev_heat');
       this.TopCanvasLayer = getLayer('curr_heat');
 
-      let heatmap = L.layerGroup([this.BottomCanvasLayer, this.CanvasLayer, this.TopCanvasLayer], {
+      let heatmap = L.layerGroup([this.BottomCanvasLayer, this.CanvasLayer, this.MiddleRegionLayer, this.TopCanvasLayer], {
         zIndex: 100
       });
 

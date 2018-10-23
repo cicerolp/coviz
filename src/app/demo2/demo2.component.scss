@@ -130,3 +130,10 @@
 .radio-button {
   margin: 5px;
 }
+
+[hidden] { display: none !important;}
+
+.hidden {
+  display: none !important;
+  bottom: -200px;
+}

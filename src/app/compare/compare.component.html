@@ -382,6 +382,12 @@
         </mat-expansion-panel-header>
 
         <mat-card>
+            <mat-card>
+                <mat-card-content>
+                    <span class="badge badge-danger">Confidence Threshold:</span>
+                    <ng5-slider [(value)]="currCohortThreshold" [options]="optionsCohort" (userChangeEnd)="refreshCohorts('ctnCohort')"></ng5-slider>
+                </mat-card-content>
+            </mat-card>
             <mat-card-content>
                 <div class="flex-container min-small">
                     <div #ctnCohort></div>

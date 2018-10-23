@@ -128,6 +128,22 @@ export class CompareComponent implements OnInit, AfterViewInit {
   // cohorts
   @ViewChild('ctnCohort', { read: ViewContainerRef }) ctnCohort: ViewContainerRef;
 
+  currCohortThreshold = 20;
+
+  optionsCohort: Options = {
+    floor: 0,
+    ceil: 100,
+    showTicks: false,
+    showSelectionBar: true,
+    translate: (value: number): string => {
+      return value.toString() + '%';
+    },
+    selectionBarGradient: {
+      from: 'rgb(165,0,38)',
+      to: 'rgb(0,104,55)'
+    }
+  }
+
   constructor(
     private httpService: HttpClient,
     private dataService: DataService,
@@ -182,6 +198,50 @@ export class CompareComponent implements OnInit, AfterViewInit {
     this.updateCtnCohort('ctnCohort', this.ctnCohort, 'query');
   }
 
+  refreshCohorts(ctn) {
+    let addToSql = (str, cons) => {
+      if (str.length !== 0) {
+        return str + ',' + cons;
+      } else {
+        return cons;
+      }
+    }
+
+    // reset widgets
+    let sql: [string] = [''];
+    this.cohorts = [];
+
+    let promises_qds = [];
+
+    // get id_patient from QDS
+    this.features.forEach((entry, index) => {
+      sql[index] = '';
+      promises_qds.push(new Promise((resolve, reject) => {
+        this.dataService.query(entry.constraints + '/aggr=count/const=user_id.values.(all)/group=user_id').subscribe(response => {
+          response[0].forEach(element => {
+            sql[index] = addToSql(sql[index], element[0]);
+          });
+
+          if (sql[index].length !== 0) {
+            sql[index] = this.currCohortThreshold.toString() + '|id_patient in (' + sql[index] + ')';
+          }
+
+          resolve(true);
+        });
+      }));
+    });
+
+    // get id_patient from QDS
+    Promise.all(promises_qds).then(() => {
+
+      this.getCtn(ctn).forEach((element, index) => {
+        let instance = <CohortPlotComponent>element.widget;
+        let bin = btoa(pako.gzip(sql[index], { to: 'string' }));
+        instance.setNextTerm(bin);
+      });
+    });
+  }
+
   updateCtnCohort(ctn, ref, query) {
     let addToSql = (str, cons) => {
       if (str.length !== 0) {
@@ -207,7 +267,7 @@ export class CompareComponent implements OnInit, AfterViewInit {
           });
 
           if (sql[index].length !== 0) {
-            sql[index] = 'id_patient in (' + sql[index] + ')';
+            sql[index] = this.currCohortThreshold.toString() + '|id_patient in (' + sql[index] + ')';
           }
 
           resolve(true);
