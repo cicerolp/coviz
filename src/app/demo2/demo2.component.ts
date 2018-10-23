@@ -104,7 +104,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   mode = new FormControl('over');
   options: FormGroup;
 
-  bandQuantiles = '0.25:0.5:0.75';
+  bandQuantiles = '0.25:0.5:0.70';
 
   currRegion = 0;
   region_map = ['region', 'department', 'arrondissement', /* 'canton', */ 'commune'];
@@ -141,7 +141,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     visible: false
   }
 
-  no2_scale = ['rgba(215,25,28,0.75)', 'rgba(253,174,97,0.75)', 'rgba(255,255,191,0.75)', 'rgba(166,217,106,0.75)', 'rgba(26,150,65,0.85)'].reverse();
+  no2_scale = ['rgba(215,25,28,0.70)', 'rgba(253,174,97,0.70)', 'rgba(255,255,191,0.70)', 'rgba(166,217,106,0.70)', 'rgba(26,150,65,0.85)'].reverse();
 
   no2_window = {
     minValue: 0,
@@ -171,8 +171,8 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
   optionsNO2Scale: Options = {
     floor: 0,
-    ceil: 2,
-    // showTicks: true,
+    ceil: 2,    
+    showTicks: true,
     // showSelectionBar: true,
     /* selectionBarGradient: {
       from: 'white',
@@ -194,6 +194,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
   optionsNO2: Options = {
     floor: 0,
     ceil: 59,
+    draggableRange: true,
     // showTicks: true,
     // showSelectionBar: true,
     /* selectionBarGradient: {
@@ -338,7 +339,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
       const g = Math.floor(256 * Math.min(1, Math.max(0, lc - 1)));
       const b = Math.floor(256 * Math.min(1, Math.max(0, lc - 2)));
 
-      return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.75 + ')';
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.70 + ')';
     }
   };
 
@@ -635,10 +636,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
       '/group=' + 'coord';
 
     this.CanvasLayer = new L.GridLayer({
-      updateWhenIdle: false,
-      updateWhenZooming: false,
       keepBuffer: 2,
-      updateInterval: 40
+      updateInterval: 40,
+      updateWhenIdle: true,
+      updateWhenZooming: false,
     });
 
     const tile_size = this.CanvasLayer.getTileSize();
@@ -659,13 +660,6 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       const tile = document.createElement('canvas');
 
-      tile.setAttribute('width', tile_size.x.toString());
-      tile.setAttribute('height', tile_size.y.toString());
-
-      const ctx = tile.getContext('2d');
-      // ctx.globalCompositeOperation = 'lighter';
-      ctx.clearRect(0, 0, tile_size.x, tile_size.y);
-
       const query = grid_query +
         '/const=date.interval.(' +
         (this.no2_window.lower + this.no2_window.bin * this.no2_window.minValue) + ':' +
@@ -673,6 +667,13 @@ export class Demo2Component implements OnInit, AfterViewInit {
         '/const=' + 'coord.tile.(' + coords.x + ':' + coords.y + ':' + coords.z + ':' + resolution + ')';
 
       this.dataService.query(query).subscribe(data => {
+        tile.setAttribute('width', tile_size.x.toString());
+        tile.setAttribute('height', tile_size.y.toString());
+
+        const ctx = tile.getContext('2d');
+        // ctx.globalCompositeOperation = 'lighter';
+        ctx.clearRect(0, 0, tile_size.x, tile_size.y);
+
         if (data[0] === undefined) {
           return tile;
         }
@@ -699,7 +700,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
           ctx.fillRect(x0, y0, (x1 - x0), (y1 - y0));
         }
       });
-
+      
       return tile;
     };
 
@@ -715,7 +716,7 @@ export class Demo2Component implements OnInit, AfterViewInit {
     Promise.all(promises).then(() => {
       let getLayerColor = (feature, dim) => {
         let value = self.geo.json_value.get(dim).find((el) => el[0] === Number.parseInt(feature.properties.code))[1];
-        let style = { fillColor: self.color(dim)(value), color: 'black', weight: 1.0, opacity: 0.75, fillOpacity: 0.75 };
+        let style = { fillColor: self.color(dim)(value), color: 'black', weight: 1.0, opacity: 0.70, fillOpacity: 0.70 };
 
         // selected layer
         if (self.geo.json_selected.get(dim).get(feature)) {
@@ -807,7 +808,10 @@ export class Demo2Component implements OnInit, AfterViewInit {
 
       let getLayer = (key) => {
         return L.geoJSON(this.geo.json.get(getLayerByKey(key)), {
-          zIndex: 1,
+          keepBuffer: 2,
+          updateInterval: 40,
+          updateWhenIdle: true,
+          updateWhenZooming: false,
 
           style: (feature) => {
             if (key == 'prev' || key == 'prev_heat') {

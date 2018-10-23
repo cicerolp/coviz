@@ -41,7 +41,9 @@ export class MapService {
   load_CRSEPSG3857() {
     this.map = L.map('map', {
       worldCopyJump: true,
-      zoomControl: false
+      zoomControl: false,
+      preferCanvas: true,
+      renderer: L.canvas()
     }).setView(this.lastPosition.center, this.lastPosition.zoom);
 
     // L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjmrqq48d06jo2ss24jxpa5ge/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
