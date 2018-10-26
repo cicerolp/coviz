@@ -46,15 +46,11 @@ export class MapService {
       renderer: L.canvas()
     }).setView(this.lastPosition.center, this.lastPosition.zoom);
 
-    // L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjmrqq48d06jo2ss24jxpa5ge/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
-
-    // L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjmq57scw05m72ro7wldn6nam/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
-
-    L.tileLayer('https://api.mapbox.com/styles/v1/calpahins/cjh7nizdb615e2rk3btgrklul/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
+    L.tileLayer('https://api.mapbox.com/styles/v1/pmqauthors/cjnpnk3xe0au12sp9qlrikox1/tiles/256/{z}/{x}/{y}?access_token={accessToken}', {
       attribution: '',
       maxZoom: 12,
       id: 'mapbox.streets',
-      accessToken: 'pk.eyJ1IjoiY2FscGFoaW5zIiwiYSI6ImNqaDduaGVtdDBhM28zM21qN2hoOTh1d2IifQ.JyQl2tr6nStL5271bNz7FA'
+      accessToken: 'pk.eyJ1IjoicG1xYXV0aG9ycyIsImEiOiJjam5wbmlkZ3EwZHR0M3FvOTQyaXA5ejh3In0.ZIpwrxSZstV0XsOO92jtjA'
     }).addTo(this.map);
 
     // this.addDebugLayer();
