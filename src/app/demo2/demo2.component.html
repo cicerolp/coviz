@@ -104,7 +104,7 @@
   <!-- end map -->
 
   <!-- footer toolbar -->
-  <div *ngIf="options.get('aggr').value === 'quantile' || options.get('aggr').value === 'cdf'" class="app-footer-toolbar app-footer-container over-map">
+  <div *ngIf="(options.get('aggr').value === 'quantile' || options.get('aggr').value === 'cdf') && !no2_window.visible" class="app-footer-toolbar app-footer-container over-map">
     <section class="app-footer-item">
       <span class="badge badge-warning">Payload Parameter: {{ getPayloadInfo('value') }}</span>
       <mat-slider [min]="getPayloadInfo('min')" [max]="getPayloadInfo('max')" [step]="getPayloadInfo('step')"
