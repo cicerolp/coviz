@@ -50,11 +50,11 @@ export class CalendarComponent implements Widget, OnInit, AfterViewInit, OnDestr
   private max = Number.MIN_SAFE_INTEGER;
 
   duration = {
-    minValue: 2000, maxValue: 2017, currYear: 2017
+    minValue: 2010, maxValue: 2017, currYear: 2017
   }
 
   optionsSlider: Options = {
-    floor: 2000,
+    floor: 2010,
     ceil: 2017,
     showTicks: true,
     /* showSelectionBar: true,

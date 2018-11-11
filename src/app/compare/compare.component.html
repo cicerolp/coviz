@@ -145,7 +145,7 @@
             <mat-card [formGroup]="options" class="mat-card-parameters">
                 <span class="badge badge-danger">Parameter:</span>
                 <mat-radio-group formControlName="ctnIahCalendar" (change)="refreshCalendarCtn('ctnIahCalendar')" class="radio-group">
-                    <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
+                    <mat-radio-button *ngFor="let opt of payload_values_iah" [value]="opt.value" class="radio-button">
                         {{ opt.viewValue }}
                     </mat-radio-button>
                 </mat-radio-group>

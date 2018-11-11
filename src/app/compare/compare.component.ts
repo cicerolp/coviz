@@ -72,6 +72,10 @@ export class CompareComponent implements OnInit, AfterViewInit {
     { value: 'value_delta', viewValue: 'Delta' },
   ]
 
+  payload_values_iah = [
+    { value: 'value', viewValue: 'Value' },
+  ]
+
   options: FormGroup;
 
   cohorts = new Array();
@@ -608,8 +612,9 @@ export class CompareComponent implements OnInit, AfterViewInit {
       '/series=event_date.(' + initial + ':86400:' + intervals + ':86400)' +
       '/pipeline/join=left_join/threshold=1' +
       '/source/aggr=average.' + this.getCalenarAggrGaussian(ctn) + '/dataset=health-durations' + this.getConstraints(index) + query +
+      /* '/group=event_date' +  */
       '/destination/aggr=inverse.' + this.getCalendarAggr(ctn) + '.($)/dataset=health-durations' + this.getConstraints(index) + query +
-      '/const=event_date.interval.(' + compareFrom + ':' + compareTo + ')';
+      '/const=event_date.interval.(' + compareFrom + ':' + compareTo + ')';/*  + '/group=event_date'; */
 
     return term;
   }
