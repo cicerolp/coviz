@@ -1,0 +1,52 @@
+.map-card-footer {
+  position: relative;
+  top: 0;
+  left: 0;
+  font-size: 0.7em;
+  background: rgba(202, 210, 211, 0);
+  box-shadow: none !important;
+  padding: 0px !important;
+}
+
+.md2-datepicker-trigger {
+  padding: 0px 0 4px 35px !important;
+}
+
+.md2-datepicker-input {
+  height: 30px !important;
+  min-width: 0 !important;
+
+  padding-right: 0 !important;
+  line-height: 0 !important;
+}
+
+.md2-datepicker-button {
+  top: 0px !important;
+  height: 40px !important;
+  padding: 5px !important;
+}
+
+app-line-chart > mat-card > section > form {
+  display: flex;
+}
+
+app-line-chart > mat-card > section > form > span:nth-child(1) {
+  width: 29px;
+  height: 27px;
+  line-height: 3;
+  margin-top: 6px;
+}
+
+ app-line-chart > mat-card > section > form > span:nth-child(3) {
+  width: 29px;
+  height: 27px;
+  line-height: 3;
+  margin-top: 6px;
+  margin-left: 7px;
+}
+
+.line {							
+  fill: none;					
+  stroke: url(#line-gradient);	
+  stroke-width: 2px;			
+}

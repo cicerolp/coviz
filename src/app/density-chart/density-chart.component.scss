@@ -1,0 +1,18 @@
+.bar {
+    fill: steelblue;
+  }
+  
+  .bar-selected {
+    fill: darkblue;
+  }
+  
+  .bar:hover {
+    stroke:rgb(0,0,0);
+    stroke-width: 2;
+  
+  }
+  
+  .bar-selected:hover {
+    stroke:rgb(255, 255, 255);
+    stroke-width: 2;
+  }

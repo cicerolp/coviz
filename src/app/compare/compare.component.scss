@@ -1,0 +1,142 @@
+.flex-container {
+  display: flex; /* or inline-flex */
+  flex-direction: row;
+  justify-content: space-between;
+
+  margin-bottom: 1rem;
+}
+
+.flex-container .flex-container {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.info-item {
+  background-color: rgba(86, 61, 124, .25);
+  border: 1px solid rgba(86, 61, 124, .2);
+  border-radius: 10px;
+}
+
+.flex-item {
+  flex-grow: 1;
+  padding: 1rem;
+}
+
+.very-small {
+  height: 40px;
+}
+
+.small {
+  height: 100px;
+}
+
+.medium {
+  height: 150px;
+}
+
+.large {
+  height: 200px;
+}
+
+.extra-large {
+  height: 250px;
+}
+
+.extra-extra-large {
+  height: 350px;
+}
+
+.min-very-small {
+  min-height: 40px;
+}
+
+.min-small {
+  min-height: 100px;
+}
+
+.min-median {
+  min-height: 150px;
+}
+
+.mat-card-parameters {
+  background: rgb(216, 216, 216);
+}
+
+.mat-card-info {
+  background: rgba(220,53,69,0.75);
+}
+
+.mat-card-iah {
+  background: rgba(40,167,69,0.75);
+}
+
+.mat-card-bmi {
+  background: rgba(0,123,255,0.75);
+}
+
+.mat-card-epworth {
+  background: rgba(255,193,7,0.75);
+}
+
+.mat-card-cohort {
+  background: rgba(23,162,184,0.75);
+}
+
+
+.mat-card-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mat-expansion-panel-header-title, 
+.mat-expansion-panel-header-description {
+  flex-basis: 0;
+}
+
+.mat-expansion-panel-header-description {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: row;
+  margin-top: 5px;
+}
+
+.radio-button {
+  margin: 5px;
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(1) {
+  background-color: rgba(166,206,227, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(2) {
+  background-color: rgba(31,120,180, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(3) {
+  background-color: rgba(178,223,138, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(4) {
+  background-color: rgba(51,160,44, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(5) {
+  background-color: rgba(251,154,153, .25);
+}
+
+mat-card > mat-card-content > div > .flex-item:nth-child(7) {
+  background-color: rgba(227,26,28, .25);
+}
+mat-card > mat-card-content > div > .flex-item:nth-child(8) {
+  background-color: rgba(253,191,111, .25);
+}
+mat-card > mat-card-content > div > .flex-item:nth-child(9) {
+  background-color: rgba(255,127,0, .25);
+}
+mat-card > mat-card-content > div > .flex-item:nth-child(10) {
+  background-color: rgba(202,178,214, .25);
+}

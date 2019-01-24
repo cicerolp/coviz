@@ -1,0 +1,90 @@
+/* You can add global styles to this file, and also import other style files */
+/* 
+@import "~@angular/material/prebuilt-themes/deeppurple-amber.css"; */
+
+@import "~bootstrap/dist/css/bootstrap.css";
+@import "~leaflet/dist/leaflet.css";
+
+@import '~@angular/material/theming';
+@include mat-core();
+$app-primary: mat-palette($mat-indigo);
+$app-accent:  mat-palette($mat-pink);
+$app-warn:    mat-palette($mat-red);
+
+// Custom Sass colors vars (will be available in all the project)
+$primary: mat-color($app-primary);
+$accent: mat-color($app-accent);
+$warn: mat-color($app-warn);
+
+$theme: mat-light-theme($app-primary, $app-accent, $app-warn);
+
+@include angular-material-theme($theme);
+
+@import '~@mat-datetimepicker/core/datetimepicker/datetimepicker-theme.scss';
+
+// Using the $theme variable from the pre-built theme you can call the theming function
+@include mat-datetimepicker-theme($theme);
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+.leaflet-control-layers-overlays, .leaflet-control-layers-base {
+  width: 250px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+}
+
+.leaflet-container {
+  background: rgb(202, 210, 211);
+}
+
+.leaflet-clickable {
+  cursor: crosshair !important;
+}
+
+#map > div.leaflet-control-container > div.leaflet-bottom.leaflet-right > div {
+  visibility: hidden;
+}
+
+.mat-slider-horizontal {
+  min-width: 100% !important;
+}
+
+.on-top {
+  z-index: 10000;
+}
+
+.over-map {
+  z-index: 900;
+}
+
+.on-map {
+  position: absolute;
+  z-index: 900;
+}
+
+/* Rules for sizing the icon. */
+.material-icons.md-16 { font-size: 16px; }
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.md-48 { font-size: 48px; }
+
+/* Rules for using icons as black on a light background. */
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+/* Rules for using icons as white on a dark background. */
+.material-icons.md-light { color: rgba(255, 255, 255, 1); }
+.material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+.app-footer-item {
+  flex: 1 1 100%;
+}
+
+[hidden] { display: none !important;}
+

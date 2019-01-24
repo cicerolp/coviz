@@ -1,0 +1,398 @@
+<mat-card>
+    <!-- panel 2 -->
+    <mat-expansion-panel class="mat-card-info" [expanded]="features.length !== 0" [disabled]="features.length === 0">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <span class="badge badge-danger">General Information</span>
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+        <!-- content -->
+
+        <mat-card *ngFor="let entry of features; let index = index">
+            <mat-card-header>
+                <!-- <div mat-card-avatar class="example-header-image"></div> -->
+                <mat-card-title>Cohort #{{ index }}</mat-card-title>
+                <mat-card-subtitle>{{ ctn.get('ctnInfo')[index] }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <mat-card>
+                    <mat-card-title>
+                        Constrainsts
+                    </mat-card-title>
+                    <mat-card-content>
+                        <div class="flex-container">
+                            {{ ctn.get('ctnConstraints')[index] }}
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+                <mat-card>
+                    <mat-card-title>
+                        Count Of Events
+                    </mat-card-title>
+                    <mat-card-content>
+                        <div class="flex-container">
+                            {{ ctn.get('ctn2')[index] }}
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+                <mat-card>
+                    <mat-card-title>
+                        Count Of Patients
+                    </mat-card-title>
+                    <mat-card-content>
+                        <div class="flex-container">
+                            {{ ctn.get('ctn3')[index] }}
+                        </div>
+                    </mat-card-content>
+                    <!-- <mat-card-actions>
+                        <button mat-raised-button color="primary" (click)="exportCohort(index)"><i class="material-icons">
+                                save
+                            </i> Export</button>
+                        <button mat-raised-button color="warn" (click)="deleteCohort(index)"><i class="material-icons">
+                                delete_forever
+                            </i> Delete</button>
+                    </mat-card-actions> -->
+                </mat-card>
+            </mat-card-content>
+        </mat-card>
+    </mat-expansion-panel>
+
+    <!-- panel 3 -->
+    <mat-divider></mat-divider>
+
+    <mat-expansion-panel class="mat-card-iah" [expanded]="features.length !== 0" [disabled]="features.length === 0">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <span class="badge badge-success">IAH Analysis</span>
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- distribution -->
+        <mat-expansion-panel expanded=false>
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-success">Distribution</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <!-- content -->
+            <mat-card>
+                <mat-card-title>
+                    System Exit
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnIahDistLeft></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Is Dead
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnIahDistDead></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Gender
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnIahDistGender></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Age
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnIahDistAge></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+
+        <!-- progression -->
+        <mat-expansion-panel expanded=false>
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-success">Progression</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <!-- content -->
+            <mat-card>
+                <mat-card-content>
+                    <div class="flex-container extra-large">
+                        <div #ctnIahPro></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+
+        <!-- calendar -->
+        <mat-expansion-panel expanded="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-success">Outlierness</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <mat-card [formGroup]="options" class="mat-card-parameters">
+                <span class="badge badge-danger">Parameter:</span>
+                <mat-radio-group formControlName="ctnIahCalendar" (change)="refreshCalendarCtn('ctnIahCalendar')" class="radio-group">
+                    <mat-radio-button *ngFor="let opt of payload_values_iah" [value]="opt.value" class="radio-button">
+                        {{ opt.viewValue }}
+                    </mat-radio-button>
+                </mat-radio-group>
+            </mat-card>
+
+            <!-- content -->
+            <mat-card>
+                <mat-card-content>
+                    <div class="flex-container extra-extra-large">
+                        <div #ctnIahCalendar></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+    </mat-expansion-panel>
+
+
+    <!-- panel 4 -->
+    <mat-divider></mat-divider>
+
+    <mat-expansion-panel class="mat-card-bmi" [expanded]="features.length !== 0" [disabled]="features.length === 0">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <span class="badge badge-primary">BMI Analysis</span>
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- distribution -->
+        <mat-expansion-panel expanded="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-primary">Distribution</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <!-- content -->
+            <mat-card>
+                <mat-card-title>
+                    System Exit
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnBmiDistLeft></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Is Dead
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnBmiDistDead></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Gender
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnBmiDistGender></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Age
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnBmiDistAge></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+
+        <!-- progression -->
+        <mat-expansion-panel expanded="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-primary">Progression</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <!-- content -->
+            <mat-card>
+                <mat-card-content>
+                    <div class="flex-container extra-large">
+                        <div #ctnBmiPro></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+
+        <!-- calendar -->
+        <mat-expansion-panel expanded="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-primary">Outlierness</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <mat-card [formGroup]="options" class="mat-card-parameters">
+                <span class="badge badge-danger">Parameter:</span>
+                <mat-radio-group formControlName="ctnBmiCalendar" (change)="refreshCalendarCtn('ctnBmiCalendar')" class="radio-group">
+                    <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
+                        {{ opt.viewValue }}
+                    </mat-radio-button>
+                </mat-radio-group>
+            </mat-card>
+
+            <!-- content -->
+            <mat-card>
+                <mat-card-content>
+                    <div class="flex-container extra-extra-large">
+                        <div #ctnBmiCalendar></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+    </mat-expansion-panel>
+
+    <!-- panel 5 -->
+    <mat-divider></mat-divider>
+
+    <mat-expansion-panel class="mat-card-epworth" [expanded]="features.length !== 0" [disabled]="features.length === 0">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <span class="badge badge-warning">Epworth Analysis</span>
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <!-- distribution -->
+        <mat-expansion-panel expanded="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-warning">Distribution</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <!-- content -->
+            <mat-card>
+                <mat-card-title>
+                    System Exit
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnEpworthDistLeft></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Is Dead
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnEpworthDistDead></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Gender
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnEpworthDistGender></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card>
+                <mat-card-title>
+                    Age
+                </mat-card-title>
+                <mat-card-content>
+                    <div class="flex-container large">
+                        <div #ctnEpworthDistAge></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+
+        <!-- progression -->
+        <mat-expansion-panel expanded="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-warning">Progression</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <!-- content -->
+            <mat-card>
+                <mat-card-content>
+                    <div class="flex-container extra-large">
+                        <div #ctnEpworthPro></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+
+        <!-- calendar -->
+        <mat-expansion-panel expanded="false">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <span class="badge badge-warning">Outlierness</span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <mat-card [formGroup]="options" class="mat-card-parameters">
+                <span class="badge badge-danger">Parameter:</span>
+                <mat-radio-group formControlName="ctnEpworthCalendar" (change)="refreshCalendarCtn('ctnEpworthCalendar')"
+                    class="radio-group">
+                    <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
+                        {{ opt.viewValue }}
+                    </mat-radio-button>
+                </mat-radio-group>
+            </mat-card>
+
+            <!-- content -->
+            <mat-card>
+                <mat-card-content>
+                    <div class="flex-container extra-extra-large">
+                        <div #ctnEpworthCalendar></div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </mat-expansion-panel>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel class="mat-card-cohort" [expanded]="features.length !== 0" [disabled]="features.length === 0">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <span class="badge badge-info">Cohort Analysis</span>
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <mat-card>
+            <mat-card>
+                <mat-card-content>
+                    <span class="badge badge-danger">Confidence Threshold:</span>
+                    <ng5-slider [(value)]="currCohortThreshold" [options]="optionsCohort" (userChangeEnd)="refreshCohorts('ctnCohort')"></ng5-slider>
+                </mat-card-content>
+            </mat-card>
+            <mat-card-content>
+                <div class="flex-container min-small">
+                    <div #ctnCohort></div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </mat-expansion-panel>
+</mat-card>

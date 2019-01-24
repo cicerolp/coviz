@@ -1,0 +1,133 @@
+<div class="app-container ">
+  <!-- map -->
+  <div id="map">
+    <div #mapwidgets>
+      <!-- navigator -->
+      <!-- <app-navigator></app-navigator> -->
+
+      <!-- color scale -->
+      <svg id="svg-color-agiradom" class="on-map"></svg>
+      <svg id="svg-color-no2" class="on-map"></svg>
+
+      <!-- treatments -->
+      <mat-card class="map-card on-map" [formGroup]="options" *ngIf="!no2_window.visible">
+        <div>
+          <span class="badge badge-warning">Treatment Duration (years):</span>
+          <section *ngFor="let entry of treatments_duration">
+            <span class="badge badge-info">{{ entry.viewValue }}</span>
+            <ng5-slider [(value)]="entry.minValue" [(highValue)]="entry.maxValue" [options]="optionsTreatments"
+              (userChangeEnd)="setTreatment($event,entry)"></ng5-slider>
+          </section>
+        </div>
+      </mat-card>
+      <!-- end treatments -->
+
+      <!-- aggregation -->
+      <mat-card class="map-card on-map" [formGroup]="options">
+        <div>
+          <section>
+            <span class="badge badge-info">Map Region Granularity:</span>
+            <ng5-slider [(value)]="currRegion" [options]="optionsRegions" (userChangeEnd)="setMapRegion($event)"></ng5-slider>
+          </section>
+          <section *ngIf="!no2_window.visible">
+            <span class="badge badge-info">Aggregation:</span>
+            <mat-form-field>
+              <mat-select formControlName="aggr" (change)="setAggr()">
+                <mat-option *ngFor="let opt of aggr_values" [value]="opt.value">
+                  {{ opt.viewValue }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+
+          <section *ngIf="options.get('aggr').value !== 'count' && !no2_window.visible">
+            <span class="badge badge-info">Parameter:</span>
+            <mat-radio-group formControlName="payload" (change)="setAggr()" class="radio-group">
+              <mat-radio-button *ngFor="let opt of payload_values" [value]="opt.value" class="radio-button">
+                {{ opt.viewValue }}
+              </mat-radio-button>
+            </mat-radio-group>
+
+            <!-- <mat-form-field>
+              <mat-select formControlName="payload" (change)="setAggr()">
+                <mat-option *ngFor="let opt of payload_values" [value]="opt.value">
+                  {{ opt.viewValue }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field> -->
+          </section>
+
+          <section *ngIf="!no2_window.visible">
+            <span class="badge badge-info" >Marker:</span>
+            <mat-form-field>
+              <mat-select formControlName="marker" (change)="setMarker()">
+                <mat-option *ngFor="let opt of marker_values" [value]="opt.value">
+                  {{ opt.viewValue }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+          <section *ngIf="!no2_window.visible">
+            <span class="badge badge-info"># of Events:</span> {{ this.options.get('display_threshold').value }}
+            <mat-slider min="0" max="1000" step="1" thumbLabel="true" tickInterval="auto" formControlName="display_threshold"
+              (change)="setMapData()"></mat-slider>
+          </section>
+        </div>
+      </mat-card>
+      <!-- end aggregation -->
+
+      <!-- info -->
+      <mat-card class="map-card on-map" [formGroup]="options">
+        <div>
+          <section>
+            <span class="badge badge-info">Name:</span> {{ info_name }}
+          </section>
+          <section>
+            <span class="badge badge-info">Number of Patients:</span> {{ info_users[0] }} of {{ info_users[1] }}
+          </section>
+          <section>
+            <span class="badge badge-info">Number of Actions:</span> {{ info_events[0] }} of {{ info_events[1] }}
+          </section>
+          <section *ngIf="!no2_window.visible">
+            <button mat-raised-button class="btn-cohort" color="warn" (click)="clearCohorts()">Clear Cohorts <i class="material-icons md-32">cancel</i></button>
+          </section>
+          <section *ngIf="!no2_window.visible">
+            <button mat-raised-button class="btn-cohort" color="primary" (click)="createCohort()">Create Cohort! <i
+                class="material-icons md-32">assignment_turned_in</i></button>
+          </section>
+        </div>
+      </mat-card>
+      <!-- end info -->
+    </div>
+    <!-- end mapwidgets -->
+  </div>
+  <!-- end map -->
+
+  <!-- footer toolbar -->
+  <div *ngIf="(options.get('aggr').value === 'quantile' || options.get('aggr').value === 'cdf') && !no2_window.visible" class="app-footer-toolbar app-footer-container over-map">
+    <section class="app-footer-item">
+      <span class="badge badge-warning">Payload Parameter: {{ getPayloadInfo('value') }}</span>
+      <mat-slider [min]="getPayloadInfo('min')" [max]="getPayloadInfo('max')" [step]="getPayloadInfo('step')"
+        thumbLabel="true" tickInterval="auto" [ngModel]="getPayloadInfo('value')" (ngModelChange)="setPayloadInfo('value', $event)"
+        (change)="setMapData()"></mat-slider>
+    </section>
+  </div>
+
+
+  <!-- no2 toolbar -->
+  <div class="app-no2-toolbar app-footer-container over-map" *ngIf="no2_window.visible">
+    <section class="app-footer-item">
+      <span class="badge badge-warning">Scale Switcher:</span>
+      <ng5-slider [(value)]="no2_window.scale_switcher" [options]="optionsNO2Scale" (userChangeEnd)="setNO2Scale()"></ng5-slider>
+
+      <span class="badge badge-warning">NO2 Exposure Window:</span>
+      <ng5-slider [(value)]="no2_window.minValue" [(highValue)]="no2_window.maxValue" [options]="optionsNO2"
+        (userChangeEnd)="setNO2Window($event)"></ng5-slider>
+    </section>
+  </div>
+
+  <div class="app-footer app-footer-container over-map" [class.hidden]="no2_window.visible" #footerCtnRef>
+    <div class="flex-item" #container></div>
+  </div>
+  <!-- end footer toolbar -->
+</div>

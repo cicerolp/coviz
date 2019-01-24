@@ -1,0 +1,11 @@
+input {
+  margin: 12px 0 0 124px;
+  width: 140px;
+  height: 35px;
+  border: 2px solid rgba(77, 156, 237, 0.7);
+  font-size: 12px;
+}
+
+#goto {
+  margin: 9px 0 0 230px;
+}

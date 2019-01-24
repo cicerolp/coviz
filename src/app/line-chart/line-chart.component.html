@@ -1,0 +1,14 @@
+<mat-card class="map-card-footer" [formGroup]="options">
+    <section>
+      <form [formGroup]="options">
+        <span class="badge badge-secondary">From:</span>
+        <md2-datepicker formControlName="fromDateTime" (change)="broadcast()" placeholder="Start DateTime" type="datetime" startView="month"
+          format="M/d/y H:mm A"></md2-datepicker>
+        <span class="badge badge-secondary">To:</span>
+        <md2-datepicker formControlName="toDateTime" (change)="broadcast()" placeholder="End DateTime" type="datetime" startView="month"
+          format="M/d/y H:mm A"></md2-datepicker>
+      </form>
+    </section>
+  </mat-card>
+  <div id="{{uniqueId}}">
+  </div>

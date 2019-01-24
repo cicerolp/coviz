@@ -1,0 +1,12 @@
+<svg id="svg-color-quant-{{uniqueId}}"></svg>
+<span class="svg-legend-calendar">Outlierness</span>
+
+<span class="badge badge-warning">Year to Analyse:</span>
+
+<ng5-slider [(value)]="duration.currYear" [options]="optionsSlider" (userChangeEnd)="broadcastCtn()"></ng5-slider>
+
+<span class="badge badge-warning">Interval to Compare With:</span>
+
+<ng5-slider [(value)]="duration.minValue" [(highValue)]="duration.maxValue" [options]="optionsSlider"
+  (userChangeEnd)="broadcastCtn()"></ng5-slider>
+<div id="{{uniqueId}}"></div>
