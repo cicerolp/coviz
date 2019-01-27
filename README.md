@@ -17,3 +17,36 @@ A video demonstration of COVIZ is available at [http://bit.ly/coviz-sigmod2019](
 * Valérie Siroux
 * João L. D. Comba
 * Jean-Louis Pepin
+
+# How to Build (Linux, Mac, and Windows are supported)
+
+* Dependencies
+    * [QDS](https://github.com/cicerolp/qds) server.
+    * `Git Large File Storage (LFS) 2` or later.    
+    * `PostgreSQL 10` or later.
+    * `Node.js 10` or later.
+    * `npm 6` or later.
+    * `Python 2`.
+
+* Instructions
+
+    1. Before clonning this repo, install Git LFS.
+        * Make sure you successfully pull the files inside `data` dir.
+
+    2. Configure `PostgreSQL` (optional):
+        * Import `data/health-trajectory.pgsql` into PostgreSQL.
+        * Setup your credentials at `tools/represent-cohort/config.json`
+
+    3. Open a new terminal to run the cohort visualization tool (depends on step #2 - Configure `PostgreSQL`):
+        * Change the current directory to `tools/represent-cohort`. 
+        * Hit `python2 init.py`
+
+    4. Build [QDS](https://github.com/cicerolp/qds) server using branch `ftr-32bit-categories`.
+        * Copy QDS binary (`nds`) to the root of this repo.
+        * Open a new terminal to run QDS with: `NDS_DATA=data ./nds -x data/health-durations.xml -x data/pollution.xml -d 15` 
+
+    5. Open a new terminal to build and run the interface:
+        * Hit `npm install` to install all Angular requeriments.
+        * Hit `ng serve` to deploy the development server.
+        * Open [localhost:4200](http://localhost:4200) to access the interface.
+            * Only available after you setup QDS server
