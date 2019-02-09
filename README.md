@@ -18,6 +18,11 @@ A video demonstration of COVIZ is available at [http://bit.ly/coviz-video](http:
 * João L. D. Comba
 * Jean-Louis Pepin
 
+# Online Demo
+* Only Google Chrome is supported. Enable **loading of unsafe scripts**.
+
+* [https://cicerolp.github.io/](https://cicerolp.github.io/)
+
 # How to Build (Linux, Mac, and Windows are supported)
 
 * Dependencies
